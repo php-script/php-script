@@ -51,6 +51,8 @@ $engine->set('app_version', '1.2.3');
 $engine->set('users_list', ['Alice', 'Bob', 'Charlie']);
 ```
 
+And now the PHP Script:
+
 ```javascript
 // <- this is a line comment
 echo 'Hello ' ~ user.name // string concatenation (with ~ Operator) and object access on users property `name`

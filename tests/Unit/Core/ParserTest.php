@@ -14,7 +14,7 @@ use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
 
 beforeEach(function () {
-    $this->parser = new Parser();
+    $this->parser = new Parser;
 });
 
 it('should parse an empty program', function () {
@@ -164,7 +164,7 @@ it('should parse a parenthesized expression', function () {
     expect($binaryOperation->right->value)->toBe('2');
 });
 
-it("should throw an exception for missing closing parenthesis", function () {
+it('should throw an exception for missing closing parenthesis', function () {
     $tokens = [
         new Token(TokenType::T_LPAREN, '('),
         new Token(TokenType::T_NUMBER, '1'),

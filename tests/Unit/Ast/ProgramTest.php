@@ -5,7 +5,7 @@ use PhpScript\Ast\Program;
 
 it('should return correct array representation', function () {
     $program = new Program([
-        new NoOp(),
+        new NoOp,
     ]);
 
     expect($program->toArray())->toBe([

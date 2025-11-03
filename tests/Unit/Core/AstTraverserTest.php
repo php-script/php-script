@@ -14,7 +14,7 @@ use PhpScript\Core\AstTraverser;
 use PhpScript\Core\TokenType;
 
 beforeEach(function () {
-    $this->traverser = new AstTraverser();
+    $this->traverser = new AstTraverser;
 });
 
 it('should traverse a program', function () {
@@ -23,7 +23,7 @@ it('should traverse a program', function () {
         new EchoStatement(new Literal('world')),
     ]);
     $result = $this->traverser->traverse($program);
-    expect($result)->toBe("echo 'hello';\n" . "echo 'world';\n");
+    expect($result)->toBe("echo 'hello';\n"."echo 'world';\n");
 });
 
 it('should traverse an empty program', function () {
@@ -54,7 +54,7 @@ it('should traverse a binary operation', function (TokenType $operator, string $
         new Literal(2)
     );
     $result = $this->traverser->traverse($binaryOp);
-    expect($result)->toBe('1 ' . $expectedOperator . ' 2');
+    expect($result)->toBe('1 '.$expectedOperator.' 2');
 })->with([
     [TokenType::T_PLUS, '+'],
     [TokenType::T_MINUS, '-'],
@@ -111,13 +111,14 @@ it('should traverse a literal', function (mixed $value, string $expected) {
 ]);
 
 it('should traverse a no-op', function () {
-    $noOp = new NoOp();
+    $noOp = new NoOp;
     $result = $this->traverser->traverse($noOp);
     expect($result)->toBe('');
 });
 
 it('should throw an exception for unknown node type', function () {
-    $unknownNode = new class implements Node {
+    $unknownNode = new class implements Node
+    {
         public function toArray(): array
         {
             return [];

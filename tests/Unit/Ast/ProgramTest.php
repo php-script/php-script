@@ -3,7 +3,7 @@
 use PhpScript\Ast\NoOp;
 use PhpScript\Ast\Program;
 
-it('should return correct array representation', function () {
+it('should return correct array representation', function (): void {
     $program = new Program([
         new NoOp,
     ]);
@@ -18,7 +18,7 @@ it('should return correct array representation', function () {
     ]);
 });
 
-it('should return correct array representation with empty statements', function () {
+it('should return correct array representation with empty statements', function (): void {
     $program = new Program([]);
 
     expect($program->toArray())->toBe([

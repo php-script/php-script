@@ -4,7 +4,7 @@ use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\Literal;
 use PhpScript\Core\TokenType;
 
-it('should return correct array representation', function () {
+it('should return correct array representation', function (): void {
     $binaryOperation = new BinaryOperation(
         new Literal(1),
         TokenType::T_PLUS,

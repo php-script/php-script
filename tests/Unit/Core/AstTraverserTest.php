@@ -13,11 +13,11 @@ use PhpScript\Contracts\Node;
 use PhpScript\Core\AstTraverser;
 use PhpScript\Core\TokenType;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->traverser = new AstTraverser;
 });
 
-it('should traverse a program', function () {
+it('should traverse a program', function (): void {
     $program = new Program([
         new EchoStatement(new Literal('hello')),
         new EchoStatement(new Literal('world')),
@@ -26,19 +26,19 @@ it('should traverse a program', function () {
     expect($result)->toBe("echo 'hello';\n"."echo 'world';\n");
 });
 
-it('should traverse an empty program', function () {
+it('should traverse an empty program', function (): void {
     $program = new Program([]);
     $result = $this->traverser->traverse($program);
     expect($result)->toBe('');
 });
 
-it('should traverse an echo statement', function () {
+it('should traverse an echo statement', function (): void {
     $echo = new EchoStatement(new Literal('hello world'));
     $result = $this->traverser->traverse($echo);
     expect($result)->toBe("echo 'hello world'");
 });
 
-it('should traverse an assignment', function () {
+it('should traverse an assignment', function (): void {
     $assignment = new Assignment(
         new Variable('foo'),
         new Literal('bar')
@@ -47,7 +47,7 @@ it('should traverse an assignment', function () {
     expect($result)->toBe('$foo = \'bar\'');
 });
 
-it('should traverse a binary operation', function (TokenType $operator, string $expectedOperator) {
+it('should traverse a binary operation', function (TokenType $operator, string $expectedOperator): void {
     $binaryOp = new BinaryOperation(
         new Literal(1),
         $operator,
@@ -66,7 +66,7 @@ it('should traverse a binary operation', function (TokenType $operator, string $
     [TokenType::T_LT, '<'],
 ]);
 
-it('should throw an exception for unknown binary operator', function () {
+it('should throw an exception for unknown binary operator', function (): void {
     $binaryOp = new BinaryOperation(
         new Literal(1),
         TokenType::T_DOT,
@@ -75,7 +75,7 @@ it('should throw an exception for unknown binary operator', function () {
     $this->traverser->traverse($binaryOp);
 })->throws(RuntimeException::class, 'Unknown operator: T_DOT');
 
-it('should traverse a member access', function () {
+it('should traverse a member access', function (): void {
     $memberAccess = new MemberAccess(
         new Variable('foo'),
         new Identifier('bar')
@@ -84,19 +84,19 @@ it('should traverse a member access', function () {
     expect($result)->toBe('$foo->bar');
 });
 
-it('should traverse a variable', function () {
+it('should traverse a variable', function (): void {
     $variable = new Variable('foo');
     $result = $this->traverser->traverse($variable);
     expect($result)->toBe('$foo');
 });
 
-it('should traverse an identifier', function () {
+it('should traverse an identifier', function (): void {
     $identifier = new Identifier('foo');
     $result = $this->traverser->traverse($identifier);
     expect($result)->toBe('foo');
 });
 
-it('should traverse a literal', function (mixed $value, string $expected) {
+it('should traverse a literal', function (mixed $value, string $expected): void {
     $literal = new Literal($value);
     $result = $this->traverser->traverse($literal);
     expect($result)->toBe($expected);
@@ -110,13 +110,13 @@ it('should traverse a literal', function (mixed $value, string $expected) {
     [null, 'null'],
 ]);
 
-it('should traverse a no-op', function () {
+it('should traverse a no-op', function (): void {
     $noOp = new NoOp;
     $result = $this->traverser->traverse($noOp);
     expect($result)->toBe('');
 });
 
-it('should throw an exception for unknown node type', function () {
+it('should throw an exception for unknown node type', function (): void {
     $unknownNode = new class implements Node
     {
         public function toArray(): array

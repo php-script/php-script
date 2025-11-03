@@ -3,7 +3,7 @@
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\Literal;
 
-it('should return correct array representation', function () {
+it('should return correct array representation', function (): void {
     $echoStatement = new EchoStatement(
         new Literal('hello world')
     );

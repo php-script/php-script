@@ -4,7 +4,7 @@ use PhpScript\Ast\Assignment;
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\Variable;
 
-it('should return correct array representation', function () {
+it('should return correct array representation', function (): void {
     $assignment = new Assignment(
         new Variable('foo'),
         new Literal('bar')

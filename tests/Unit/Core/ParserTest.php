@@ -13,11 +13,11 @@ use PhpScript\Core\Parser;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
 
-beforeEach(function () {
+beforeEach(function (): void {
     $this->parser = new Parser;
 });
 
-it('should parse an empty program', function () {
+it('should parse an empty program', function (): void {
     $tokens = [];
     $ast = $this->parser->parse($tokens);
 
@@ -25,7 +25,7 @@ it('should parse an empty program', function () {
     expect($ast->statements)->toBeEmpty();
 });
 
-it('should parse a no-op statement', function () {
+it('should parse a no-op statement', function (): void {
     $tokens = [
         new Token(TokenType::T_SEMICOLON, ';'),
     ];
@@ -34,7 +34,7 @@ it('should parse a no-op statement', function () {
     expect($ast->statements[0])->toBeInstanceOf(NoOp::class);
 });
 
-it('should parse an echo statement', function () {
+it('should parse an echo statement', function (): void {
     $tokens = [
         new Token(TokenType::T_ECHO, 'echo'),
         new Token(TokenType::T_STRING, 'hello'),
@@ -48,7 +48,7 @@ it('should parse an echo statement', function () {
     expect($echoStatement->expression->value)->toBe('hello');
 });
 
-it('should parse an assignment', function () {
+it('should parse an assignment', function (): void {
     $tokens = [
         new Token(TokenType::T_IDENTIFIER, 'foo'),
         new Token(TokenType::T_EQUALS, '='),
@@ -65,7 +65,7 @@ it('should parse an assignment', function () {
     expect($assignment->expression->value)->toBe('bar');
 });
 
-it('should parse a binary operation', function () {
+it('should parse a binary operation', function (): void {
     $tokens = [
         new Token(TokenType::T_NUMBER, '1'),
         new Token(TokenType::T_PLUS, '+'),
@@ -83,7 +83,7 @@ it('should parse a binary operation', function () {
     expect($binaryOperation->right->value)->toBe('2');
 });
 
-it('should parse a member access', function () {
+it('should parse a member access', function (): void {
     $tokens = [
         new Token(TokenType::T_IDENTIFIER, 'foo'),
         new Token(TokenType::T_DOT, '.'),
@@ -100,7 +100,7 @@ it('should parse a member access', function () {
     expect($memberAccess->property->name)->toBe('bar');
 });
 
-it('should parse a literal', function () {
+it('should parse a literal', function (): void {
     $tokens = [
         new Token(TokenType::T_STRING, 'hello'),
     ];
@@ -112,7 +112,7 @@ it('should parse a literal', function () {
     expect($literal->value)->toBe('hello');
 });
 
-it('should parse a variable', function () {
+it('should parse a variable', function (): void {
     $tokens = [
         new Token(TokenType::T_IDENTIFIER, 'foo'),
     ];
@@ -124,7 +124,7 @@ it('should parse a variable', function () {
     expect($variable->name)->toBe('foo');
 });
 
-it('should throw an exception for invalid assignment target', function () {
+it('should throw an exception for invalid assignment target', function (): void {
     $tokens = [
         new Token(TokenType::T_NUMBER, '1'),
         new Token(TokenType::T_EQUALS, '='),
@@ -133,14 +133,14 @@ it('should throw an exception for invalid assignment target', function () {
     $this->parser->parse($tokens);
 })->throws(RuntimeException::class, 'Invalid assignment target.');
 
-it('should throw an exception for unexpected token', function () {
+it('should throw an exception for unexpected token', function (): void {
     $tokens = [
         new Token(TokenType::T_RPAREN, ')'),
     ];
     $this->parser->parse($tokens);
 })->throws(RuntimeException::class, 'Unexpected token: T_RPAREN');
 
-it('should parse a parenthesized expression', function () {
+it('should parse a parenthesized expression', function (): void {
     $tokens = [
         new Token(TokenType::T_LPAREN, '('),
         new Token(TokenType::T_NUMBER, '1'),
@@ -164,7 +164,7 @@ it('should parse a parenthesized expression', function () {
     expect($binaryOperation->right->value)->toBe('2');
 });
 
-it('should throw an exception for missing closing parenthesis', function () {
+it('should throw an exception for missing closing parenthesis', function (): void {
     $tokens = [
         new Token(TokenType::T_LPAREN, '('),
         new Token(TokenType::T_NUMBER, '1'),

@@ -4,7 +4,7 @@ use PhpScript\Ast\Identifier;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\Variable;
 
-it('should return correct array representation', function () {
+it('should return correct array representation', function (): void {
     $memberAccess = new MemberAccess(
         new Variable('foo'),
         new Identifier('bar')

@@ -90,14 +90,16 @@ final readonly class Lexer
             $matchFound = false;
 
             foreach ($this->tokenPatterns as $type => $pattern) {
-                if (preg_match('/^(' . $pattern . ')/', $remaining, $matches)) {
+                if (preg_match('/^('.$pattern.')/', $remaining, $matches)) {
                     $tokenTypeEnum = TokenType::from($type);
                     $value = $matches[1];
 
                     if ($tokenTypeEnum === TokenType::T_STRING) {
-                        // Strip outer quotes and un-escape quotes inside
-                        $value = substr($value, 1, -1);
-                        $value = str_replace(['\\\'', '\\"'], ['\'', '"'], $value);
+                        // The regex for T_STRING has two content-capturing groups.
+                        // $matches[2] is for double-quoted strings, $matches[3] for single-quoted.
+                        // We check which one actually matched to get the pure string content.
+                        $content = isset($matches[3]) && $matches[3] !== '' ? $matches[3] : ($matches[2] ?? '');
+                        $value = stripcslashes($content);
                     }
 
                     // ignore whitespace and comments

@@ -15,7 +15,7 @@ use PhpScript\Ast\Program;
 use PhpScript\Ast\Variable;
 use PhpScript\Contracts\Node;
 use PhpScript\Contracts\ParserInterface;
-use RuntimeException;
+use PhpScript\Exceptions\ParseException;
 
 final class Parser implements ParserInterface
 {
@@ -44,12 +44,13 @@ final class Parser implements ParserInterface
 
     private function parseStatement(): Node
     {
+        $token = $this->peek();
         if ($this->match(TokenType::T_ECHO)) {
-            return $this->parseEchoStatement();
+            return $this->parseEchoStatement($token);
         }
 
         if ($this->match(TokenType::T_SEMICOLON)) {
-            return new NoOp;
+            return new NoOp($token);
         }
 
         $node = $this->parseExpression();
@@ -59,11 +60,11 @@ final class Parser implements ParserInterface
         return $node;
     }
 
-    private function parseEchoStatement(): EchoStatement
+    private function parseEchoStatement(Token $token): EchoStatement
     {
         $expression = $this->parseExpression();
 
-        return new EchoStatement($expression);
+        return new EchoStatement($expression, $token);
     }
 
     private function parseExpression(): Node
@@ -76,12 +77,13 @@ final class Parser implements ParserInterface
         $left = $this->parseConcat();
 
         if ($this->match(TokenType::T_EQUALS)) {
+            $token = $this->previous();
             if (! ($left instanceof Variable)) {
-                throw new RuntimeException('Invalid assignment target.');
+                throw new ParseException('Invalid assignment target.', $token);
             }
             $right = $this->parseAssignment();
 
-            return new Assignment($left, $right);
+            return new Assignment($left, $right, $token);
         }
 
         return $left;
@@ -92,9 +94,10 @@ final class Parser implements ParserInterface
         $node = $this->parseAdditive();
 
         while ($this->match(TokenType::T_CONCAT)) {
+            $token = $this->previous();
             $operator = $this->previous()->type;
             $right = $this->parseAdditive();
-            $node = new BinaryOperation($node, $operator, $right);
+            $node = new BinaryOperation($node, $operator, $right, $token);
         }
 
         return $node;
@@ -105,9 +108,10 @@ final class Parser implements ParserInterface
         $node = $this->parseMultiplicative();
 
         while ($this->match(TokenType::T_PLUS, TokenType::T_MINUS)) {
+            $token = $this->previous();
             $operator = $this->previous()->type;
             $right = $this->parseMultiplicative();
-            $node = new BinaryOperation($node, $operator, $right);
+            $node = new BinaryOperation($node, $operator, $right, $token);
         }
 
         return $node;
@@ -118,9 +122,10 @@ final class Parser implements ParserInterface
         $node = $this->parsePrimary();
 
         while ($this->match(TokenType::T_MULTIPLY, TokenType::T_DIVIDE)) {
+            $token = $this->previous();
             $operator = $this->previous()->type;
             $right = $this->parsePrimary();
-            $node = new BinaryOperation($node, $operator, $right);
+            $node = new BinaryOperation($node, $operator, $right, $token);
         }
 
         return $node;
@@ -128,16 +133,18 @@ final class Parser implements ParserInterface
 
     private function parsePrimary(): Node
     {
+        $token = $this->peek();
         if ($this->match(TokenType::T_NUMBER, TokenType::T_STRING)) {
-            return new Literal($this->previous()->value);
+            return new Literal($this->previous()->value, $token);
         }
 
         if ($this->match(TokenType::T_IDENTIFIER)) {
-            $node = new Variable($this->previous()->value);
+            $node = new Variable($this->previous()->value, $token);
 
             while ($this->match(TokenType::T_DOT)) {
-                $property = $this->consume(TokenType::T_IDENTIFIER, 'Expected identifier after .');
-                $node = new MemberAccess($node, new Identifier($property->value));
+                $propertyToken = $this->consume(TokenType::T_IDENTIFIER, 'Expected identifier after .');
+                $property = new Identifier($propertyToken->value, $propertyToken);
+                $node = new MemberAccess($node, $property, $propertyToken);
             }
 
             return $node;
@@ -150,7 +157,7 @@ final class Parser implements ParserInterface
             return $node;
         }
 
-        throw new RuntimeException('Unexpected token: '.$this->peek()->type->value);
+        throw new ParseException('Unexpected token: '.$this->peek()->type->value, $this->peek());
     }
 
     private function match(TokenType ...$types): bool
@@ -172,7 +179,7 @@ final class Parser implements ParserInterface
             return $this->advance();
         }
 
-        throw new RuntimeException($message);
+        throw new ParseException($message, $this->peek());
     }
 
     private function check(TokenType $type): bool
@@ -198,12 +205,12 @@ final class Parser implements ParserInterface
         return $this->position >= count($this->tokens);
     }
 
-    private function peek(): Token
+    private function peek(): ?Token
     {
         return $this->tokens[$this->position];
     }
 
-    private function previous(): Token
+    private function previous(): ?Token
     {
         return $this->tokens[$this->position - 1];
     }

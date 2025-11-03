@@ -19,9 +19,35 @@ use RuntimeException;
 
 final class AstTraverser implements AstTraverserInterface
 {
+    private string $generatedCode = '';
+
+    private array $sourceMap = [];
+
+    private int $currentLine = 1;
+
     public function traverse(Node $node): string
     {
-        return match ($node::class) {
+        $this->generatedCode = '';
+        $this->sourceMap = [];
+        $this->currentLine = 1;
+        $this->doTraverse($node);
+
+        return $this->generatedCode;
+    }
+
+    public function getSourceMap(): array
+    {
+        return $this->sourceMap;
+    }
+
+    private function doTraverse(Node $node): void
+    {
+        $token = $node->getToken();
+        if ($token instanceof \PhpScript\Core\Token) {
+            $this->sourceMap[$this->currentLine] = $token;
+        }
+
+        match ($node::class) {
             Program::class => $this->traverseProgram($node),
             EchoStatement::class => $this->traverseEchoStatement($node),
             Assignment::class => $this->traverseAssignment($node),
@@ -35,28 +61,31 @@ final class AstTraverser implements AstTraverserInterface
         };
     }
 
-    private function traverseProgram(Program $node): string
+    private function traverseProgram(Program $node): void
     {
-        $result = '';
         foreach ($node->statements as $statement) {
-            $result .= $this->traverse($statement).";\n";
+            $this->doTraverse($statement);
+            $this->generatedCode .= ";\n";
+            $this->currentLine++;
         }
-
-        return $result;
     }
 
-    private function traverseEchoStatement(EchoStatement $node): string
+    private function traverseEchoStatement(EchoStatement $node): void
     {
-        return 'echo '.$this->traverse($node->expression);
+        $this->generatedCode .= 'echo ';
+        $this->doTraverse($node->expression);
     }
 
-    private function traverseAssignment(Assignment $node): string
+    private function traverseAssignment(Assignment $node): void
     {
-        return $this->traverse($node->variable).' = '.$this->traverse($node->expression);
+        $this->doTraverse($node->variable);
+        $this->generatedCode .= ' = ';
+        $this->doTraverse($node->expression);
     }
 
-    private function traverseBinaryOperation(BinaryOperation $node): string
+    private function traverseBinaryOperation(BinaryOperation $node): void
     {
+        $this->doTraverse($node->left);
         $operator = match ($node->operator) {
             TokenType::T_PLUS => '+',
             TokenType::T_MINUS => '-',
@@ -68,42 +97,52 @@ final class AstTraverser implements AstTraverserInterface
             TokenType::T_LT => '<',
             default => throw new RuntimeException('Unknown operator: '.$node->operator->value),
         };
-
-        return $this->traverse($node->left).' '.$operator.' '.$this->traverse($node->right);
+        $this->generatedCode .= ' '.$operator.' ';
+        $this->doTraverse($node->right);
     }
 
-    private function traverseMemberAccess(MemberAccess $node): string
+    private function traverseMemberAccess(MemberAccess $node): void
     {
-        return $this->traverse($node->object).'->'.$this->traverse($node->property);
+        $this->doTraverse($node->object);
+        $this->generatedCode .= '->';
+        $this->doTraverse($node->property);
     }
 
-    private function traverseVariable(Variable $node): string
+    private function traverseVariable(Variable $node): void
     {
-        return '$'.$node->name;
+        $this->generatedCode .= '$'.$node->name;
     }
 
-    private function traverseIdentifier(Identifier $node): string
+    private function traverseIdentifier(Identifier $node): void
     {
-        return $node->name;
+        $this->generatedCode .= $node->name;
     }
 
-    private function traverseLiteral(Literal $node): string
+    private function traverseLiteral(Literal $node): void
     {
         $value = $node->value;
         if (is_numeric($value)) {
-            return (string) $value;
+            $this->generatedCode .= (string) $value;
+
+            return;
         }
 
         if (is_string($value)) {
-            return "'".addslashes($value)."'";
+            $this->generatedCode .= "'".addslashes($value)."'";
+
+            return;
         }
 
         if (is_bool($value)) {
-            return $value ? 'true' : 'false';
+            $this->generatedCode .= $value ? 'true' : 'false';
+
+            return;
         }
 
         if ($value === null) {
-            return 'null';
+            $this->generatedCode .= 'null';
+
+            return;
         }
 
         // @codeCoverageIgnoreStart
@@ -111,8 +150,8 @@ final class AstTraverser implements AstTraverserInterface
         // @codeCoverageIgnoreEnd
     }
 
-    private function traverseNoOp(): string
+    private function traverseNoOp(): void
     {
-        return '';
+        // empty
     }
 }

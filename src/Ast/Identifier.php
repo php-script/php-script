@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace PhpScript\Ast;
 
-use PhpScript\Contracts\Node;
+use PhpScript\Core\Token;
 
-final readonly class Identifier implements Node
+final readonly class Identifier extends BaseNode
 {
     public function __construct(
         public string $name,
-    ) {}
+        ?Token $token = null,
+    ) {
+        parent::__construct($token);
+    }
 
     public function toArray(): array
     {

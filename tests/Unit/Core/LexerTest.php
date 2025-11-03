@@ -14,7 +14,7 @@ echo u2
     $lexer = new Lexer;
     $tokens = $lexer->tokenize($phpScriptCode);
 
-    expect(array_map(fn (Token $token) => $token->toArray(), $tokens))->toBe([
+    expect(array_map(fn (Token $token): array => $token->toArray(), $tokens))->toBe([
         [
             'type' => 'T_IDENTIFIER',
             'value' => 'u',

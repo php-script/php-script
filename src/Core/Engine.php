@@ -12,8 +12,6 @@ use Throwable;
 
 final class Engine
 {
-    private readonly LexerInterface $lexer;
-
     /**
      * @var array<string, mixed>
      */
@@ -30,9 +28,8 @@ final class Engine
         'mysql_', 'mysqli_', 'pdo',
     ];
 
-    public function __construct(?LexerInterface $lexer = null)
+    public function __construct(private readonly ?LexerInterface $lexer = new Lexer)
     {
-        $this->lexer = $lexer ?? new Lexer;
     }
 
     public function set(string $name, mixed $value): self
@@ -54,7 +51,7 @@ final class Engine
         $this->ensureScriptCanBeExecuted($script);
 
         $previousErrorReporting = error_reporting(-1);
-        set_error_handler(function (int $severity, string $message, ?string $file, ?int $line) {
+        set_error_handler(function (int $severity, string $message, ?string $file, ?int $line): never {
             throw new ErrorException($message, 0, $severity, $file, $line);
         });
 
@@ -158,9 +155,6 @@ final class Engine
                 case TokenType::T_AS:
                 case TokenType::T_ECHO:
                 case TokenType::T_RETURN:
-                    $phpCode .= $value;
-                    $isStartOfChain = true;
-                    break;
 
                 case TokenType::T_NUMBER:
                 case TokenType::T_STRING:

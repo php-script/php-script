@@ -4,70 +4,11 @@ declare(strict_types=1);
 
 namespace PhpScript\Core;
 
+use PhpScript\Contracts\LexerInterface;
 use PhpScript\Exceptions\LexerException;
 
-class Lexer
+final readonly class Lexer implements LexerInterface
 {
-    // Token-Typen
-    public const string T_IDENTIFIER = 'T_IDENTIFIER'; // Variablennamen, Funktionsnamen (user, logins, count)
-
-    public const string T_NUMBER = 'T_NUMBER';       // Zahlen (1, 10, 3.14)
-
-    public const string T_STRING = 'T_STRING';       // Strings ("Hallo")
-
-    public const string T_DOT = 'T_DOT';         // .
-
-    public const string T_LPAREN = 'T_LPAREN';     // (
-
-    public const string T_RPAREN = 'T_RPAREN';     // )
-
-    public const string T_LBRACE = 'T_LBRACE';     // {
-
-    public const string T_RBRACE = 'T_RBRACE';     // }
-
-    public const string T_SEMICOLON = 'T_SEMICOLON';   // ;
-
-    public const string T_EQUALS = 'T_EQUALS';     // =
-
-    public const string T_PLUS = 'T_PLUS';       // +
-
-    public const string T_MINUS = 'T_MINUS';      // -
-
-    public const string T_MULTIPLY = 'T_MULTIPLY';   // *
-
-    public const string T_DIVIDE = 'T_DIVIDE';     // /
-
-    public const string T_GT = 'T_GT';         // >
-
-    public const string T_LT = 'T_LT';         // <
-
-    public const string T_EQUALS_EQUALS = 'T_EQUALS_EQUALS'; // ==
-
-    public const string T_WHITESPACE = 'T_WHITESPACE';  // (wird ignoriert)
-
-    public const string T_COMMENT = 'T_COMMENT';     // // Kommentar (wird ignoriert)
-
-    public const string T_UNKNOWN = 'T_UNKNOWN';     // Unbekanntes Zeichen
-
-    // Keywords der Sprache
-    public const string T_IF = 'T_IF';
-
-    public const string T_ELSE = 'T_ELSE';
-
-    public const string T_FOREACH = 'T_FOREACH';
-
-    public const string T_AS = 'T_AS';
-
-    public const string T_ECHO = 'T_ECHO';
-
-    public const string T_RETURN = 'T_RETURN';
-
-    public const string T_TRUE = 'T_TRUE';
-
-    public const string T_FALSE = 'T_FALSE';
-
-    public const string T_NULL = 'T_NULL';
-
     /**
      * An associative array defining token patterns for a lexical analyzer or tokenizer.
      * Each key corresponds to a specific token type, and its value is the regex pattern
@@ -82,56 +23,62 @@ class Lexer
      *
      * @var array<string, string>
      */
-    private array $tokenPatterns = [
-        self::T_WHITESPACE => '\s+',
-        self::T_COMMENT => '\/\/[^\n]*',
-        self::T_NUMBER => '\b\d+(\.\d+)?\b',
-        self::T_STRING => '"(.*?)(?<!\\\\)"|\'(.*?)(?<!\\\\)\'',
+    private array $tokenPatterns;
 
-        // Keywords (müssen VOR T_IDENTIFIER kommen)
-        self::T_IF => '\bif\b',
-        self::T_ELSE => '\belse\b',
-        self::T_FOREACH => '\bforeach\b',
-        self::T_AS => '\bas\b',
-        self::T_ECHO => '\becho\b',
-        self::T_RETURN => '\breturn\b',
-        self::T_TRUE => '\btrue\b',
-        self::T_FALSE => '\bfalse\b',
-        self::T_NULL => '\bnull\b',
+    public function __construct()
+    {
+        // initialize token patterns in defined order
+        $this->tokenPatterns = [
+            TokenType::T_WHITESPACE->value => '\s+',
+            TokenType::T_COMMENT->value => '\/\/[^\n]*',
+            TokenType::T_NUMBER->value => '\b\d+(\.\d+)?\b',
+            TokenType::T_STRING->value => '"(.*?)(?<!\\\\)"|\'(.*?)(?<!\\\\)\'',
 
-        // Bezeichner (Variablen, Funktionen)
-        self::T_IDENTIFIER => '\b[a-zA-Z_]\w*\b',
+            // Keywords (have to be before T_IDENTIFIER)
+            TokenType::T_IF->value => '\bif\b',
+            TokenType::T_ELSE->value => '\belse\b',
+            TokenType::T_FOREACH->value => '\bforeach\b',
+            TokenType::T_AS->value => '\bas\b',
+            TokenType::T_ECHO->value => '\becho\b',
+            TokenType::T_RETURN->value => '\breturn\b',
+            TokenType::T_TRUE->value => '\btrue\b',
+            TokenType::T_FALSE->value => '\bfalse\b',
+            TokenType::T_NULL->value => '\bnull\b',
 
-        // Operatoren
-        self::T_EQUALS_EQUALS => '==',
-        self::T_EQUALS => '=',
-        self::T_DOT => '\.',
-        self::T_LPAREN => '\(',
-        self::T_RPAREN => '\)',
-        self::T_LBRACE => '\{',
-        self::T_RBRACE => '\}',
-        self::T_SEMICOLON => ';',
-        self::T_PLUS => '\+',
-        self::T_MINUS => '\-',
-        self::T_MULTIPLY => '\*',
-        self::T_DIVIDE => '\/',
-        self::T_GT => '>',
-        self::T_LT => '<',
-    ];
+            // Identifiers
+            TokenType::T_IDENTIFIER->value => '\b[a-zA-Z_]\w*\b',
+
+            // Operators
+            TokenType::T_EQUALS_EQUALS->value => '==',
+            TokenType::T_EQUALS->value => '=',
+            TokenType::T_DOT->value => '\.',
+            TokenType::T_LPAREN->value => '\(',
+            TokenType::T_RPAREN->value => '\)',
+            TokenType::T_LBRACE->value => '\{',
+            TokenType::T_RBRACE->value => '\}',
+            TokenType::T_SEMICOLON->value => ';',
+            TokenType::T_PLUS->value => '\+',
+            TokenType::T_MINUS->value => '\-',
+            TokenType::T_MULTIPLY->value => '\*',
+            TokenType::T_DIVIDE->value => '\/',
+            TokenType::T_GT->value => '>',
+            TokenType::T_LT->value => '<',
+            TokenType::T_CONCAT->value => '~',
+        ];
+    }
 
     /**
-     * Zerlegt einen php-script-Code-String in ein Array von Tokens.
+     * Tokenizes the given script string into an array of tokens based on predefined patterns.
      *
-     * @return list<array{type: string, value: mixed}>
-     *
-     * @throws \PhpScript\Exceptions\LexerException
+     * @return list<\PhpScript\Core\Token>
+     * @throws LexerException If an unknown character or syntax error is encountered during tokenization.
      */
     public function tokenize(string $script): array
     {
-        // 1. Zeilenumbrüche als Semikolon behandeln (optional am Ende)
-        // Ersetze alle Zeilenumbrüche durch Semikolons
+        // 1. handle linebreaks
+        // all linebreaks will be ; with newline
         $script = str_replace(["\r\n", "\n"], ";\n", $script);
-        // Entferne doppelte Semikolons, die dadurch entstehen könnten
+        // replace double ; with ;
         $script = preg_replace('/;+/', ';', $script);
 
         $tokens = [];
@@ -147,12 +94,14 @@ class Lexer
                 if (preg_match('/^('.$pattern.')/', $remaining, $matches)) {
                     $value = $matches[1];
 
-                    // Whitespace und Kommentare ignorieren
-                    if ($type !== self::T_WHITESPACE && $type !== self::T_COMMENT) {
-                        $tokens[] = [
-                            'type' => $type,
-                            'value' => $value,
-                        ];
+                    $tokenTypeEnum = TokenType::from($type);
+
+                    // ignore whitespace and comments
+                    if ($tokenTypeEnum !== TokenType::T_WHITESPACE && $tokenTypeEnum !== TokenType::T_COMMENT) {
+                        $tokens[] = new Token(
+                            type: $tokenTypeEnum,
+                            value: $value,
+                        );
                     }
 
                     $offset += strlen($value);

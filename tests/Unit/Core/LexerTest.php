@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 it('lexer resolves script code', function (): void {
-    $phpScriptCode = "u = 10
+    $phpScriptCode = 'u = 10
 u2 = u * 2;
 echo u2
-";
-    $lexer = new \PhpScript\Core\Lexer();
+';
+    $lexer = new \PhpScript\Core\Lexer;
     $tokens = $lexer->tokenize($phpScriptCode);
 
     expect($tokens)->toBe([
@@ -67,9 +67,9 @@ echo u2
 });
 
 it('throws exception when token is not recognized', function (): void {
-    $phpScriptCode = "foo!!!()";
+    $phpScriptCode = 'foo!!!()';
 
-    $lexer = new \PhpScript\Core\Lexer();
+    $lexer = new \PhpScript\Core\Lexer;
     $this->expectException(\PhpScript\Exceptions\LexerException::class);
     $lexer->tokenize($phpScriptCode);
 });

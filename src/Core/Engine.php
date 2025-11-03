@@ -32,7 +32,7 @@ final class Engine
 
     public function __construct(?LexerInterface $lexer = null)
     {
-        $this->lexer = $lexer ?? new Lexer();
+        $this->lexer = $lexer ?? new Lexer;
     }
 
     public function set(string $name, mixed $value): self
@@ -67,14 +67,14 @@ final class Engine
         try {
             $tmpFile = $this->createTemporaryFile();
 
-            file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n" . $phpCode);
+            file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n".$phpCode);
             include $tmpFile;
 
             unlink($tmpFile);
         } catch (Throwable $e) {
             ob_end_clean();
             unlink($tmpFile);
-            throw EngineException::runtimeError($e->getMessage(), $e->getLine()-2, $e);
+            throw EngineException::runtimeError($e->getMessage(), $e->getLine() - 2, $e);
         } finally {
             restore_error_handler();
             error_reporting($previousErrorReporting);
@@ -89,7 +89,7 @@ final class Engine
     private function ensureScriptCanBeExecuted(string $script): void
     {
         foreach ($this->forbiddenFunctions as $func) {
-            if (preg_match('/\b' . $func . '\s*\(/i', $script)) {
+            if (preg_match('/\b'.$func.'\s*\(/i', $script)) {
                 throw SecurityException::invalidFunctionCall($func);
             }
         }
@@ -120,7 +120,7 @@ final class Engine
             switch ($token->type) {
                 case TokenType::T_IDENTIFIER:
                     if ($isStartOfChain) {
-                        $phpCode .= '$' . $value; // e.g. user -> $user OR u1 -> $u1
+                        $phpCode .= '$'.$value; // e.g. user -> $user OR u1 -> $u1
                     } else {
                         $phpCode .= $value; // e.g. logins -> logins
                     }
@@ -137,8 +137,8 @@ final class Engine
                     $isStartOfChain = true;
                     break;
 
-                // reset the chain
-                // after "(", "+", "=" etc. the next thing has to be a variable
+                    // reset the chain
+                    // after "(", "+", "=" etc. the next thing has to be a variable
                 case TokenType::T_LPAREN:
                 case TokenType::T_RPAREN:
                 case TokenType::T_LBRACE:
@@ -164,11 +164,11 @@ final class Engine
 
                 case TokenType::T_NUMBER:
                 case TokenType::T_STRING:
-                // @codeCoverageIgnoreStart
+                    // @codeCoverageIgnoreStart
                 case TokenType::T_TRUE:
                 case TokenType::T_FALSE:
                 case TokenType::T_NULL:
-                // @codeCoverageIgnoreEnd
+                    // @codeCoverageIgnoreEnd
                 default:
                     $phpCode .= $value;
                     $isStartOfChain = true;
@@ -190,6 +190,7 @@ final class Engine
         if ($tmpFile === false) {
             throw EngineException::temporaryFileCreationFailed();
         }
+
         // @codeCoverageIgnoreEnd
         return $tmpFile;
     }

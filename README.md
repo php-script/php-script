@@ -1,28 +1,43 @@
 # PHP Script
 
-PHP Script provides an option to provide the end-user a scriptable option for your backend powered by PHP but with the
-easiness of Javascript. So this package provides a lexer and an engine to execute user generated PHP Script without the
-hazzle to spin up a Node.js service.
-
 <p align="center">
-    <p align="center">
-        <a href="https://github.com/php-script/php-script/actions"><img alt="GitHub Workflow Status (master)" src="https://github.com/php-script/php-script/actions/workflows/tests.yml/badge.svg"></a>
-        <a href="https://packagist.org/packages/php-script/php-script"><img alt="Total Downloads" src="https://img.shields.io/packagist/dt/php-script/php-script"></a>
-        <a href="https://packagist.org/packages/php-script/php-script"><img alt="Latest Version" src="https://img.shields.io/packagist/v/php-script/php-script"></a>
-        <a href="https://packagist.org/packages/php-script/php-script"><img alt="License" src="https://img.shields.io/packagist/l/php-script/php-script"></a>
-    </p>
+    <a href="https://github.com/php-script/php-script/actions"><img alt="GitHub Workflow Status (master)" src="https://github.com/php-script/php-script/actions/workflows/tests.yml/badge.svg"></a>
+    <a href="https://packagist.org/packages/php-script/php-script"><img alt="Total Downloads" src="https://img.shields.io/packagist/dt/php-script/php-script"></a>
+    <a href="https://packagist.org/packages/php-script/php-script"><img alt="Latest Version" src="https://img.shields.io/packagist/v/php-script/php-script"></a>
+    <a href="https://packagist.org/packages/php-script/php-script"><img alt="License" src="https://img.shields.io/packagist/l/php-script/php-script"></a>
 </p>
 
-------
+---
 
-## tl;dr
+PHP Script is a scripting language that allows end-users to customize and extend your PHP-powered backend with the simplicity of JavaScript. It provides a secure and controlled environment to execute user-generated scripts without the need for a separate Node.js service.
 
-On php provide the following setup:
+## Features
+
+- **Easy to Use:** The syntax is inspired by JavaScript, making it familiar to a wide range of developers.
+- **Secure:** The engine provides a sandboxed environment, giving you full control over the exposed functions and data.
+- **Flexible:** You can expose any PHP function or variable to the script, allowing for powerful customizations.
+- **Lightweight:** The package is designed to be lightweight and has minimal dependencies.
+
+## Installation
+
+You can install the package via composer:
+
+```bash
+composer require php-script/php-script
+```
+
+## Usage
+
+### 1. Setting up the Engine
+
+First, you need to create an instance of the `Engine` and expose the necessary data and functions to the script.
 
 ```php
+use PhpScript\Core\Engine;
+
 class LoginStats
 {
-    public function count()
+    public function count(): int
     {
         return 42;
     }
@@ -30,63 +45,67 @@ class LoginStats
 
 class User
 {
-    public $name = "Administrator";
-    public $logins; // Wird ein Objekt sein
+    public string $name = "Administrator";
+    public LoginStats $logins;
 
     public function __construct()
     {
         $this->logins = new LoginStats();
     }
 
-    public function hasPermission(string $perm)
+    public function hasPermission(string $perm): bool
     {
         return $perm === 'admin';
     }
 }
 
-// setting up the PHP Script engine
+// Setting up the PHP Script engine
 $engine = new Engine();
 $engine->set('user', new User());
 $engine->set('app_version', '1.2.3');
 $engine->set('users_list', ['Alice', 'Bob', 'Charlie']);
 ```
 
-And now the PHP Script:
+### 2. Writing a PHP Script
+
+Now, you can write a script that interacts with the exposed data and functions.
 
 ```javascript
-// <- this is a line comment
-echo 'Hello ' ~ user.name // string concatenation (with ~ Operator) and object access on users property `name`
+// This is a line comment
+echo 'Hello ' ~ user.name // String concatenation and object property access
 
-// calling a method
+// Calling a method
 totalLogins = user.logins.count();
-echo 'Logins: ' ~ totalLogins // line end can have a ";" optional
+echo 'Logins: ' ~ totalLogins;
 
-// setting vars and calculate with it
-var1 = 10
-var2 = var1 * 2 + totalLogins
-echo 'Sum: ' ~ var2 // (with ~ operator)
+// Working with variables
+var1 = 10;
+var2 = var1 * 2 + totalLogins;
+echo 'Sum: ' ~ var2;
 
-// control flow: if
+// Conditional statements
 if (var2 > 50) {
-    echo 'var2 is greater than 50!'
+    echo 'var2 is greater than 50!';
 }
 
-// control flow: foreach
-echo 'users list:'
+// Looping through an array
+echo 'Users list:';
 foreach (users_list as u) {
-    echo '- ' ~ u // (write a list item)
+    echo '- ' ~ u;
 }
 
-// method calls with arguments
+// Calling a method with an argument
 if (user.hasPermission('admin')) {
-    echo 'Zugriff gewährt!'
+    echo 'Access granted!';
 }
 
-// accessing the 'app_version' Variable
-echo 'App Version: ' ~ app_version
+// Accessing a global variable
+echo 'App Version: ' ~ app_version;
 ```
 
-Then this PHP Script will get executed on PHP like so:
+### 3. Executing the Script
+
+Finally, you can execute the script using the `execute` method of the `Engine`.
 
 ```php
 try {
@@ -96,34 +115,33 @@ try {
 }
 ```
 
-This will echo:
+This will produce the following output:
 
 ```text
 Hello Administrator
 Logins: 42
 Sum: 62
 var2 is greater than 50!
-users list:
+Users list:
 - Alice
 - Bob
 - Charlie
-Zugriff gewährt!
+Access granted!
 App Version: 1.2.3
 ```
 
 ## TODO
 
-- [x] proof of concept
-- [ ] create an AST
-- [ ] render PHP from AST
-- [ ] render PHP Script from AST
-- [ ] make it robust
-- [ ] improve error display
-- [ ] give it 100% code coverage
-- [ ] provide a monaco editor component for vanilla javascript
-- [ ] provide a monaco editor component for Vue.js
-- [ ] provide a monaco editor component for React.js
-- [ ] provide dynamic code completion for the editor component by the provided context
+- [x] Proof of concept
+- [ ] Create an Abstract Syntax Tree (AST)
+- [ ] Render PHP from AST
+- [ ] Render PHP Script from AST
+- [ ] Improve robustness and error handling
+- [ ] Achieve 100% code coverage
+- [ ] Provide a Monaco editor component for vanilla JavaScript
+- [ ] Provide a Monaco editor component for Vue.js
+- [ ] Provide a Monaco editor component for React.js
+- [ ] Implement dynamic code completion for the editor component based on the provided context
 
 ## Local development
 

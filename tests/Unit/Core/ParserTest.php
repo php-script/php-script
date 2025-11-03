@@ -139,3 +139,35 @@ it('should throw an exception for unexpected token', function () {
     ];
     $this->parser->parse($tokens);
 })->throws(RuntimeException::class, 'Unexpected token: T_RPAREN');
+
+it('should parse a parenthesized expression', function () {
+    $tokens = [
+        new Token(TokenType::T_LPAREN, '('),
+        new Token(TokenType::T_NUMBER, '1'),
+        new Token(TokenType::T_PLUS, '+'),
+        new Token(TokenType::T_NUMBER, '2'),
+        new Token(TokenType::T_RPAREN, ')'),
+    ];
+    $ast = $this->parser->parse($tokens);
+
+    /** @var Program $ast */
+    expect($ast)->toBeInstanceOf(Program::class);
+    expect($ast->statements)->toHaveCount(1);
+
+    /** @var BinaryOperation $binaryOperation */
+    $binaryOperation = $ast->statements[0];
+    expect($binaryOperation)->toBeInstanceOf(BinaryOperation::class);
+    expect($binaryOperation->left)->toBeInstanceOf(Literal::class);
+    expect($binaryOperation->left->value)->toBe('1');
+    expect($binaryOperation->operator)->toBe(TokenType::T_PLUS);
+    expect($binaryOperation->right)->toBeInstanceOf(Literal::class);
+    expect($binaryOperation->right->value)->toBe('2');
+});
+
+it("should throw an exception for missing closing parenthesis", function () {
+    $tokens = [
+        new Token(TokenType::T_LPAREN, '('),
+        new Token(TokenType::T_NUMBER, '1'),
+    ];
+    $this->parser->parse($tokens);
+})->throws(RuntimeException::class, "Expect ')' after expression.");

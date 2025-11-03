@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace PhpScript\Core;
 
-use PhpScript\Contracts\LexerInterface;
 use PhpScript\Exceptions\LexerException;
 
-final readonly class Lexer implements LexerInterface
+final readonly class Lexer
 {
     /**
      * An associative array defining token patterns for a lexical analyzer or tokenizer.
@@ -32,7 +31,7 @@ final readonly class Lexer implements LexerInterface
             TokenType::T_WHITESPACE->value => '\s+',
             TokenType::T_COMMENT->value => '\/\/[^\n]*',
             TokenType::T_NUMBER->value => '\b\d+(\.\d+)?\b',
-            TokenType::T_STRING->value => '"(.*?)(?<!\\\\)"|\'(.*?)(?<!\\\\)\'',
+            TokenType::T_STRING->value => '\"(.*?)(?<!\\\\)\"|\'(.*?)(?<!\\\\)\'',
 
             // Keywords (have to be before T_IDENTIFIER)
             TokenType::T_IF->value => '\bif\b',
@@ -91,11 +90,15 @@ final readonly class Lexer implements LexerInterface
             $matchFound = false;
 
             foreach ($this->tokenPatterns as $type => $pattern) {
-                // Wir suchen nur am Anfang des verbleibenden Strings (^)
-                if (preg_match('/^('.$pattern.')/', $remaining, $matches)) {
+                if (preg_match('/^(' . $pattern . ')/', $remaining, $matches)) {
+                    $tokenTypeEnum = TokenType::from($type);
                     $value = $matches[1];
 
-                    $tokenTypeEnum = TokenType::from($type);
+                    if ($tokenTypeEnum === TokenType::T_STRING) {
+                        // Strip outer quotes and un-escape quotes inside
+                        $value = substr($value, 1, -1);
+                        $value = str_replace(['\\\'', '\\"'], ['\'', '"'], $value);
+                    }
 
                     // ignore whitespace and comments
                     if ($tokenTypeEnum !== TokenType::T_WHITESPACE && $tokenTypeEnum !== TokenType::T_COMMENT) {
@@ -105,9 +108,9 @@ final readonly class Lexer implements LexerInterface
                         );
                     }
 
-                    $offset += strlen($value);
+                    $offset += strlen($matches[0]);
                     $matchFound = true;
-                    break; // Nächstes Token im Haupt-Loop suchen
+                    break;
                 }
             }
 

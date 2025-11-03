@@ -4,6 +4,7 @@
 /.vscode
 /.zed
 /composer.lock
+/vendor
 
 /.phpactor.json
 /.phpunit.result.cache

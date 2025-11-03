@@ -1,0 +1,12 @@
+/.fleet
+/.idea
+/.phpunit.cache
+/.vscode
+/.zed
+/composer.lock
+
+/.phpactor.json
+/.phpunit.result.cache
+
+/.DS_Store
+/Thumbs.db

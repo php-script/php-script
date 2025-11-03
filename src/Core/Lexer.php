@@ -69,8 +69,18 @@ class Lexer
     public const string T_NULL = 'T_NULL';
 
     /**
-     * Regex-Muster für jeden Token-Typ.
-     * Die Reihenfolge ist wichtig!
+     * An associative array defining token patterns for a lexical analyzer or tokenizer.
+     * Each key corresponds to a specific token type, and its value is the regex pattern
+     * to recognize that type in the input string.
+     *
+     * Token types include:
+     * - Whitespace and comments
+     * - Numbers and strings
+     * - Programming language keywords
+     * - Identifiers (e.g., variables and functions)
+     * - Common operators and symbols (e.g., `=`, `+`, `{`, `}`)
+     *
+     * @var array<string, string>
      */
     private array $tokenPatterns = [
         self::T_WHITESPACE => '\s+',

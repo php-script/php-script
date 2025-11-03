@@ -28,9 +28,7 @@ final class Engine
         'mysql_', 'mysqli_', 'pdo',
     ];
 
-    public function __construct(private readonly ?LexerInterface $lexer = new Lexer)
-    {
-    }
+    public function __construct(private readonly ?LexerInterface $lexer = new Lexer) {}
 
     public function set(string $name, mixed $value): self
     {

@@ -11,6 +11,9 @@ final readonly class Token
         public string $value,
     ) {}
 
+    /**
+     * @return array{type: string, value: string}
+     */
     public function toArray(): array
     {
         return [

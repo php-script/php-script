@@ -13,6 +13,7 @@ it('engine resolves numbers', function (): void {
 
     expect($result)->toBe('12');
 });
+
 it('engine resolves strings', function (): void {
     $engine = new Engine;
     $engine->set('s', 'hello');

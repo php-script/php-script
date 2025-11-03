@@ -133,9 +133,8 @@ App Version: 1.2.3
 ## TODO
 
 - [x] Proof of concept
-- [ ] Create an Abstract Syntax Tree (AST)
-- [ ] Render PHP from AST
-- [ ] Render PHP Script from AST
+- [x] Create an Abstract Syntax Tree (AST)
+- [x] Render PHP from AST
 - [ ] Improve robustness and error handling
 - [ ] Achieve 100% code coverage
 - [ ] Provide a Monaco editor component for vanilla JavaScript

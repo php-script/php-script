@@ -54,9 +54,7 @@ final class Parser implements ParserInterface
 
         $node = $this->parseExpression();
 
-        if ($this->match(TokenType::T_SEMICOLON)) {
-            // Semicolon optional am Ende eines Statements
-        }
+        $this->match(TokenType::T_SEMICOLON);
 
         return $node;
     }

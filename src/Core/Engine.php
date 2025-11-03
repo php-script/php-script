@@ -28,7 +28,7 @@ final class Engine
         'mysql_', 'mysqli_', 'pdo',
     ];
 
-    public function __construct(private readonly ?LexerInterface $lexer = new Lexer) {}
+    public function __construct(private readonly LexerInterface $lexer = new Lexer) {}
 
     public function set(string $name, mixed $value): self
     {
@@ -68,7 +68,9 @@ final class Engine
             unlink($tmpFile);
         } catch (Throwable $e) {
             ob_end_clean();
-            unlink($tmpFile);
+            if (isset($tmpFile) && is_string($tmpFile)) {
+                unlink($tmpFile);
+            }
             throw EngineException::runtimeError($e->getMessage(), $e->getLine() - 2, $e);
         } finally {
             restore_error_handler();

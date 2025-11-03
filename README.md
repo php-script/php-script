@@ -1,6 +1,12 @@
 # PHP Script
 
 <p align="center">
+    <a href="https://github.com/php-script/php-script" target="_blank">
+        <img src="/art/php-script-logo.png" alt="PHP Script" style="width:70%;">
+    </a>
+</p>
+
+<p align="center">
     <a href="https://github.com/php-script/php-script/actions"><img alt="GitHub Workflow Status (master)" src="https://github.com/php-script/php-script/actions/workflows/tests.yml/badge.svg"></a>
     <a href="https://packagist.org/packages/php-script/php-script"><img alt="Total Downloads" src="https://img.shields.io/packagist/dt/php-script/php-script"></a>
     <a href="https://packagist.org/packages/php-script/php-script"><img alt="Latest Version" src="https://img.shields.io/packagist/v/php-script/php-script"></a>

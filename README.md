@@ -136,18 +136,33 @@ Access granted!
 App Version: 1.2.3
 ```
 
+## Features
+
+- Abstract Syntax Tree (AST) is in use
+- we render PHP from AST
+- robust error handling with a pointer to the root cause in the PHP Script
+- 100% code coverage
+- Whitelist implementation for allowing function calls
+
 ## TODO
 
-- [x] Proof of concept
-- [x] Create an Abstract Syntax Tree (AST)
-- [x] Render PHP from AST
-- [x] Improve robustness and error handling
-- [x] Achieve 100% code coverage
-- [ ] Switch to whitelist instead of blacklist
+- [ ] render PHP Script from AST
+- [ ] render Mermaid.js Flowchart from AST
 - [ ] Provide a Monaco editor component for vanilla JavaScript
 - [ ] Provide a Monaco editor component for Vue.js
 - [ ] Provide a Monaco editor component for React.js
 - [ ] Implement dynamic code completion for the editor component based on the provided context
+
+## Contribution
+
+1. Create a branch from main
+2. do your stuff
+3. document your stuff here
+4. call `composer lint` until no errors
+5. call `composer refactor` until no errors
+6. call `composer lint` again until no errors
+7. call `composer test` until no errors
+8. commit and push your changes and open a PR
 
 ## Local development
 

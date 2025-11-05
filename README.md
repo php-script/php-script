@@ -141,8 +141,9 @@ App Version: 1.2.3
 - [x] Proof of concept
 - [x] Create an Abstract Syntax Tree (AST)
 - [x] Render PHP from AST
-- [ ] Improve robustness and error handling
-- [ ] Achieve 100% code coverage
+- [x] Improve robustness and error handling
+- [x] Achieve 100% code coverage
+- [ ] Switch to whitelist instead of blacklist
 - [ ] Provide a Monaco editor component for vanilla JavaScript
 - [ ] Provide a Monaco editor component for Vue.js
 - [ ] Provide a Monaco editor component for React.js

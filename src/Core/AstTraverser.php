@@ -21,6 +21,9 @@ final class AstTraverser implements AstTraverserInterface
 {
     private string $generatedCode = '';
 
+    /**
+     * @var \PhpScript\Core\Token[]
+     */
     private array $sourceMap = [];
 
     private int $currentLine = 1;
@@ -35,6 +38,9 @@ final class AstTraverser implements AstTraverserInterface
         return $this->generatedCode;
     }
 
+    /**
+     * @return \PhpScript\Core\Token[]
+     */
     public function getSourceMap(): array
     {
         return $this->sourceMap;

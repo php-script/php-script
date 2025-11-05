@@ -17,6 +17,7 @@ enum TokenType: string
     case T_LBRACE = 'T_LBRACE';     // {
     case T_RBRACE = 'T_RBRACE';     // }
     case T_SEMICOLON = 'T_SEMICOLON';   // ;
+    case T_COMMA = 'T_COMMA';       // ,
     case T_EQUALS = 'T_EQUALS';     // =
     case T_PLUS = 'T_PLUS';       // +
     case T_MINUS = 'T_MINUS';      // -

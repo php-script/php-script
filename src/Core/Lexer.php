@@ -56,6 +56,7 @@ final readonly class Lexer
             TokenType::T_LBRACE->value => '\{',
             TokenType::T_RBRACE->value => '\}',
             TokenType::T_SEMICOLON->value => ';',
+            TokenType::T_COMMA->value => ',',
             TokenType::T_PLUS->value => '\+',
             TokenType::T_MINUS->value => '\-',
             TokenType::T_MULTIPLY->value => '\*',

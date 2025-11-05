@@ -7,6 +7,7 @@ namespace PhpScript\Core;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
+use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\MemberAccess;
@@ -20,20 +21,25 @@ use PhpScript\Exceptions\ParseException;
 final class Parser implements ParserInterface
 {
     /**
-     * @var list<Token>
+     * @var \PhpScript\Core\Token[]
      */
     private array $tokens;
 
     private int $position = 0;
 
     /**
-     * @param  list<Token>  $tokens
+     * @param  \PhpScript\Core\Token[]  $tokens
      *
      * @throws \PhpScript\Exceptions\ParseException
      */
     public function parse(array $tokens): Node
     {
-        $this->tokens = array_values(array_filter($tokens, static fn (Token $token): bool => ! in_array($token->type, [TokenType::T_WHITESPACE, TokenType::T_COMMENT], true)));
+        $this->tokens = array_values(
+            array_filter(
+                $tokens,
+                static fn (Token $token): bool => ! in_array($token->type, [TokenType::T_WHITESPACE, TokenType::T_COMMENT], true)
+            )
+        );
         $this->position = 0;
 
         $statements = [];
@@ -92,7 +98,7 @@ final class Parser implements ParserInterface
 
         if ($this->match(TokenType::T_EQUALS)) {
             $token = $this->previous();
-            if (! ($left instanceof Variable)) {
+            if (! $left instanceof Variable && ! $left instanceof MemberAccess) {
                 throw new ParseException('Invalid assignment target.', $token);
             }
             $right = $this->parseAssignment();
@@ -142,16 +148,59 @@ final class Parser implements ParserInterface
      */
     private function parseMultiplicative(): Node
     {
-        $node = $this->parsePrimary();
+        $node = $this->parseCall();
 
         while ($this->match(TokenType::T_MULTIPLY, TokenType::T_DIVIDE)) {
             $token = $this->previous();
             $operator = $this->previous()->type;
-            $right = $this->parsePrimary();
+            $right = $this->parseCall();
             $node = new BinaryOperation($node, $operator, $right, $token);
         }
 
         return $node;
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseCall(): Node
+    {
+        $expr = $this->parsePrimary();
+
+        while (true) {
+            if ($this->match(TokenType::T_LPAREN)) {
+                $expr = $this->finishCall($expr);
+            } elseif ($this->match(TokenType::T_DOT)) {
+                $propertyToken = $this->consume(TokenType::T_IDENTIFIER, 'Expected identifier after .');
+                $property = new Identifier($propertyToken->value, $propertyToken);
+                $expr = new MemberAccess($expr, $property, $propertyToken);
+            } else {
+                break;
+            }
+        }
+
+        return $expr;
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function finishCall(Node $callee): FunctionCall
+    {
+        if ($callee instanceof Variable) {
+            $callee = new Identifier($callee->name, $callee->getToken());
+        }
+
+        $arguments = [];
+        if (! $this->check(TokenType::T_RPAREN)) {
+            do {
+                $arguments[] = $this->parseExpression();
+            } while ($this->match(TokenType::T_COMMA));
+        }
+
+        $token = $this->consume(TokenType::T_RPAREN, "Expect ')' after arguments.");
+
+        return new FunctionCall($callee, $arguments, $token);
     }
 
     /**
@@ -165,15 +214,7 @@ final class Parser implements ParserInterface
         }
 
         if ($this->match(TokenType::T_IDENTIFIER)) {
-            $node = new Variable($this->previous()->value, $token);
-
-            while ($this->match(TokenType::T_DOT)) {
-                $propertyToken = $this->consume(TokenType::T_IDENTIFIER, 'Expected identifier after .');
-                $property = new Identifier($propertyToken->value, $propertyToken);
-                $node = new MemberAccess($node, $property, $propertyToken);
-            }
-
-            return $node;
+            return new Variable($this->previous()->value, $token);
         }
 
         if ($this->match(TokenType::T_LPAREN)) {

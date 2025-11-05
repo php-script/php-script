@@ -10,7 +10,7 @@ use PhpScript\Core\Token;
 final readonly class Assignment extends BaseNode
 {
     public function __construct(
-        public Variable $variable,
+        public Variable|MemberAccess $variable,
         public Node $expression,
         ?Token $token = null,
     ) {

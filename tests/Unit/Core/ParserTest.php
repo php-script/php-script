@@ -165,10 +165,32 @@ it('should parse a parenthesized expression', function (): void {
     expect($binaryOperation->right->value)->toBe('2');
 });
 
-it('should throw an exception for missing closing parenthesis', function (): void {
+it('should throw exception at previous token when consume fails at end of file', function (): void {
     $tokens = [
         new Token(TokenType::T_LPAREN, '(', 1, 1, 0),
         new Token(TokenType::T_NUMBER, '1', 1, 2, 1),
     ];
-    $this->parser->parse($tokens);
-})->throws(ParseException::class, "Expect ')' after expression.");
+
+    try {
+        $this->parser->parse($tokens);
+    } catch (ParseException $e) {
+        expect($e->getMessage())->toBe("Expect ')' after expression.");
+        // Crucially, the error is associated with the LAST valid token, not a non-existent one.
+        expect($e->getToken()->type)->toBe(TokenType::T_NUMBER);
+        expect($e->getToken()->value)->toBe('1');
+    }
+});
+
+it('should throw an exception for missing identifier after dot', function (): void {
+    $tokens = [
+        new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),
+        new Token(TokenType::T_DOT, '.', 1, 4, 3),
+    ];
+
+    try {
+        $this->parser->parse($tokens);
+    } catch (ParseException $e) {
+        expect($e->getMessage())->toBe('Expected identifier after .');
+        expect($e->getToken()->type)->toBe(TokenType::T_DOT);
+    }
+});

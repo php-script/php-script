@@ -179,7 +179,13 @@ final class Parser implements ParserInterface
             return $this->advance();
         }
 
+        if ($this->isAtEnd()) {
+            throw new ParseException($message, $this->previous());
+        }
+
+        // @codeCoverageIgnoreStart
         throw new ParseException($message, $this->peek());
+        // @codeCoverageIgnoreEnd
     }
 
     private function check(TokenType $type): bool
@@ -205,12 +211,12 @@ final class Parser implements ParserInterface
         return $this->position >= count($this->tokens);
     }
 
-    private function peek(): ?Token
+    private function peek(): Token
     {
         return $this->tokens[$this->position];
     }
 
-    private function previous(): ?Token
+    private function previous(): Token
     {
         return $this->tokens[$this->position - 1];
     }

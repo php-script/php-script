@@ -88,7 +88,9 @@ final class Engine
                 throw EngineException::runtimeError($e->getMessage(), $token->line, $token->column, $token->offset, $e);
             }
 
+            // @codeCoverageIgnoreStart
             throw EngineException::runtimeError($e->getMessage(), 0, 0, 0, $e);
+            // @codeCoverageIgnoreEnd
         } finally {
             restore_error_handler();
             error_reporting($previousErrorReporting);

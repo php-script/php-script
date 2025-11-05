@@ -41,6 +41,13 @@ it('prevents from calling forbidden functions', function (): void {
     $engine->execute('echo exec("ls");');
 });
 
+it('allows whitelisted functions', function (): void {
+    $engine = new Engine;
+    $engine->allow('strtoupper');
+    $result = $engine->execute('echo strtoupper("hello");');
+    expect($result)->toBe('HELLO');
+});
+
 it('throws exception on runtime error', function (): void {
     $engine = new Engine;
     try {

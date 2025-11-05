@@ -7,6 +7,7 @@ namespace PhpScript\Core;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
+use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\MemberAccess;
@@ -16,6 +17,7 @@ use PhpScript\Ast\Variable;
 use PhpScript\Contracts\AstTraverserInterface;
 use PhpScript\Contracts\Node;
 use PhpScript\Exceptions\AstTraverserException;
+use PhpScript\Exceptions\EngineException;
 
 final class AstTraverser implements AstTraverserInterface
 {
@@ -29,7 +31,20 @@ final class AstTraverser implements AstTraverserInterface
     private int $currentLine = 1;
 
     /**
-     * @throws \PhpScript\Exceptions\AstTraverserException
+     * @var string[]
+     */
+    private array $allowedFunctions = [];
+
+    /**
+     * @param  string[]  $allowedFunctions
+     */
+    public function setAllowedFunctions(array $allowedFunctions): void
+    {
+        $this->allowedFunctions = $allowedFunctions;
+    }
+
+    /**
+     * @throws AstTraverserException
      */
     public function traverse(Node $node): string
     {
@@ -51,6 +66,7 @@ final class AstTraverser implements AstTraverserInterface
 
     /**
      * @throws \PhpScript\Exceptions\AstTraverserException
+     * @throws \PhpScript\Exceptions\EngineException
      */
     private function doTraverse(Node $node): void
     {
@@ -65,6 +81,7 @@ final class AstTraverser implements AstTraverserInterface
             Assignment::class => $this->traverseAssignment($node),
             BinaryOperation::class => $this->traverseBinaryOperation($node),
             MemberAccess::class => $this->traverseMemberAccess($node),
+            FunctionCall::class => $this->traverseFunctionCall($node),
             Variable::class => $this->traverseVariable($node),
             Identifier::class => $this->traverseIdentifier($node),
             Literal::class => $this->traverseLiteral($node),
@@ -121,6 +138,29 @@ final class AstTraverser implements AstTraverserInterface
         $this->doTraverse($node->object);
         $this->generatedCode .= '->';
         $this->doTraverse($node->property);
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\EngineException
+     */
+    private function traverseFunctionCall(FunctionCall $node): void
+    {
+        if ($node->callee instanceof Identifier) {
+            if (! in_array($node->callee->name, $this->allowedFunctions, true)) {
+                $token = $node->callee->getToken();
+                throw EngineException::invalidFunctionCall($node->callee->name, (int) $token?->line, (int) $token?->column, (int) $token?->offset);
+            }
+        }
+
+        $this->doTraverse($node->callee);
+        $this->generatedCode .= '(';
+        foreach ($node->arguments as $i => $argument) {
+            $this->doTraverse($argument);
+            if ($i < count($node->arguments) - 1) {
+                $this->generatedCode .= ', ';
+            }
+        }
+        $this->generatedCode .= ')';
     }
 
     private function traverseVariable(Variable $node): void

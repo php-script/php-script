@@ -63,6 +63,7 @@ final class Engine
         try {
             $tokens = $this->lexer->tokenize($script);
             $ast = $this->parser->parse($tokens);
+            $this->astTraverser->setAllowedFunctions($this->allowedFunctions);
             $phpCode = $this->astTraverser->traverse($ast);
             $sourceMap = $this->astTraverser->getSourceMap();
 

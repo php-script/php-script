@@ -48,7 +48,7 @@ final readonly class Lexer
             TokenType::T_IDENTIFIER->value => '\b[a-zA-Z_]\w*\b',
 
             // Operators
-            TokenType::T_EQUALS_EQUALS->value => '==',
+            TokenType::T_COMPARE_EQUALS->value => '==',
             TokenType::T_EQUALS->value => '=',
             TokenType::T_DOT->value => '\.',
             TokenType::T_LEFT_PARENTHESIS->value => '\(',

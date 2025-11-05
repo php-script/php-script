@@ -25,7 +25,7 @@ final readonly class FunctionCall extends BaseNode
         return [
             'type' => self::class,
             'callee' => $this->callee->toArray(),
-            'arguments' => array_map(fn (Node $node) => $node->toArray(), $this->arguments),
+            'arguments' => array_map(fn (Node $node): array => $node->toArray(), $this->arguments),
         ];
     }
 }

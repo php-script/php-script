@@ -43,7 +43,7 @@ final class AstTraverser implements AstTraverserInterface
     private function doTraverse(Node $node): void
     {
         $token = $node->getToken();
-        if ($token instanceof \PhpScript\Core\Token) {
+        if ($token && ! isset($this->sourceMap[$this->currentLine])) {
             $this->sourceMap[$this->currentLine] = $token;
         }
 

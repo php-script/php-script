@@ -1,5 +1,7 @@
 <?php
-use PhpScript\Core\Engine;require_once __DIR__.'/../vendor/autoload.php';
+use PhpScript\Core\Engine;
+
+require_once __DIR__.'/../vendor/autoload.php';
 
 $hasErrors = false;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {

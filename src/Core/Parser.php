@@ -116,7 +116,7 @@ final class Parser implements ParserInterface
     {
         $node = $this->parseConcat();
 
-        while ($this->match(TokenType::T_COMPARE_EQUALS, TokenType::T_GREATER_THAN, TokenType::T_LESS_THAN)) {
+        while ($this->match(TokenType::T_COMPARE_EQUALS, TokenType::T_COMPARE_UNEQUALS, TokenType::T_GREATER_THAN, TokenType::T_LESS_THAN)) {
             $token = $this->previous();
             $operator = $this->previous()->type;
             $right = $this->parseConcat();

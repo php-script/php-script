@@ -26,6 +26,7 @@ enum TokenType: string
     case T_GREATER_THAN = 'T_GREATER_THAN';         // >
     case T_LESS_THAN = 'T_LESS_THAN';         // <
     case T_COMPARE_EQUALS = 'T_COMPARE_EQUALS'; // ==, ===
+    case T_COMPARE_UNEQUALS = 'T_COMPARE_UNEQUALS'; // !=, !==
     case T_WHITESPACE = 'T_WHITESPACE';  // (whitespace)
     case T_COMMENT = 'T_COMMENT';     // // line comment
     case T_UNKNOWN = 'T_UNKNOWN';     // unknown char

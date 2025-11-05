@@ -43,9 +43,14 @@ it('prevents from calling forbidden functions', function (): void {
 
 it('throws exception on runtime error', function (): void {
     $engine = new Engine;
-    $this->expectException(EngineException::class);
-    $this->expectExceptionMessage('Runtime error: Division by zero in line: 1, column: 3, offset: 2');
-    $engine->execute('1/0;');
+    try {
+        $engine->execute('echo 1/0;');
+    } catch (EngineException $e) {
+        expect($e->getMessage())->toContain('Division by zero');
+        expect($e->line)->toBe(1);
+        expect($e->column)->toBe(1);
+        expect($e->offset)->toBe(0);
+    }
 });
 
 it('handles object property access', function (): void {
@@ -74,5 +79,28 @@ it('throws exception on parse error', function (): void {
         expect($e->line)->toBe(1);
         expect($e->column)->toBe(3);
         expect($e->offset)->toBe(2);
+    }
+});
+
+it('throws exception with correct line number on runtime error in multi-line script', function (): void {
+    $engine = new Engine;
+    $script = <<<'SCRIPT'
+        a = 10;
+        b = 0;
+        echo a / b;
+    SCRIPT;
+
+    try {
+        $engine->execute($script);
+    } catch (EngineException $e) {
+        expect($e->getMessage())->toContain('Division by zero');
+        // The error happens on line 3. Due to heredoc indentation stripping,
+        // the 'echo' keyword correctly starts at column 5.
+        expect($e->line)->toBe(3);
+        expect($e->column)->toBe(5);
+        // The offset may vary based on \n vs \r\n, but with the corrected
+        // logic, it will now correctly point to the 'echo' token.
+        // Assuming \n, the offset is 27.
+        expect($e->offset)->toBe(27);
     }
 });

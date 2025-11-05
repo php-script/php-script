@@ -44,7 +44,7 @@ it('prevents from calling forbidden functions', function (): void {
 it('throws exception on runtime error', function (): void {
     $engine = new Engine;
     $this->expectException(EngineException::class);
-    $this->expectExceptionMessage('Runtime error: Division by zero in line: 1');
+    $this->expectExceptionMessage('Runtime error: Division by zero in line: 1, column: 3, offset: 2');
     $engine->execute('1/0;');
 });
 
@@ -63,4 +63,16 @@ it('handles string concatenation', function (): void {
     $result = $engine->execute("echo 'hello' ~ ' world';");
 
     expect($result)->toBe('hello world');
+});
+
+it('throws exception on parse error', function (): void {
+    $engine = new Engine;
+    try {
+        $engine->execute('1 = 2;');
+    } catch (EngineException $e) {
+        expect($e->getMessage())->toBe('Invalid assignment target.');
+        expect($e->line)->toBe(1);
+        expect($e->column)->toBe(3);
+        expect($e->offset)->toBe(2);
+    }
 });

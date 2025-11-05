@@ -15,7 +15,7 @@ use PhpScript\Ast\Program;
 use PhpScript\Ast\Variable;
 use PhpScript\Contracts\AstTraverserInterface;
 use PhpScript\Contracts\Node;
-use RuntimeException;
+use PhpScript\Exceptions\AstTraverserException;
 
 final class AstTraverser implements AstTraverserInterface
 {
@@ -28,6 +28,9 @@ final class AstTraverser implements AstTraverserInterface
 
     private int $currentLine = 1;
 
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
     public function traverse(Node $node): string
     {
         $this->generatedCode = '';
@@ -46,6 +49,9 @@ final class AstTraverser implements AstTraverserInterface
         return $this->sourceMap;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
     private function doTraverse(Node $node): void
     {
         $token = $node->getToken();
@@ -63,7 +69,7 @@ final class AstTraverser implements AstTraverserInterface
             Identifier::class => $this->traverseIdentifier($node),
             Literal::class => $this->traverseLiteral($node),
             NoOp::class => $this->traverseNoOp(),
-            default => throw new RuntimeException('Unknown node type: '.$node::class),
+            default => throw AstTraverserException::unknownNodeType($node::class),
         };
     }
 
@@ -89,6 +95,9 @@ final class AstTraverser implements AstTraverserInterface
         $this->doTraverse($node->expression);
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
     private function traverseBinaryOperation(BinaryOperation $node): void
     {
         $this->doTraverse($node->left);
@@ -101,7 +110,7 @@ final class AstTraverser implements AstTraverserInterface
             TokenType::T_EQUALS_EQUALS => '==',
             TokenType::T_GT => '>',
             TokenType::T_LT => '<',
-            default => throw new RuntimeException('Unknown operator: '.$node->operator->value),
+            default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
         $this->generatedCode .= ' '.$operator.' ';
         $this->doTraverse($node->right);
@@ -124,6 +133,9 @@ final class AstTraverser implements AstTraverserInterface
         $this->generatedCode .= $node->name;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
     private function traverseLiteral(Literal $node): void
     {
         $value = $node->value;
@@ -152,7 +164,7 @@ final class AstTraverser implements AstTraverserInterface
         }
 
         // @codeCoverageIgnoreStart
-        throw new RuntimeException('Unknown literal type: '.gettype($value));
+        throw AstTraverserException::unknownLiteralType(gettype($value));
         // @codeCoverageIgnoreEnd
     }
 

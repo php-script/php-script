@@ -28,6 +28,8 @@ final class Parser implements ParserInterface
 
     /**
      * @param  list<Token>  $tokens
+     *
+     * @throws \PhpScript\Exceptions\ParseException
      */
     public function parse(array $tokens): Node
     {
@@ -42,6 +44,9 @@ final class Parser implements ParserInterface
         return new Program($statements);
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseStatement(): Node
     {
         $token = $this->peek();
@@ -60,6 +65,9 @@ final class Parser implements ParserInterface
         return $node;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseEchoStatement(Token $token): EchoStatement
     {
         $expression = $this->parseExpression();
@@ -67,11 +75,17 @@ final class Parser implements ParserInterface
         return new EchoStatement($expression, $token);
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseExpression(): Node
     {
         return $this->parseAssignment();
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseAssignment(): Node
     {
         $left = $this->parseConcat();
@@ -89,6 +103,9 @@ final class Parser implements ParserInterface
         return $left;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseConcat(): Node
     {
         $node = $this->parseAdditive();
@@ -103,6 +120,9 @@ final class Parser implements ParserInterface
         return $node;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseAdditive(): Node
     {
         $node = $this->parseMultiplicative();
@@ -117,6 +137,9 @@ final class Parser implements ParserInterface
         return $node;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseMultiplicative(): Node
     {
         $node = $this->parsePrimary();
@@ -131,6 +154,9 @@ final class Parser implements ParserInterface
         return $node;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parsePrimary(): Node
     {
         $token = $this->peek();
@@ -173,6 +199,9 @@ final class Parser implements ParserInterface
         return false;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function consume(TokenType $type, string $message): Token
     {
         if ($this->check($type)) {

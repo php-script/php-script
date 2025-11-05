@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use PhpScript\Core\Engine;
 use PhpScript\Exceptions\EngineException;
-use PhpScript\Exceptions\SecurityException;
 
 it('engine resolves numbers', function (): void {
     $engine = new Engine;
@@ -37,7 +36,8 @@ it('can set and forget context', function (): void {
 
 it('prevents from calling forbidden functions', function (): void {
     $engine = new Engine;
-    $this->expectException(SecurityException::class);
+    $this->expectException(EngineException::class);
+    $this->expectExceptionMessage('Invalid function call: exec in line: 1, column: 6, offset: 5');
     $engine->execute('echo exec("ls");');
 });
 

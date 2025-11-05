@@ -27,4 +27,11 @@ class EngineException extends \RuntimeException
 
         return new self($message, $line, $column, $offset, $previous);
     }
+
+    public static function invalidFunctionCall(string $functionName, int $line, int $column, int $offset, ?Throwable $previous = null): self
+    {
+        $message = sprintf('Invalid function call: %s in line: %d, column: %d, offset: %d', $functionName, $line, $column, $offset);
+
+        return new self($message, $line, $column, $offset, $previous);
+    }
 }

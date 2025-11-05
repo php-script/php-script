@@ -7,7 +7,6 @@ namespace PhpScript\Core;
 use ErrorException;
 use PhpScript\Exceptions\EngineException;
 use PhpScript\Exceptions\ParseException;
-use PhpScript\Exceptions\SecurityException;
 use Throwable;
 
 final class Engine
@@ -49,7 +48,6 @@ final class Engine
     }
 
     /**
-     * @throws \PhpScript\Exceptions\SecurityException
      * @throws \PhpScript\Exceptions\EngineException
      */
     public function execute(string $script): mixed
@@ -79,7 +77,10 @@ final class Engine
             unlink($tmpFile);
         } catch (ParseException $e) {
             $token = $e->getToken();
-            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset, $e);
+            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset,
+                $e);
+        } catch (EngineException $e) {
+            throw $e;
         } catch (Throwable $e) {
             ob_end_clean();
             if (isset($tmpFile) && file_exists($tmpFile)) {

@@ -48,6 +48,13 @@ it('allows whitelisted functions', function (): void {
     expect($result)->toBe('HELLO');
 });
 
+it('allows whitelisted functions with multiple arguments', function (): void {
+    $engine = new Engine;
+    $engine->allow('str_replace');
+    $result = $engine->execute('echo str_replace("l", "L", "hello world");');
+    expect($result)->toBe('heLLo worLd');
+});
+
 it('throws exception on runtime error', function (): void {
     $engine = new Engine;
     try {

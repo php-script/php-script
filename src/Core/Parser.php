@@ -94,7 +94,7 @@ final class Parser implements ParserInterface
      */
     private function parseAssignment(): Node
     {
-        $left = $this->parseConcat();
+        $left = $this->parseComparison();
 
         if ($this->match(TokenType::T_EQUALS)) {
             $token = $this->previous();
@@ -107,6 +107,23 @@ final class Parser implements ParserInterface
         }
 
         return $left;
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseComparison(): Node
+    {
+        $node = $this->parseConcat();
+
+        while ($this->match(TokenType::T_COMPARE_EQUALS, TokenType::T_COMPARE_UNEQUALS, TokenType::T_GREATER_THAN, TokenType::T_LESS_THAN)) {
+            $token = $this->previous();
+            $operator = $this->previous()->type;
+            $right = $this->parseConcat();
+            $node = new BinaryOperation($node, $operator, $right, $token);
+        }
+
+        return $node;
     }
 
     /**
@@ -168,7 +185,7 @@ final class Parser implements ParserInterface
         $expr = $this->parsePrimary();
 
         while (true) {
-            if ($this->match(TokenType::T_LPAREN)) {
+            if ($this->match(TokenType::T_LEFT_PARENTHESIS)) {
                 $expr = $this->finishCall($expr);
             } elseif ($this->match(TokenType::T_DOT)) {
                 $propertyToken = $this->consume(TokenType::T_IDENTIFIER, 'Expected identifier after .');
@@ -192,13 +209,13 @@ final class Parser implements ParserInterface
         }
 
         $arguments = [];
-        if (! $this->check(TokenType::T_RPAREN)) {
+        if (! $this->check(TokenType::T_RIGHT_PARENTHESIS)) {
             do {
                 $arguments[] = $this->parseExpression();
             } while ($this->match(TokenType::T_COMMA));
         }
 
-        $token = $this->consume(TokenType::T_RPAREN, "Expect ')' after arguments.");
+        $token = $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after arguments.");
 
         return new FunctionCall($callee, $arguments, $token);
     }
@@ -217,9 +234,9 @@ final class Parser implements ParserInterface
             return new Variable($this->previous()->value, $token);
         }
 
-        if ($this->match(TokenType::T_LPAREN)) {
+        if ($this->match(TokenType::T_LEFT_PARENTHESIS)) {
             $node = $this->parseExpression();
-            $this->consume(TokenType::T_RPAREN, "Expect ')' after expression.");
+            $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after expression.");
 
             return $node;
         }

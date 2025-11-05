@@ -84,6 +84,24 @@ it('should parse a binary operation', function (): void {
     expect($binaryOperation->right->value)->toBe('2');
 });
 
+it('should parse a comparison', function (): void {
+    $tokens = [
+        new Token(TokenType::T_NUMBER, '1', 1, 1, 0),
+        new Token(TokenType::T_COMPARE_EQUALS, '==', 1, 3, 2),
+        new Token(TokenType::T_NUMBER, '2', 1, 5, 4),
+    ];
+    $ast = $this->parser->parse($tokens);
+
+    /** @var BinaryOperation $binaryOperation */
+    $binaryOperation = $ast->statements[0];
+    expect($binaryOperation)->toBeInstanceOf(BinaryOperation::class);
+    expect($binaryOperation->left)->toBeInstanceOf(Literal::class);
+    expect($binaryOperation->left->value)->toBe('1');
+    expect($binaryOperation->operator)->toBe(TokenType::T_COMPARE_EQUALS);
+    expect($binaryOperation->right)->toBeInstanceOf(Literal::class);
+    expect($binaryOperation->right->value)->toBe('2');
+});
+
 it('should parse a member access', function (): void {
     $tokens = [
         new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),

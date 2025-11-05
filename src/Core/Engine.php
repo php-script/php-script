@@ -19,19 +19,20 @@ final class Engine
     /**
      * @var string[]
      */
-    private array $forbiddenFunctions = [
-        'exec', 'shell_exec', 'system', 'passthru', 'popen', 'proc_open',
-        'eval', 'create_function', 'assert',
-        'fopen', 'file_get_contents', 'file_put_contents', 'unlink', 'rmdir', 'mkdir',
-        'include', 'require', 'include_once', 'require_once',
-        'mysql_', 'mysqli_', 'pdo',
-    ];
+    private array $allowedFunctions = [];
 
     public function __construct(
         private readonly Lexer $lexer = new Lexer,
         private readonly Parser $parser = new Parser,
         private readonly AstTraverser $astTraverser = new AstTraverser,
     ) {}
+
+    public function allow(string ...$functionNames): self
+    {
+        $this->allowedFunctions = array_merge($this->allowedFunctions, $functionNames);
+
+        return $this;
+    }
 
     public function set(string $name, mixed $value): self
     {
@@ -52,8 +53,6 @@ final class Engine
      */
     public function execute(string $script): mixed
     {
-        $this->ensureScriptCanBeExecuted($script);
-
         $previousErrorReporting = error_reporting(-1);
         set_error_handler(function (int $severity, string $message, ?string $file, ?int $line): never {
             throw new ErrorException($message, 0, $severity, $file, $line);
@@ -102,21 +101,6 @@ final class Engine
         }
 
         return ob_get_clean();
-    }
-
-    /**
-     * @throws \PhpScript\Exceptions\SecurityException
-     */
-    private function ensureScriptCanBeExecuted(string $script): void
-    {
-        foreach ($this->forbiddenFunctions as $func) {
-            if (preg_match('/\b'.$func.'\s*\(/i', $script, $matches, PREG_OFFSET_CAPTURE)) {
-                $offset = $matches[0][1];
-                $line = substr_count(substr($script, 0, $offset), "\n") + 1;
-                $col = $offset - (int) strrpos(substr($script, 0, $offset), "\n");
-                throw SecurityException::invalidFunctionCall($func, $line, $col, $offset);
-            }
-        }
     }
 
     /**

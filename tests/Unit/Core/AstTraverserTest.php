@@ -61,7 +61,7 @@ it('should traverse a binary operation', function (TokenType $operator, string $
     [TokenType::T_MULTIPLY, '*'],
     [TokenType::T_DIVIDE, '/'],
     [TokenType::T_CONCAT, '.'],
-    [TokenType::T_COMPARE_EQUALS, '=='],
+    [TokenType::T_COMPARE_EQUALS, '==='],
     [TokenType::T_GREATER_THAN, '>'],
     [TokenType::T_LESS_THAN, '<'],
 ]);

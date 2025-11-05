@@ -49,3 +49,20 @@ it('throws exception when token is not recognized', function (): void {
         expect($e->getMessage())->toBe('Unknown character or syntax error at line 2, column 5.');
     }
 });
+
+it('handles non-breaking spaces', function (): void {
+    $phpScriptCode = "a =\u{00A0}1;";
+    $lexer = new Lexer;
+    $tokens = $lexer->tokenize($phpScriptCode);
+
+    $expectedTokens = [
+        new Token(TokenType::T_IDENTIFIER, 'a', 1, 1, 0),
+        new Token(TokenType::T_WHITESPACE, ' ', 1, 2, 1),
+        new Token(TokenType::T_EQUALS, '=', 1, 3, 2),
+        new Token(TokenType::T_WHITESPACE, "\u{00A0}", 1, 4, 3),
+        new Token(TokenType::T_NUMBER, '1', 1, 6, 5),
+        new Token(TokenType::T_SEMICOLON, ';', 1, 7, 6),
+    ];
+
+    expect($tokens)->toEqual($expectedTokens);
+});

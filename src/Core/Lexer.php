@@ -28,7 +28,7 @@ final readonly class Lexer
     {
         // initialize token patterns in defined order
         $this->tokenPatterns = [
-            TokenType::T_WHITESPACE->value => '\s+',
+            TokenType::T_WHITESPACE->value => '[\s\x{00A0}]+',
             TokenType::T_COMMENT->value => '\/\/[^\n]*',
             TokenType::T_NUMBER->value => '\b\d+(\.\d+)?\b',
             TokenType::T_STRING->value => '\"(.*?)(?<!\\\\)\"|\'(.*?)(?<!\\\\)\'',
@@ -89,7 +89,7 @@ final readonly class Lexer
             $matchFound = false;
 
             foreach ($this->tokenPatterns as $type => $pattern) {
-                if (preg_match('/^('.$pattern.')/', $remaining, $matches)) {
+                if (preg_match('/^('.$pattern.')/u', $remaining, $matches)) {
                     $tokenTypeEnum = TokenType::from($type);
                     $value = $matches[1];
 

@@ -143,6 +143,8 @@ App Version: 1.2.3
 - robust error handling with a pointer to the root cause in the PHP Script
 - 100% code coverage
 - Whitelist implementation for allowing function calls
+- Playground
+  - use `make playground` and open http://localhost:8080/playground.php in your browser
 
 ## TODO
 

@@ -230,6 +230,10 @@ final class Parser implements ParserInterface
             return new Literal($this->previous()->value, $token);
         }
 
+        if ($this->match(TokenType::T_LINEBREAK)) {
+            return new Literal(PHP_EOL, $token);
+        }
+
         if ($this->match(TokenType::T_IDENTIFIER)) {
             return new Variable($this->previous()->value, $token);
         }

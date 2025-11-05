@@ -118,3 +118,10 @@ it('throws exception with correct line number on runtime error in multi-line scr
         expect($e->offset)->toBe(27);
     }
 });
+
+it('handles the LINEBREAK constant', function (): void {
+    $engine = new Engine;
+    $result = $engine->execute("echo 'hello' ~ LINEBREAK ~ 'world';");
+
+    expect($result)->toBe('hello'.PHP_EOL.'world');
+});

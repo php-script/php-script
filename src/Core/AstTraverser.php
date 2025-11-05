@@ -145,11 +145,9 @@ final class AstTraverser implements AstTraverserInterface
      */
     private function traverseFunctionCall(FunctionCall $node): void
     {
-        if ($node->callee instanceof Identifier) {
-            if (! in_array($node->callee->name, $this->allowedFunctions, true)) {
-                $token = $node->callee->getToken();
-                throw EngineException::invalidFunctionCall($node->callee->name, (int) $token?->line, (int) $token?->column, (int) $token?->offset);
-            }
+        if ($node->callee instanceof Identifier && ! in_array($node->callee->name, $this->allowedFunctions, true)) {
+            $token = $node->callee->getToken();
+            throw EngineException::invalidFunctionCall($node->callee->name, (int) $token?->line, (int) $token?->column, (int) $token?->offset);
         }
 
         $this->doTraverse($node->callee);

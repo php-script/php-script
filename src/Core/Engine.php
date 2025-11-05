@@ -54,9 +54,11 @@ final class Engine
     public function execute(string $script): mixed
     {
         $previousErrorReporting = error_reporting(-1);
-        set_error_handler(function (int $severity, string $message, ?string $file, ?int $line): never {
-            throw new ErrorException($message, 0, $severity, $file, $line);
-        });
+        set_error_handler(
+            function (int $severity, string $message, ?string $file, ?int $line): never {
+                throw new ErrorException($message, 0, $severity, $file, $line);
+            }
+        );
 
         try {
             $tokens = $this->lexer->tokenize($script);

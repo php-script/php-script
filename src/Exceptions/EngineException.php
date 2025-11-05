@@ -8,8 +8,13 @@ use Throwable;
 
 class EngineException extends \RuntimeException
 {
-    public function __construct(string $message, public int $line = 0, public readonly int $column = 0, public readonly int $offset = 0, ?Throwable $previous = null)
-    {
+    public function __construct(
+        string $message,
+        public int $line = 0,
+        public readonly int $column = 0,
+        public readonly int $offset = 0,
+        ?Throwable $previous = null,
+    ) {
         parent::__construct($message, 0, $previous);
     }
 

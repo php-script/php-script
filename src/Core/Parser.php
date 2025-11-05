@@ -98,7 +98,7 @@ final class Parser implements ParserInterface
 
         if ($this->match(TokenType::T_EQUALS)) {
             $token = $this->previous();
-            if (! ($left instanceof Variable || $left instanceof MemberAccess)) {
+            if (! $left instanceof Variable && ! $left instanceof MemberAccess) {
                 throw new ParseException('Invalid assignment target.', $token);
             }
             $right = $this->parseAssignment();

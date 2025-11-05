@@ -125,8 +125,8 @@ final class AstTraverser implements AstTraverserInterface
             TokenType::T_DIVIDE => '/',
             TokenType::T_CONCAT => '.',
             TokenType::T_EQUALS_EQUALS => '==',
-            TokenType::T_GT => '>',
-            TokenType::T_LT => '<',
+            TokenType::T_GREATER_THAN => '>',
+            TokenType::T_LESS_THAN => '<',
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
         $this->generatedCode .= ' '.$operator.' ';

@@ -62,8 +62,8 @@ it('should traverse a binary operation', function (TokenType $operator, string $
     [TokenType::T_DIVIDE, '/'],
     [TokenType::T_CONCAT, '.'],
     [TokenType::T_EQUALS_EQUALS, '=='],
-    [TokenType::T_GT, '>'],
-    [TokenType::T_LT, '<'],
+    [TokenType::T_GREATER_THAN, '>'],
+    [TokenType::T_LESS_THAN, '<'],
 ]);
 
 it('should throw an exception for unknown binary operator', function (): void {

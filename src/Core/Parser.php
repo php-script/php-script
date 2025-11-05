@@ -168,7 +168,7 @@ final class Parser implements ParserInterface
         $expr = $this->parsePrimary();
 
         while (true) {
-            if ($this->match(TokenType::T_LPAREN)) {
+            if ($this->match(TokenType::T_LEFT_PARENTHESIS)) {
                 $expr = $this->finishCall($expr);
             } elseif ($this->match(TokenType::T_DOT)) {
                 $propertyToken = $this->consume(TokenType::T_IDENTIFIER, 'Expected identifier after .');
@@ -192,13 +192,13 @@ final class Parser implements ParserInterface
         }
 
         $arguments = [];
-        if (! $this->check(TokenType::T_RPAREN)) {
+        if (! $this->check(TokenType::T_RIGHT_PARENTHESIS)) {
             do {
                 $arguments[] = $this->parseExpression();
             } while ($this->match(TokenType::T_COMMA));
         }
 
-        $token = $this->consume(TokenType::T_RPAREN, "Expect ')' after arguments.");
+        $token = $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after arguments.");
 
         return new FunctionCall($callee, $arguments, $token);
     }
@@ -217,9 +217,9 @@ final class Parser implements ParserInterface
             return new Variable($this->previous()->value, $token);
         }
 
-        if ($this->match(TokenType::T_LPAREN)) {
+        if ($this->match(TokenType::T_LEFT_PARENTHESIS)) {
             $node = $this->parseExpression();
-            $this->consume(TokenType::T_RPAREN, "Expect ')' after expression.");
+            $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after expression.");
 
             return $node;
         }

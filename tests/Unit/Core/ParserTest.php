@@ -136,18 +136,18 @@ it('should throw an exception for invalid assignment target', function (): void 
 
 it('should throw an exception for unexpected token', function (): void {
     $tokens = [
-        new Token(TokenType::T_RPAREN, ')', 1, 1, 0),
+        new Token(TokenType::T_RIGHT_PARENTHESIS, ')', 1, 1, 0),
     ];
     $this->parser->parse($tokens);
-})->throws(ParseException::class, 'Unexpected token: T_RPAREN');
+})->throws(ParseException::class, 'Unexpected token: T_RIGHT_PARENTHESIS');
 
 it('should parse a parenthesized expression', function (): void {
     $tokens = [
-        new Token(TokenType::T_LPAREN, '(', 1, 1, 0),
+        new Token(TokenType::T_LEFT_PARENTHESIS, '(', 1, 1, 0),
         new Token(TokenType::T_NUMBER, '1', 1, 2, 1),
         new Token(TokenType::T_PLUS, '+', 1, 4, 3),
         new Token(TokenType::T_NUMBER, '2', 1, 6, 5),
-        new Token(TokenType::T_RPAREN, ')', 1, 7, 6),
+        new Token(TokenType::T_RIGHT_PARENTHESIS, ')', 1, 7, 6),
     ];
     $ast = $this->parser->parse($tokens);
 
@@ -167,7 +167,7 @@ it('should parse a parenthesized expression', function (): void {
 
 it('should throw exception at previous token when consume fails at end of file', function (): void {
     $tokens = [
-        new Token(TokenType::T_LPAREN, '(', 1, 1, 0),
+        new Token(TokenType::T_LEFT_PARENTHESIS, '(', 1, 1, 0),
         new Token(TokenType::T_NUMBER, '1', 1, 2, 1),
     ];
 

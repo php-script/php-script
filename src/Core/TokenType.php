@@ -12,10 +12,10 @@ enum TokenType: string
     case T_STRING = 'T_STRING';       // Strings ("Hallo")
     case T_DOT = 'T_DOT';         // . (Objektzugriff)
     case T_CONCAT = 'T_CONCAT';     // ~ (String-Verkettung)
-    case T_LPAREN = 'T_LPAREN';     // (
-    case T_RPAREN = 'T_RPAREN';     // )
-    case T_LBRACE = 'T_LBRACE';     // {
-    case T_RBRACE = 'T_RBRACE';     // }
+    case T_LEFT_PARENTHESIS = 'T_LEFT_PARENTHESIS';     // (
+    case T_RIGHT_PARENTHESIS = 'T_RIGHT_PARENTHESIS';     // )
+    case T_LEFT_BRACE = 'T_LEFT_BRACE';     // {
+    case T_RIGHT_BRACE = 'T_RIGHT_BRACE';     // }
     case T_SEMICOLON = 'T_SEMICOLON';   // ;
     case T_COMMA = 'T_COMMA';       // ,
     case T_EQUALS = 'T_EQUALS';     // =
@@ -23,8 +23,8 @@ enum TokenType: string
     case T_MINUS = 'T_MINUS';      // -
     case T_MULTIPLY = 'T_MULTIPLY';   // *
     case T_DIVIDE = 'T_DIVIDE';     // /
-    case T_GT = 'T_GT';         // >
-    case T_LT = 'T_LT';         // <
+    case T_GREATER_THAN = 'T_GREATER_THAN';         // >
+    case T_LESS_THAN = 'T_LESS_THAN';         // <
     case T_EQUALS_EQUALS = 'T_EQUALS_EQUALS'; // ==
     case T_WHITESPACE = 'T_WHITESPACE';  // (wird ignoriert)
     case T_COMMENT = 'T_COMMENT';     // // Kommentar (wird ignoriert)

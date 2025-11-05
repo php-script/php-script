@@ -43,6 +43,7 @@ final readonly class Lexer
             TokenType::T_TRUE->value => '\btrue\b',
             TokenType::T_FALSE->value => '\bfalse\b',
             TokenType::T_NULL->value => '\bnull\b',
+            TokenType::T_LINEBREAK->value => '\bLINEBREAK\b',
 
             // Identifiers
             TokenType::T_IDENTIFIER->value => '\b[a-zA-Z_]\w*\b',

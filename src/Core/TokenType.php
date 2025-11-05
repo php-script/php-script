@@ -41,4 +41,5 @@ enum TokenType: string
     case T_TRUE = 'T_TRUE';
     case T_FALSE = 'T_FALSE';
     case T_NULL = 'T_NULL';
+    case T_LINEBREAK = 'T_LINEBREAK';
 }

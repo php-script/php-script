@@ -20,14 +20,14 @@ use PhpScript\Exceptions\ParseException;
 final class Parser implements ParserInterface
 {
     /**
-     * @var list<Token>
+     * @var \PhpScript\Core\Token[]
      */
     private array $tokens;
 
     private int $position = 0;
 
     /**
-     * @param  list<Token>  $tokens
+     * @param  \PhpScript\Core\Token[]  $tokens
      *
      * @throws \PhpScript\Exceptions\ParseException
      */

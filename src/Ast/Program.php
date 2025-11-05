@@ -6,14 +6,16 @@ namespace PhpScript\Ast;
 
 use PhpScript\Contracts\Node;
 
-final readonly class Program implements Node
+final readonly class Program extends BaseNode
 {
     /**
      * @param  Node[]  $statements
      */
     public function __construct(
         public array $statements,
-    ) {}
+    ) {
+        parent::__construct();
+    }
 
     public function toArray(): array
     {

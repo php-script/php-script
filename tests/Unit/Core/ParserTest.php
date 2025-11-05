@@ -12,6 +12,7 @@ use PhpScript\Ast\Variable;
 use PhpScript\Core\Parser;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
+use PhpScript\Exceptions\ParseException;
 
 beforeEach(function (): void {
     $this->parser = new Parser;
@@ -27,7 +28,7 @@ it('should parse an empty program', function (): void {
 
 it('should parse a no-op statement', function (): void {
     $tokens = [
-        new Token(TokenType::T_SEMICOLON, ';'),
+        new Token(TokenType::T_SEMICOLON, ';', 1, 1, 0),
     ];
     $ast = $this->parser->parse($tokens);
 
@@ -36,8 +37,8 @@ it('should parse a no-op statement', function (): void {
 
 it('should parse an echo statement', function (): void {
     $tokens = [
-        new Token(TokenType::T_ECHO, 'echo'),
-        new Token(TokenType::T_STRING, 'hello'),
+        new Token(TokenType::T_ECHO, 'echo', 1, 1, 0),
+        new Token(TokenType::T_STRING, 'hello', 1, 6, 5),
     ];
     $ast = $this->parser->parse($tokens);
 
@@ -50,9 +51,9 @@ it('should parse an echo statement', function (): void {
 
 it('should parse an assignment', function (): void {
     $tokens = [
-        new Token(TokenType::T_IDENTIFIER, 'foo'),
-        new Token(TokenType::T_EQUALS, '='),
-        new Token(TokenType::T_STRING, 'bar'),
+        new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),
+        new Token(TokenType::T_EQUALS, '=', 1, 5, 4),
+        new Token(TokenType::T_STRING, 'bar', 1, 7, 6),
     ];
     $ast = $this->parser->parse($tokens);
 
@@ -67,9 +68,9 @@ it('should parse an assignment', function (): void {
 
 it('should parse a binary operation', function (): void {
     $tokens = [
-        new Token(TokenType::T_NUMBER, '1'),
-        new Token(TokenType::T_PLUS, '+'),
-        new Token(TokenType::T_NUMBER, '2'),
+        new Token(TokenType::T_NUMBER, '1', 1, 1, 0),
+        new Token(TokenType::T_PLUS, '+', 1, 3, 2),
+        new Token(TokenType::T_NUMBER, '2', 1, 5, 4),
     ];
     $ast = $this->parser->parse($tokens);
 
@@ -85,9 +86,9 @@ it('should parse a binary operation', function (): void {
 
 it('should parse a member access', function (): void {
     $tokens = [
-        new Token(TokenType::T_IDENTIFIER, 'foo'),
-        new Token(TokenType::T_DOT, '.'),
-        new Token(TokenType::T_IDENTIFIER, 'bar'),
+        new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),
+        new Token(TokenType::T_DOT, '.', 1, 4, 3),
+        new Token(TokenType::T_IDENTIFIER, 'bar', 1, 5, 4),
     ];
     $ast = $this->parser->parse($tokens);
 
@@ -102,7 +103,7 @@ it('should parse a member access', function (): void {
 
 it('should parse a literal', function (): void {
     $tokens = [
-        new Token(TokenType::T_STRING, 'hello'),
+        new Token(TokenType::T_STRING, 'hello', 1, 1, 0),
     ];
     $ast = $this->parser->parse($tokens);
 
@@ -114,7 +115,7 @@ it('should parse a literal', function (): void {
 
 it('should parse a variable', function (): void {
     $tokens = [
-        new Token(TokenType::T_IDENTIFIER, 'foo'),
+        new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),
     ];
     $ast = $this->parser->parse($tokens);
 
@@ -126,27 +127,27 @@ it('should parse a variable', function (): void {
 
 it('should throw an exception for invalid assignment target', function (): void {
     $tokens = [
-        new Token(TokenType::T_NUMBER, '1'),
-        new Token(TokenType::T_EQUALS, '='),
-        new Token(TokenType::T_NUMBER, '2'),
+        new Token(TokenType::T_NUMBER, '1', 1, 1, 0),
+        new Token(TokenType::T_EQUALS, '=', 1, 3, 2),
+        new Token(TokenType::T_NUMBER, '2', 1, 5, 4),
     ];
     $this->parser->parse($tokens);
-})->throws(RuntimeException::class, 'Invalid assignment target.');
+})->throws(ParseException::class, 'Invalid assignment target.');
 
 it('should throw an exception for unexpected token', function (): void {
     $tokens = [
-        new Token(TokenType::T_RPAREN, ')'),
+        new Token(TokenType::T_RPAREN, ')', 1, 1, 0),
     ];
     $this->parser->parse($tokens);
-})->throws(RuntimeException::class, 'Unexpected token: T_RPAREN');
+})->throws(ParseException::class, 'Unexpected token: T_RPAREN');
 
 it('should parse a parenthesized expression', function (): void {
     $tokens = [
-        new Token(TokenType::T_LPAREN, '('),
-        new Token(TokenType::T_NUMBER, '1'),
-        new Token(TokenType::T_PLUS, '+'),
-        new Token(TokenType::T_NUMBER, '2'),
-        new Token(TokenType::T_RPAREN, ')'),
+        new Token(TokenType::T_LPAREN, '(', 1, 1, 0),
+        new Token(TokenType::T_NUMBER, '1', 1, 2, 1),
+        new Token(TokenType::T_PLUS, '+', 1, 4, 3),
+        new Token(TokenType::T_NUMBER, '2', 1, 6, 5),
+        new Token(TokenType::T_RPAREN, ')', 1, 7, 6),
     ];
     $ast = $this->parser->parse($tokens);
 
@@ -164,10 +165,32 @@ it('should parse a parenthesized expression', function (): void {
     expect($binaryOperation->right->value)->toBe('2');
 });
 
-it('should throw an exception for missing closing parenthesis', function (): void {
+it('should throw exception at previous token when consume fails at end of file', function (): void {
     $tokens = [
-        new Token(TokenType::T_LPAREN, '('),
-        new Token(TokenType::T_NUMBER, '1'),
+        new Token(TokenType::T_LPAREN, '(', 1, 1, 0),
+        new Token(TokenType::T_NUMBER, '1', 1, 2, 1),
     ];
-    $this->parser->parse($tokens);
-})->throws(RuntimeException::class, "Expect ')' after expression.");
+
+    try {
+        $this->parser->parse($tokens);
+    } catch (ParseException $e) {
+        expect($e->getMessage())->toBe("Expect ')' after expression.");
+        // Crucially, the error is associated with the LAST valid token, not a non-existent one.
+        expect($e->getToken()->type)->toBe(TokenType::T_NUMBER);
+        expect($e->getToken()->value)->toBe('1');
+    }
+});
+
+it('should throw an exception for missing identifier after dot', function (): void {
+    $tokens = [
+        new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),
+        new Token(TokenType::T_DOT, '.', 1, 4, 3),
+    ];
+
+    try {
+        $this->parser->parse($tokens);
+    } catch (ParseException $e) {
+        expect($e->getMessage())->toBe('Expected identifier after .');
+        expect($e->getToken()->type)->toBe(TokenType::T_DOT);
+    }
+});

@@ -15,7 +15,7 @@ use PhpScript\Ast\Program;
 use PhpScript\Ast\Variable;
 use PhpScript\Contracts\Node;
 use PhpScript\Contracts\ParserInterface;
-use RuntimeException;
+use PhpScript\Exceptions\ParseException;
 
 final class Parser implements ParserInterface
 {
@@ -28,6 +28,8 @@ final class Parser implements ParserInterface
 
     /**
      * @param  list<Token>  $tokens
+     *
+     * @throws \PhpScript\Exceptions\ParseException
      */
     public function parse(array $tokens): Node
     {
@@ -42,14 +44,18 @@ final class Parser implements ParserInterface
         return new Program($statements);
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseStatement(): Node
     {
+        $token = $this->peek();
         if ($this->match(TokenType::T_ECHO)) {
-            return $this->parseEchoStatement();
+            return $this->parseEchoStatement($token);
         }
 
         if ($this->match(TokenType::T_SEMICOLON)) {
-            return new NoOp;
+            return new NoOp($token);
         }
 
         $node = $this->parseExpression();
@@ -59,85 +65,112 @@ final class Parser implements ParserInterface
         return $node;
     }
 
-    private function parseEchoStatement(): EchoStatement
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseEchoStatement(Token $token): EchoStatement
     {
         $expression = $this->parseExpression();
 
-        return new EchoStatement($expression);
+        return new EchoStatement($expression, $token);
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseExpression(): Node
     {
         return $this->parseAssignment();
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseAssignment(): Node
     {
         $left = $this->parseConcat();
 
         if ($this->match(TokenType::T_EQUALS)) {
+            $token = $this->previous();
             if (! ($left instanceof Variable)) {
-                throw new RuntimeException('Invalid assignment target.');
+                throw new ParseException('Invalid assignment target.', $token);
             }
             $right = $this->parseAssignment();
 
-            return new Assignment($left, $right);
+            return new Assignment($left, $right, $token);
         }
 
         return $left;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseConcat(): Node
     {
         $node = $this->parseAdditive();
 
         while ($this->match(TokenType::T_CONCAT)) {
+            $token = $this->previous();
             $operator = $this->previous()->type;
             $right = $this->parseAdditive();
-            $node = new BinaryOperation($node, $operator, $right);
+            $node = new BinaryOperation($node, $operator, $right, $token);
         }
 
         return $node;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseAdditive(): Node
     {
         $node = $this->parseMultiplicative();
 
         while ($this->match(TokenType::T_PLUS, TokenType::T_MINUS)) {
+            $token = $this->previous();
             $operator = $this->previous()->type;
             $right = $this->parseMultiplicative();
-            $node = new BinaryOperation($node, $operator, $right);
+            $node = new BinaryOperation($node, $operator, $right, $token);
         }
 
         return $node;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parseMultiplicative(): Node
     {
         $node = $this->parsePrimary();
 
         while ($this->match(TokenType::T_MULTIPLY, TokenType::T_DIVIDE)) {
+            $token = $this->previous();
             $operator = $this->previous()->type;
             $right = $this->parsePrimary();
-            $node = new BinaryOperation($node, $operator, $right);
+            $node = new BinaryOperation($node, $operator, $right, $token);
         }
 
         return $node;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function parsePrimary(): Node
     {
+        $token = $this->peek();
         if ($this->match(TokenType::T_NUMBER, TokenType::T_STRING)) {
-            return new Literal($this->previous()->value);
+            return new Literal($this->previous()->value, $token);
         }
 
         if ($this->match(TokenType::T_IDENTIFIER)) {
-            $node = new Variable($this->previous()->value);
+            $node = new Variable($this->previous()->value, $token);
 
             while ($this->match(TokenType::T_DOT)) {
-                $property = $this->consume(TokenType::T_IDENTIFIER, 'Expected identifier after .');
-                $node = new MemberAccess($node, new Identifier($property->value));
+                $propertyToken = $this->consume(TokenType::T_IDENTIFIER, 'Expected identifier after .');
+                $property = new Identifier($propertyToken->value, $propertyToken);
+                $node = new MemberAccess($node, $property, $propertyToken);
             }
 
             return $node;
@@ -150,7 +183,7 @@ final class Parser implements ParserInterface
             return $node;
         }
 
-        throw new RuntimeException('Unexpected token: '.$this->peek()->type->value);
+        throw new ParseException('Unexpected token: '.$this->peek()->type->value, $this->peek());
     }
 
     private function match(TokenType ...$types): bool
@@ -166,13 +199,22 @@ final class Parser implements ParserInterface
         return false;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
     private function consume(TokenType $type, string $message): Token
     {
         if ($this->check($type)) {
             return $this->advance();
         }
 
-        throw new RuntimeException($message);
+        if ($this->isAtEnd()) {
+            throw new ParseException($message, $this->previous());
+        }
+
+        // @codeCoverageIgnoreStart
+        throw new ParseException($message, $this->peek());
+        // @codeCoverageIgnoreEnd
     }
 
     private function check(TokenType $type): bool

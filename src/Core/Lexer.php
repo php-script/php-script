@@ -75,18 +75,14 @@ final readonly class Lexer
      */
     public function tokenize(string $script): array
     {
-        // 1. handle linebreaks
-        // all linebreaks will be ; with newline
-        $script = str_replace(["\r\n", "\n"], ";\n", $script);
-        // replace double ; with ;
-        $script = preg_replace('/;+/', ';', $script);
-
         $tokens = [];
         $offset = 0;
-        $length = strlen((string) $script);
+        $line = 1;
+        $lineOffset = 0;
+        $length = strlen($script);
 
         while ($offset < $length) {
-            $remaining = substr((string) $script, $offset);
+            $remaining = substr($script, $offset);
             $matchFound = false;
 
             foreach ($this->tokenPatterns as $type => $pattern) {
@@ -95,19 +91,16 @@ final readonly class Lexer
                     $value = $matches[1];
 
                     if ($tokenTypeEnum === TokenType::T_STRING) {
-                        // The regex for T_STRING has two content-capturing groups.
-                        // $matches[2] is for double-quoted strings, $matches[3] for single-quoted.
-                        // We check which one actually matched to get the pure string content.
                         $content = isset($matches[3]) && $matches[3] !== '' ? $matches[3] : ($matches[2] ?? '');
                         $value = stripcslashes($content);
                     }
 
-                    // ignore whitespace and comments
-                    if ($tokenTypeEnum !== TokenType::T_WHITESPACE && $tokenTypeEnum !== TokenType::T_COMMENT) {
-                        $tokens[] = new Token(
-                            type: $tokenTypeEnum,
-                            value: $value,
-                        );
+                    $column = $offset - $lineOffset + 1;
+                    $tokens[] = new Token($tokenTypeEnum, $value, $line, $column, $offset);
+
+                    if (str_contains($matches[0], "\n")) {
+                        $line += substr_count($matches[0], "\n");
+                        $lineOffset = $offset + (int) strrpos($matches[0], "\n") + 1;
                     }
 
                     $offset += strlen($matches[0]);
@@ -117,7 +110,8 @@ final readonly class Lexer
             }
 
             if (! $matchFound) {
-                throw LexerException::unknownCharOrSyntaxError($remaining);
+                $column = $offset - $lineOffset + 1;
+                throw new LexerException("Unknown character or syntax error at line $line, column $column.");
             }
         }
 

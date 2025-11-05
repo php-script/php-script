@@ -6,8 +6,8 @@ namespace PhpScript\Exceptions;
 
 class SecurityException extends \RuntimeException
 {
-    public static function invalidFunctionCall(string $functionName): self
+    public static function invalidFunctionCall(string $functionName, int $line, int $column, int $offset): self
     {
-        return new self("Invalid function call: $functionName");
+        return new self("Invalid function call: $functionName at line: $line, column: $column, offset: $offset");
     }
 }

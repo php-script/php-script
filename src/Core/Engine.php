@@ -6,6 +6,7 @@ namespace PhpScript\Core;
 
 use ErrorException;
 use PhpScript\Exceptions\EngineException;
+use PhpScript\Exceptions\ParseException;
 use PhpScript\Exceptions\SecurityException;
 use Throwable;
 
@@ -47,6 +48,10 @@ final class Engine
         return $this;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\SecurityException
+     * @throws \PhpScript\Exceptions\EngineException
+     */
     public function execute(string $script): mixed
     {
         $this->ensureScriptCanBeExecuted($script);
@@ -56,27 +61,40 @@ final class Engine
             throw new ErrorException($message, 0, $severity, $file, $line);
         });
 
-        $tokens = $this->lexer->tokenize($script);
-        $ast = $this->parser->parse($tokens);
-        $phpCode = $this->astTraverser->traverse($ast);
-
-        extract($this->context);
-
-        ob_start();
-
         try {
+            $tokens = $this->lexer->tokenize($script);
+            $ast = $this->parser->parse($tokens);
+            $phpCode = $this->astTraverser->traverse($ast);
+            $sourceMap = $this->astTraverser->getSourceMap();
+
+            extract($this->context);
+
+            ob_start();
+
             $tmpFile = $this->createTemporaryFile();
 
             file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n".$phpCode);
             include $tmpFile;
 
             unlink($tmpFile);
+        } catch (ParseException $e) {
+            $token = $e->getToken();
+            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset, $e);
         } catch (Throwable $e) {
             ob_end_clean();
-            if (isset($tmpFile) && is_string($tmpFile)) {
+            if (isset($tmpFile) && file_exists($tmpFile)) {
                 unlink($tmpFile);
             }
-            throw EngineException::runtimeError($e->getMessage(), $e->getLine() - 2, $e);
+
+            $line = $e->getLine() - 2;
+            $token = $sourceMap[$line] ?? null;
+            if ($token instanceof Token) {
+                throw EngineException::runtimeError($e->getMessage(), $token->line, $token->column, $token->offset, $e);
+            }
+
+            // @codeCoverageIgnoreStart
+            throw EngineException::runtimeError($e->getMessage(), 0, 0, 0, $e);
+            // @codeCoverageIgnoreEnd
         } finally {
             restore_error_handler();
             error_reporting($previousErrorReporting);
@@ -91,8 +109,11 @@ final class Engine
     private function ensureScriptCanBeExecuted(string $script): void
     {
         foreach ($this->forbiddenFunctions as $func) {
-            if (preg_match('/\b'.$func.'\s*\(/i', $script)) {
-                throw SecurityException::invalidFunctionCall($func);
+            if (preg_match('/\b'.$func.'\s*\(/i', $script, $matches, PREG_OFFSET_CAPTURE)) {
+                $offset = $matches[0][1];
+                $line = substr_count(substr($script, 0, $offset), "\n") + 1;
+                $col = $offset - (int) strrpos(substr($script, 0, $offset), "\n");
+                throw SecurityException::invalidFunctionCall($func, $line, $col, $offset);
             }
         }
     }

@@ -15,13 +15,51 @@ use PhpScript\Ast\Program;
 use PhpScript\Ast\Variable;
 use PhpScript\Contracts\AstTraverserInterface;
 use PhpScript\Contracts\Node;
-use RuntimeException;
+use PhpScript\Exceptions\AstTraverserException;
 
 final class AstTraverser implements AstTraverserInterface
 {
+    private string $generatedCode = '';
+
+    /**
+     * @var \PhpScript\Core\Token[]
+     */
+    private array $sourceMap = [];
+
+    private int $currentLine = 1;
+
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
     public function traverse(Node $node): string
     {
-        return match ($node::class) {
+        $this->generatedCode = '';
+        $this->sourceMap = [];
+        $this->currentLine = 1;
+        $this->doTraverse($node);
+
+        return $this->generatedCode;
+    }
+
+    /**
+     * @return \PhpScript\Core\Token[]
+     */
+    public function getSourceMap(): array
+    {
+        return $this->sourceMap;
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
+    private function doTraverse(Node $node): void
+    {
+        $token = $node->getToken();
+        if ($token && ! isset($this->sourceMap[$this->currentLine])) {
+            $this->sourceMap[$this->currentLine] = $token;
+        }
+
+        match ($node::class) {
             Program::class => $this->traverseProgram($node),
             EchoStatement::class => $this->traverseEchoStatement($node),
             Assignment::class => $this->traverseAssignment($node),
@@ -31,32 +69,38 @@ final class AstTraverser implements AstTraverserInterface
             Identifier::class => $this->traverseIdentifier($node),
             Literal::class => $this->traverseLiteral($node),
             NoOp::class => $this->traverseNoOp(),
-            default => throw new RuntimeException('Unknown node type: '.$node::class),
+            default => throw AstTraverserException::unknownNodeType($node::class),
         };
     }
 
-    private function traverseProgram(Program $node): string
+    private function traverseProgram(Program $node): void
     {
-        $result = '';
         foreach ($node->statements as $statement) {
-            $result .= $this->traverse($statement).";\n";
+            $this->doTraverse($statement);
+            $this->generatedCode .= ";\n";
+            $this->currentLine++;
         }
-
-        return $result;
     }
 
-    private function traverseEchoStatement(EchoStatement $node): string
+    private function traverseEchoStatement(EchoStatement $node): void
     {
-        return 'echo '.$this->traverse($node->expression);
+        $this->generatedCode .= 'echo ';
+        $this->doTraverse($node->expression);
     }
 
-    private function traverseAssignment(Assignment $node): string
+    private function traverseAssignment(Assignment $node): void
     {
-        return $this->traverse($node->variable).' = '.$this->traverse($node->expression);
+        $this->doTraverse($node->variable);
+        $this->generatedCode .= ' = ';
+        $this->doTraverse($node->expression);
     }
 
-    private function traverseBinaryOperation(BinaryOperation $node): string
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
+    private function traverseBinaryOperation(BinaryOperation $node): void
     {
+        $this->doTraverse($node->left);
         $operator = match ($node->operator) {
             TokenType::T_PLUS => '+',
             TokenType::T_MINUS => '-',
@@ -66,53 +110,66 @@ final class AstTraverser implements AstTraverserInterface
             TokenType::T_EQUALS_EQUALS => '==',
             TokenType::T_GT => '>',
             TokenType::T_LT => '<',
-            default => throw new RuntimeException('Unknown operator: '.$node->operator->value),
+            default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
-
-        return $this->traverse($node->left).' '.$operator.' '.$this->traverse($node->right);
+        $this->generatedCode .= ' '.$operator.' ';
+        $this->doTraverse($node->right);
     }
 
-    private function traverseMemberAccess(MemberAccess $node): string
+    private function traverseMemberAccess(MemberAccess $node): void
     {
-        return $this->traverse($node->object).'->'.$this->traverse($node->property);
+        $this->doTraverse($node->object);
+        $this->generatedCode .= '->';
+        $this->doTraverse($node->property);
     }
 
-    private function traverseVariable(Variable $node): string
+    private function traverseVariable(Variable $node): void
     {
-        return '$'.$node->name;
+        $this->generatedCode .= '$'.$node->name;
     }
 
-    private function traverseIdentifier(Identifier $node): string
+    private function traverseIdentifier(Identifier $node): void
     {
-        return $node->name;
+        $this->generatedCode .= $node->name;
     }
 
-    private function traverseLiteral(Literal $node): string
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
+    private function traverseLiteral(Literal $node): void
     {
         $value = $node->value;
         if (is_numeric($value)) {
-            return (string) $value;
+            $this->generatedCode .= (string) $value;
+
+            return;
         }
 
         if (is_string($value)) {
-            return "'".addslashes($value)."'";
+            $this->generatedCode .= "'".addslashes($value)."'";
+
+            return;
         }
 
         if (is_bool($value)) {
-            return $value ? 'true' : 'false';
+            $this->generatedCode .= $value ? 'true' : 'false';
+
+            return;
         }
 
         if ($value === null) {
-            return 'null';
+            $this->generatedCode .= 'null';
+
+            return;
         }
 
         // @codeCoverageIgnoreStart
-        throw new RuntimeException('Unknown literal type: '.gettype($value));
+        throw AstTraverserException::unknownLiteralType(gettype($value));
         // @codeCoverageIgnoreEnd
     }
 
-    private function traverseNoOp(): string
+    private function traverseNoOp(): void
     {
-        return '';
+        // empty
     }
 }

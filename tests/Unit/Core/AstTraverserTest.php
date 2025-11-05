@@ -123,6 +123,11 @@ it('should throw an exception for unknown node type', function (): void {
         {
             return [];
         }
+
+        public function getToken(): ?\PhpScript\Core\Token
+        {
+            return null;
+        }
     };
     $this->traverser->traverse($unknownNode);
 })->throws(RuntimeException::class);

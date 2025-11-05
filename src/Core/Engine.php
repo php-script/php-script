@@ -48,6 +48,10 @@ final class Engine
         return $this;
     }
 
+    /**
+     * @throws \PhpScript\Exceptions\SecurityException
+     * @throws \PhpScript\Exceptions\EngineException
+     */
     public function execute(string $script): mixed
     {
         $this->ensureScriptCanBeExecuted($script);

@@ -20,32 +20,56 @@ echo u2
             'value' => 'u',
         ],
         [
+            'type' => 'T_WHITESPACE',
+            'value' => ' ',
+        ],
+        [
             'type' => 'T_EQUALS',
             'value' => '=',
+        ],
+        [
+            'type' => 'T_WHITESPACE',
+            'value' => ' ',
         ],
         [
             'type' => 'T_NUMBER',
             'value' => '10',
         ],
         [
-            'type' => 'T_SEMICOLON',
-            'value' => ';',
+            'type' => 'T_WHITESPACE',
+            'value' => "\n",
         ],
         [
             'type' => 'T_IDENTIFIER',
             'value' => 'u2',
         ],
         [
+            'type' => 'T_WHITESPACE',
+            'value' => ' ',
+        ],
+        [
             'type' => 'T_EQUALS',
             'value' => '=',
+        ],
+        [
+            'type' => 'T_WHITESPACE',
+            'value' => ' ',
         ],
         [
             'type' => 'T_IDENTIFIER',
             'value' => 'u',
         ],
         [
+            'type' => 'T_WHITESPACE',
+            'value' => ' ',
+        ],
+        [
             'type' => 'T_MULTIPLY',
             'value' => '*',
+        ],
+        [
+            'type' => 'T_WHITESPACE',
+            'value' => ' ',
         ],
         [
             'type' => 'T_NUMBER',
@@ -56,16 +80,24 @@ echo u2
             'value' => ';',
         ],
         [
+            'type' => 'T_WHITESPACE',
+            'value' => "\n",
+        ],
+        [
             'type' => 'T_ECHO',
             'value' => 'echo',
+        ],
+        [
+            'type' => 'T_WHITESPACE',
+            'value' => ' ',
         ],
         [
             'type' => 'T_IDENTIFIER',
             'value' => 'u2',
         ],
         [
-            'type' => 'T_SEMICOLON',
-            'value' => ';',
+            'type' => 'T_WHITESPACE',
+            'value' => "\n",
         ],
     ]);
 });

@@ -79,16 +79,16 @@ final class Engine
             unlink($tmpFile);
         } catch (ParseException $e) {
             $token = $e->getToken();
-            throw new EngineException($e->getMessage(), $token->line, $token->column, $token->offset, $e);
+            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset, $e);
         } catch (Throwable $e) {
             ob_end_clean();
-            if (isset($tmpFile) && is_string($tmpFile)) {
+            if (isset($tmpFile) && file_exists($tmpFile)) {
                 unlink($tmpFile);
             }
 
             $line = $e->getLine() - 2;
-            $token = $sourceMap[$line] ?? $e->getToken() ?? null;
-            if ($token) {
+            $token = $sourceMap[$line] ?? null;
+            if ($token instanceof Token) {
                 throw EngineException::runtimeError($e->getMessage(), $token->line, $token->column, $token->offset, $e);
             }
 

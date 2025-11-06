@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Tests\Unit\Core;
+
 use PhpScript\Core\Engine;
 use PhpScript\Exceptions\EngineException;
 
@@ -69,7 +71,7 @@ it('throws exception on runtime error', function (): void {
 
 it('handles object property access', function (): void {
     $engine = new Engine;
-    $user = new stdClass;
+    $user = new \stdClass;
     $user->name = 'John Doe';
     $engine->set('user', $user);
     $result = $engine->execute('echo user.name;');

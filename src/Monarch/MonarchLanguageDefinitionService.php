@@ -6,7 +6,8 @@ namespace PhpScript\Monarch;
 
 final readonly class MonarchLanguageDefinitionService
 {
-    private const KEYWORDS = [
+    /** @var string[] */
+    private const array KEYWORDS = [
         'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
     ];
 
@@ -21,6 +22,16 @@ final readonly class MonarchLanguageDefinitionService
         private array $contextDocumentation = [],
     ) {}
 
+    /**
+     * @return array{
+     *     keywords: string[],
+     *     allowedFunctions: string[],
+     *     contextVariables: string[],
+     *     operators: string[],
+     *     symbols: string,
+     *     tokenizer: array<string, mixed>,
+     * }
+     */
     public function getDefinition(): array
     {
         return [
@@ -78,9 +89,15 @@ final readonly class MonarchLanguageDefinitionService
         ];
     }
 
+    /**
+     * @return array{
+     *     text: non-empty-list<array{label: string, kind: int, insertText: string, detail: string, documentation: string}>,
+     *     keyword: array<array{label: string, kind: int, insertText: non-falsy-string, detail: string, documentation: string}>
+     * }
+     */
     public function getCompletionItems(): array
     {
-        $functionItems = array_map(fn (string $functionName) => [
+        $functionItems = array_map(fn (string $functionName): array => [
             'label' => $functionName,
             'kind' => CompletionItemKind::Function->value,
             'insertText' => $functionName . '(${1:condition})',
@@ -88,7 +105,7 @@ final readonly class MonarchLanguageDefinitionService
             'documentation' => '',
         ], $this->allowedFunctions);
 
-        $variableItems = array_map(fn (string $variableName) => [
+        $variableItems = array_map(fn (string $variableName): array => [
             'label' => $variableName,
             'kind' => CompletionItemKind::Variable->value,
             'insertText' => $variableName,
@@ -96,7 +113,7 @@ final readonly class MonarchLanguageDefinitionService
             'documentation' => $this->contextDocumentation[$variableName] ?? '',
         ], array_keys($this->contextVariables));
 
-        $keywordItems = array_map(static fn (string $keyword) => [
+        $keywordItems = array_map(static fn (string $keyword): array => [
             'label' => $keyword,
             'kind' => CompletionItemKind::Keyword->value,
             'insertText' => $keyword,

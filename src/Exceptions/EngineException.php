@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace PhpScript\Exceptions;
 
+use RuntimeException;
 use Throwable;
 
-class EngineException extends \RuntimeException
+class EngineException extends RuntimeException
 {
     public function __construct(
         string $message,

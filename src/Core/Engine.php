@@ -6,15 +6,18 @@ namespace PhpScript\Core;
 
 use ErrorException;
 use PhpScript\Exceptions\EngineException;
+use PhpScript\Exceptions\LexerException;
 use PhpScript\Exceptions\ParseException;
+use PhpScript\Monarch\MonarchLanguageDefinitionService;
 use Throwable;
 
 final class Engine
 {
-    /**
-     * @var array<string, mixed>
-     */
+    /** @var array<string, mixed> */
     private array $context = [];
+
+    /** @var array<string, string> */
+    private array $contextDocumentation = [];
 
     /**
      * @var string[]
@@ -34,9 +37,12 @@ final class Engine
         return $this;
     }
 
-    public function set(string $name, mixed $value): self
+    public function set(string $name, mixed $value, ?string $documentation = null): self
     {
         $this->context[$name] = $value;
+        if ($documentation !== null) {
+            $this->contextDocumentation[$name] = $documentation;
+        }
 
         return $this;
     }
@@ -73,7 +79,7 @@ final class Engine
 
             $tmpFile = $this->createTemporaryFile();
 
-            file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n".$phpCode);
+            file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n" . $phpCode);
             include $tmpFile;
 
             unlink($tmpFile);
@@ -83,6 +89,8 @@ final class Engine
                 $e);
         } catch (EngineException $e) {
             throw $e;
+        } catch (LexerException $e) {
+            throw new EngineException($e->getMessage(), $e->line, $e->column, $e->offset, $e);
         } catch (Throwable $e) {
             ob_end_clean();
             if (isset($tmpFile) && file_exists($tmpFile)) {
@@ -104,6 +112,15 @@ final class Engine
         }
 
         return ob_get_clean();
+    }
+
+    public function monarchLanguageDefinition(): MonarchLanguageDefinitionService
+    {
+        return new MonarchLanguageDefinitionService(
+            $this->allowedFunctions,
+            $this->context,
+            $this->contextDocumentation,
+        );
     }
 
     /**

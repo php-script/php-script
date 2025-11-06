@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Tests\Unit\Core;
+
 use PhpScript\Core\Engine;
 use PhpScript\Exceptions\EngineException;
 
@@ -69,7 +71,7 @@ it('throws exception on runtime error', function (): void {
 
 it('handles object property access', function (): void {
     $engine = new Engine;
-    $user = new stdClass;
+    $user = new \stdClass;
     $user->name = 'John Doe';
     $engine->set('user', $user);
     $result = $engine->execute('echo user.name;');
@@ -123,5 +125,22 @@ it('handles the LINEBREAK constant', function (): void {
     $engine = new Engine;
     $result = $engine->execute("echo 'hello' ~ LINEBREAK ~ 'world';");
 
-    expect($result)->toBe('hello'.PHP_EOL.'world');
+    expect($result)->toBe('hello' . PHP_EOL . 'world');
+});
+
+it('handles lexer exceptions', function (): void {
+    $engine = new Engine;
+    $script = <<<'SCRIPT'
+        b=1
+        a=2
+        echo a+b ~ LINEBREAK;
+        $b = 4;
+        echo "Hello " ~ '!';
+    SCRIPT;
+
+    try {
+        $engine->execute($script);
+    } catch (EngineException $e) {
+        expect($e->getMessage())->toBe('Unknown character or syntax error `$b = 4;⏎  …` at line 4, column 5.');
+    }
 });

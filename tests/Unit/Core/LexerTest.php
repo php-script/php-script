@@ -8,7 +8,7 @@ use PhpScript\Core\TokenType;
 use PhpScript\Exceptions\LexerException;
 
 it('lexer resolves script code', function (): void {
-    $phpScriptCode = 'u = 10'."\n".'u2 = u * 2;
+    $phpScriptCode = 'u = 10' . "\n" . 'u2 = u * 2;
 echo u2';
     $lexer = new Lexer;
     $tokens = $lexer->tokenize($phpScriptCode);
@@ -46,7 +46,7 @@ it('throws exception when token is not recognized', function (): void {
     try {
         $lexer->tokenize($phpScriptCode);
     } catch (LexerException $e) {
-        expect($e->getMessage())->toBe('Unknown character or syntax error at line 2, column 5.');
+        expect($e->getMessage())->toBe('Unknown character or syntax error `@;⏎c = 3;` at line 2, column 5.');
     }
 });
 

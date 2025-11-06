@@ -130,7 +130,7 @@ final class AstTraverser implements AstTraverserInterface
             TokenType::T_LESS_THAN => '<',
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
-        $this->generatedCode .= ' '.$operator.' ';
+        $this->generatedCode .= ' ' . $operator . ' ';
         $this->doTraverse($node->right);
     }
 
@@ -164,7 +164,7 @@ final class AstTraverser implements AstTraverserInterface
 
     private function traverseVariable(Variable $node): void
     {
-        $this->generatedCode .= '$'.$node->name;
+        $this->generatedCode .= '$' . $node->name;
     }
 
     private function traverseIdentifier(Identifier $node): void
@@ -185,7 +185,7 @@ final class AstTraverser implements AstTraverserInterface
         }
 
         if (is_string($value)) {
-            $this->generatedCode .= "'".addslashes($value)."'";
+            $this->generatedCode .= "'" . addslashes($value) . "'";
 
             return;
         }

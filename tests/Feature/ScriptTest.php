@@ -26,8 +26,8 @@ PHPSCRIPT;
     $result = $engine->execute($phpScript);
 
     expect($result)->toBe(
-        'USER: John'.PHP_EOL.
-        'BEFORE: '.PHP_EOL.
-        'AFTER: John'.PHP_EOL
+        'USER: John' . PHP_EOL .
+        'BEFORE: ' . PHP_EOL .
+        'AFTER: John' . PHP_EOL
     );
 });

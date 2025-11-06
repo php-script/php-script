@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace PhpScript\Exceptions;
 
 use PhpScript\Core\Token;
+use RuntimeException;
 
-class ParseException extends \RuntimeException
+class ParseException extends RuntimeException
 {
     public function __construct(string $message, private readonly ?Token $token)
     {

@@ -1,6 +1,5 @@
 <?php
 use PhpScript\Core\Engine;
-use PhpScript\Core\MonarchLanguageDefinitionService;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -32,10 +31,12 @@ $code = '';
 $hasErrors = false;
 $engine = new Engine;
 $engine->allow('count')
-    ->set('user', new User)
-    ->set('app_version', '1.0.0')
-    ->set('users_list', ['Alice', 'Bob', 'Charlie'])
+    ->set('user', new User, 'User instance')
+    ->set('app_version', '1.0.0', 'Application version')
+    ->set('users_list', ['Alice', 'Bob', 'Charlie'], 'List of users')
 ;
+
+$completionItems = $engine->monarchLanguageDefinition()->getCompletionItems();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
     $code = $_POST['code'];
@@ -88,9 +89,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
         // Register a tokens provider for the language
         monaco.languages.setMonarchTokensProvider('php-script', <?php echo json_encode($engine->monarchLanguageDefinition()->getDefinition()); ?>);
 
+        monaco.languages.registerCompletionItemProvider('php-script', {
+            provideCompletionItems: (model, position) => {
+                const word = model.getWordUntilPosition(position);
+                const range = {
+                    startLineNumber: position.lineNumber,
+                    endLineNumber: position.lineNumber,
+                    startColumn: word.startColumn,
+                    endColumn: word.endColumn,
+                };
+                const suggestions = [
+                    <?php
+                    foreach ($completionItems['text'] as $completionItem):
+                    ?>
+                    {
+                        label: "<?php echo $completionItem['label']; ?>",
+                        kind: <?php echo $completionItem['kind']; ?>,//monaco.languages.CompletionItemKind.Text,
+                        insertText: "<?php echo $completionItem['insertText']; ?>",
+                        range: range,
+                        documentation: "<?php echo $completionItem['documentation']; ?>",
+                    },
+                    <?php
+                    endforeach;
+                    ?>
+                    <?php
+                    foreach ($completionItems['keyword'] as $completionItem):
+                    ?>
+                    {
+                        label: "<?php echo $completionItem['label']; ?>",
+                        kind: <?php echo $completionItem['kind']; ?>,//monaco.languages.CompletionItemKind.Keyword,
+                        insertText: "<?php echo $completionItem['insertText']; ?>",
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        range: range,
+                        documentation: "<?php echo $completionItem['documentation']; ?>",
+                    },
+                    <?php
+                    endforeach;
+                    ?>
+                ];
+
+                return { suggestions: suggestions };
+            },
+        });
+
         const editor = monaco.editor.create(document.getElementById('editor'), {
             value: `<?php echo $code; ?>`,
-            language: 'php-script'
+            language: 'php-script',
+            theme: "vs-light",
         });
 
         document.getElementById('playground-form').addEventListener('submit', function() {

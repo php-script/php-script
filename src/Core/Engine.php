@@ -8,14 +8,16 @@ use ErrorException;
 use PhpScript\Exceptions\EngineException;
 use PhpScript\Exceptions\LexerException;
 use PhpScript\Exceptions\ParseException;
+use PhpScript\Monarch\MonarchLanguageDefinitionService;
 use Throwable;
 
 final class Engine
 {
-    /**
-     * @var array<string, mixed>
-     */
+    /** @var array<string, mixed> */
     private array $context = [];
+
+    /** @var array<string, string> */
+    private array $contextDocumentation = [];
 
     /**
      * @var string[]
@@ -35,9 +37,12 @@ final class Engine
         return $this;
     }
 
-    public function set(string $name, mixed $value): self
+    public function set(string $name, mixed $value, ?string $documentation = null): self
     {
         $this->context[$name] = $value;
+        if ($documentation !== null) {
+            $this->contextDocumentation[$name] = $documentation;
+        }
 
         return $this;
     }
@@ -111,7 +116,11 @@ final class Engine
 
     public function monarchLanguageDefinition(): MonarchLanguageDefinitionService
     {
-        return new MonarchLanguageDefinitionService($this->allowedFunctions, $this->context);
+        return new MonarchLanguageDefinitionService(
+            $this->allowedFunctions,
+            $this->context,
+            $this->contextDocumentation,
+        );
     }
 
     /**

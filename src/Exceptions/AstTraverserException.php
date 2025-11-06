@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace PhpScript\Exceptions;
 
-class AstTraverserException extends \RuntimeException
+use RuntimeException;
+
+class AstTraverserException extends RuntimeException
 {
     public static function unknownNodeType(string $nodeClass): self
     {

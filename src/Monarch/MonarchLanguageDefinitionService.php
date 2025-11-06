@@ -11,16 +11,15 @@ final readonly class MonarchLanguageDefinitionService
     ];
 
     /**
-     * @param string[] $allowedFunctions
-     * @param array<string, mixed> $contextVariables
-     * @param array<string, string> $contextDocumentation
+     * @param  string[]  $allowedFunctions
+     * @param  array<string, mixed>  $contextVariables
+     * @param  array<string, string>  $contextDocumentation
      */
     public function __construct(
         private array $allowedFunctions = [],
         private array $contextVariables = [],
         private array $contextDocumentation = [],
-    ) {
-    }
+    ) {}
 
     public function getDefinition(): array
     {
@@ -72,7 +71,7 @@ final readonly class MonarchLanguageDefinitionService
                 ],
                 'string_single' => [
                     ["[^\\\\']+", 'string'],
-                    ["\\\\.", 'string.escape'],
+                    ['\\\\.', 'string.escape'],
                     ["'", 'string.quote', '@pop'],
                 ],
             ],
@@ -84,7 +83,7 @@ final readonly class MonarchLanguageDefinitionService
         $functionItems = array_map(fn (string $functionName) => [
             'label' => $functionName,
             'kind' => CompletionItemKind::Function->value,
-            'insertText' => $functionName.'(${1:condition})',
+            'insertText' => $functionName . '(${1:condition})',
             'detail' => 'Allowed function',
             'documentation' => '',
         ], $this->allowedFunctions);
@@ -110,5 +109,4 @@ final readonly class MonarchLanguageDefinitionService
             'keyword' => $functionItems,
         ];
     }
-
 }

@@ -13,12 +13,13 @@ class LoginStats
 
 class User
 {
-    public string $name = "Administrator";
+    public string $name = 'Administrator';
+
     public LoginStats $logins;
 
     public function __construct()
     {
-        $this->logins = new LoginStats();
+        $this->logins = new LoginStats;
     }
 
     public function hasPermission(string $perm): bool
@@ -33,8 +34,7 @@ $engine = new Engine;
 $engine->allow('count')
     ->set('user', new User, 'User instance')
     ->set('app_version', '1.0.0', 'Application version')
-    ->set('users_list', ['Alice', 'Bob', 'Charlie'], 'List of users')
-;
+    ->set('users_list', ['Alice', 'Bob', 'Charlie'], 'List of users');
 
 $completionItems = $engine->monarchLanguageDefinition()->getCompletionItems();
 
@@ -100,8 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
                 };
                 const suggestions = [
                     <?php
-                    foreach ($completionItems['text'] as $completionItem):
-                    ?>
+                    foreach ($completionItems['text'] as $completionItem) {
+                        ?>
                     {
                         label: "<?php echo $completionItem['label']; ?>",
                         kind: <?php echo $completionItem['kind']; ?>,//monaco.languages.CompletionItemKind.Text,
@@ -110,11 +110,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
                         documentation: "<?php echo $completionItem['documentation']; ?>",
                     },
                     <?php
-                    endforeach;
-                    ?>
+                    }
+?>
                     <?php
-                    foreach ($completionItems['keyword'] as $completionItem):
-                    ?>
+foreach ($completionItems['keyword'] as $completionItem) {
+    ?>
                     {
                         label: "<?php echo $completionItem['label']; ?>",
                         kind: <?php echo $completionItem['kind']; ?>,//monaco.languages.CompletionItemKind.Keyword,
@@ -124,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
                         documentation: "<?php echo $completionItem['documentation']; ?>",
                     },
                     <?php
-                    endforeach;
-                    ?>
+}
+?>
                 ];
 
                 return { suggestions: suggestions };

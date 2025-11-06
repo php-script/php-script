@@ -17,5 +17,5 @@ it('creates exception with abbreviated token message', function (): void {
     $exception = LexerException::unknownCharOrSyntaxError($remainingCode);
 
     expect($exception)->toBeInstanceOf(LexerException::class)
-        ->and($exception->getMessage())->toBe('Unknown character or syntax error `@#$%` at line 0, column 0.');
+        ->and($exception->getMessage())->toBe('Unknown character or syntax error `@#$% ⏎ foo…` at line 0, column 0.');
 });

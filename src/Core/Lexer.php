@@ -114,7 +114,7 @@ final readonly class Lexer
 
             if (! $matchFound) {
                 $column = $offset - $lineOffset + 1;
-                throw new LexerException("Unknown character or syntax error at line $line, column $column.");
+                throw LexerException::unknownCharOrSyntaxError($remaining, $line, $column, $offset);
             }
         }
 

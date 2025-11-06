@@ -8,7 +8,7 @@ use PhpScript\Core\TokenType;
 use PhpScript\Exceptions\LexerException;
 
 it('lexer resolves script code', function (): void {
-    $phpScriptCode = 'u = 10'."\n".'u2 = u * 2;
+    $phpScriptCode = 'u = 10' . "\n" . 'u2 = u * 2;
 echo u2';
     $lexer = new Lexer;
     $tokens = $lexer->tokenize($phpScriptCode);

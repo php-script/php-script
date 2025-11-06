@@ -245,7 +245,7 @@ final class Parser implements ParserInterface
             return $node;
         }
 
-        throw new ParseException('Unexpected token: '.$this->peek()->type->value, $this->peek());
+        throw new ParseException('Unexpected token: ' . $this->peek()->type->value, $this->peek());
     }
 
     private function match(TokenType ...$types): bool

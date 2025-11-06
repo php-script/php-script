@@ -123,5 +123,5 @@ it('handles the LINEBREAK constant', function (): void {
     $engine = new Engine;
     $result = $engine->execute("echo 'hello' ~ LINEBREAK ~ 'world';");
 
-    expect($result)->toBe('hello'.PHP_EOL.'world');
+    expect($result)->toBe('hello' . PHP_EOL . 'world');
 });

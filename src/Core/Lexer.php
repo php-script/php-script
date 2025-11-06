@@ -89,7 +89,7 @@ final readonly class Lexer
             $matchFound = false;
 
             foreach ($this->tokenPatterns as $type => $pattern) {
-                if (preg_match('/^('.$pattern.')/u', $remaining, $matches)) {
+                if (preg_match('/^(' . $pattern . ')/u', $remaining, $matches)) {
                     $tokenTypeEnum = TokenType::from($type);
                     $value = $matches[1];
 

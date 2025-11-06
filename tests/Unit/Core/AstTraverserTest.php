@@ -23,7 +23,7 @@ it('should traverse a program', function (): void {
         new EchoStatement(new Literal('world')),
     ]);
     $result = $this->traverser->traverse($program);
-    expect($result)->toBe("echo 'hello';\n"."echo 'world';\n");
+    expect($result)->toBe("echo 'hello';\n" . "echo 'world';\n");
 });
 
 it('should traverse an empty program', function (): void {
@@ -54,7 +54,7 @@ it('should traverse a binary operation', function (TokenType $operator, string $
         new Literal(2)
     );
     $result = $this->traverser->traverse($binaryOp);
-    expect($result)->toBe('1 '.$expectedOperator.' 2');
+    expect($result)->toBe('1 ' . $expectedOperator . ' 2');
 })->with([
     [TokenType::T_PLUS, '+'],
     [TokenType::T_MINUS, '-'],

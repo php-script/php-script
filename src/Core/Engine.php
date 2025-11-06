@@ -73,7 +73,7 @@ final class Engine
 
             $tmpFile = $this->createTemporaryFile();
 
-            file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n".$phpCode);
+            file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n" . $phpCode);
             include $tmpFile;
 
             unlink($tmpFile);

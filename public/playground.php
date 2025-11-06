@@ -1,7 +1,7 @@
 <?php
 use PhpScript\Core\Engine;
 
-require_once __DIR__.'/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 $code = '';
 $hasErrors = false;

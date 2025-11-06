@@ -6,6 +6,7 @@ namespace PhpScript\Core;
 
 use ErrorException;
 use PhpScript\Exceptions\EngineException;
+use PhpScript\Exceptions\LexerException;
 use PhpScript\Exceptions\ParseException;
 use Throwable;
 
@@ -83,6 +84,8 @@ final class Engine
                 $e);
         } catch (EngineException $e) {
             throw $e;
+        } catch (LexerException $e) {
+            throw new EngineException($e->getMessage(), $e->line, $e->column, $e->offset, $e);
         } catch (Throwable $e) {
             ob_end_clean();
             if (isset($tmpFile) && file_exists($tmpFile)) {

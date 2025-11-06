@@ -3,12 +3,15 @@ use PhpScript\Core\Engine;
 
 require_once __DIR__.'/../vendor/autoload.php';
 
+$code = '';
 $hasErrors = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
+    $code = $_POST['code'];
     ob_start();
     try {
         $engine = new Engine;
-        echo $engine->execute($_POST['code']);
+        echo $engine->execute($code);
     } catch (Throwable $e) {
         $hasErrors = true;
         echo $e->getMessage();
@@ -30,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
         <div>
             <form method="post">
                 <label for="code" class="block text-xl font-bold mb-2">PHP Script</label>
-                <textarea name="code" id="code" rows="20" class="w-full p-2 border rounded-md <?php echo $hasErrors ? 'border-red-300' : 'border-gray-300' ?>"><?php echo htmlspecialchars($_POST['code'] ?? ''); ?></textarea>
+                <textarea name="code" id="code" rows="20" class="w-full p-2 border rounded-md <?php echo $hasErrors ? 'border-red-300' : 'border-gray-300' ?>"><?php echo htmlspecialchars($code); ?></textarea>
                 <button type="submit" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Run &gt;&gt;</button>
             </form>
         </div>

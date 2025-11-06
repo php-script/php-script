@@ -1,16 +1,46 @@
 <?php
 use PhpScript\Core\Engine;
+use PhpScript\Core\MonarchLanguageDefinitionService;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+class LoginStats
+{
+    public function count(): int
+    {
+        return 42;
+    }
+}
+
+class User
+{
+    public string $name = "Administrator";
+    public LoginStats $logins;
+
+    public function __construct()
+    {
+        $this->logins = new LoginStats();
+    }
+
+    public function hasPermission(string $perm): bool
+    {
+        return $perm === 'admin';
+    }
+}
+
 $code = '';
 $hasErrors = false;
+$engine = new Engine;
+$engine->allow('count')
+    ->set('user', new User)
+    ->set('app_version', '1.0.0')
+    ->set('users_list', ['Alice', 'Bob', 'Charlie'])
+;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
     $code = $_POST['code'];
     ob_start();
     try {
-        $engine = new Engine;
         echo $engine->execute($code);
     } catch (Throwable $e) {
         $hasErrors = true;
@@ -56,52 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
         monaco.languages.register({ id: 'php-script' });
 
         // Register a tokens provider for the language
-        monaco.languages.setMonarchTokensProvider('php-script', {
-            keywords: [
-                'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK'
-            ],
-            operators: [
-                '==', '===', '!=', '!==', '=', '.', '+', '-', '*', '/', '>', '<', '~'
-            ],
-            symbols:  /[=><!~?&|+\-*/^%.,;()\{}\[\]]/,
-
-            tokenizer: {
-                root: [
-                    [/[a-zA-Z_]\w*/, {
-                        cases: {
-                            '@keywords': 'keyword',
-                            '@default': 'identifier'
-                        }
-                    }],
-                    { include: '@whitespace' },
-                    [/[{}()\[\]]/, '@brackets'],
-                    [/[<>](?!@symbols)/, '@brackets'],
-                    [/@symbols/, {
-                        cases: {
-                            '@operators': 'operator',
-                            '@default': ''
-                        }
-                    }],
-                    [/\d+(\.\d+)?/, 'number'],
-                    [/"/, 'string.quote', '@string_double'],
-                    [/'/, 'string.quote', '@string_single'],
-                ],
-                whitespace: [
-                    [/[ \t\r\n]+/, ''],
-                    [/\/\/.*$/, 'comment'],
-                ],
-                string_double: [
-                    [/[^\\"]+/, 'string'],
-                    [/\\./, 'string.escape'],
-                    [/"/, 'string.quote', '@pop']
-                ],
-                string_single: [
-                    [/[^\\']+/, 'string'],
-                    [/\\./, 'string.escape'],
-                    [/'/, 'string.quote', '@pop']
-                ],
-            }
-        });
+        monaco.languages.setMonarchTokensProvider('php-script', <?php echo json_encode($engine->monarchLanguageDefinition()->getDefinition()); ?>);
 
         const editor = monaco.editor.create(document.getElementById('editor'), {
             value: `<?php echo $code; ?>`,

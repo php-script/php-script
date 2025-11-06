@@ -109,6 +109,11 @@ final class Engine
         return ob_get_clean();
     }
 
+    public function monarchLanguageDefinition(): MonarchLanguageDefinitionService
+    {
+        return new MonarchLanguageDefinitionService($this->allowedFunctions, $this->context);
+    }
+
     /**
      * @throws \PhpScript\Exceptions\EngineException
      */

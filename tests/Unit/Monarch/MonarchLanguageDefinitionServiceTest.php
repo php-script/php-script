@@ -179,3 +179,20 @@ it('returns the correct completion items when an allowed function is added', fun
 
     expect($completionItems['keyword'])->toContain($functionItem);
 });
+
+it('returns the correct completion items when a context variable is set', function () {
+    $engine = new Engine;
+    $engine->set('user', new \stdClass, 'The current user');
+
+    $completionItems = $engine->monarchLanguageDefinition()->getCompletionItems();
+
+    $variableItem = [
+        'label' => 'user',
+        'kind' => CompletionItemKind::Variable->value,
+        'insertText' => 'user',
+        'detail' => 'Context variable',
+        'documentation' => 'The current user',
+    ];
+
+    expect($completionItems['text'])->toContain($variableItem);
+});

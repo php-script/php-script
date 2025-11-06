@@ -46,7 +46,7 @@ it('throws exception when token is not recognized', function (): void {
     try {
         $lexer->tokenize($phpScriptCode);
     } catch (LexerException $e) {
-        expect($e->getMessage())->toBe('Unknown character or syntax error at line 2, column 5.');
+        expect($e->getMessage())->toBe('Unknown character or syntax error `@;⏎c = 3;` at line 2, column 5.');
     }
 });
 

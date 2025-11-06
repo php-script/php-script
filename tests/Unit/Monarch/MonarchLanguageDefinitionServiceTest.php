@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Monarch;
 
+use PhpScript\Core\Engine;
 use PhpScript\Monarch\CompletionItemKind;
 use PhpScript\Monarch\MonarchLanguageDefinitionService;
 
@@ -160,4 +161,21 @@ it('returns the correct completion items with context variables', function () {
 
     expect($completionItems['text'])->toEqual(array_merge($keywordItems, $variableItems));
     expect($completionItems['keyword'])->toBe([]);
+});
+
+it('returns the correct completion items when an allowed function is added', function () {
+    $engine = new Engine;
+    $engine->allow('count');
+
+    $completionItems = $engine->monarchLanguageDefinition()->getCompletionItems();
+
+    $functionItem = [
+        'label' => 'count',
+        'kind' => CompletionItemKind::Function->value,
+        'insertText' => 'count(${1:condition})',
+        'detail' => 'Allowed function',
+        'documentation' => '',
+    ];
+
+    expect($completionItems['keyword'])->toContain($functionItem);
 });

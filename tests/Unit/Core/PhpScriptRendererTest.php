@@ -6,8 +6,11 @@ use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
+use PhpScript\Ast\FunctionCall;
+use PhpScript\Ast\Identifier;
 use PhpScript\Ast\IfStatement;
 use PhpScript\Ast\Literal;
+use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
@@ -95,28 +98,37 @@ it('can render an if statement without an else block', function () {
     expect(trim($output))->toBe('if (true) {}');
 });
 
-it('can render a for statement with null parts', function () {
+it('can render a for statement with partial null parts', function () {
     $program = new Program([
-        new ForStatement(null, null, null, new Program([]), new Token(TokenType::T_FOR, 'for', 1, 1, 0)),
+        new ForStatement(new Assignment(new Variable('i'), new Literal(0)), null, null, new Program([]), new Token(TokenType::T_FOR, 'for', 1, 1, 0)),
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
-    expect(trim($output))->toBe('for (; ; ) {}');
+    expect(trim($output))->toBe('for (i = 0; ; ) {}');
 });
 
-it('can render a foreach statement with a key', function () {
+it('can render a for statement with only a condition', function () {
+    $program = new Program([
+        new ForStatement(null, new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)), null, new Program([]), new Token(TokenType::T_FOR, 'for', 1, 1, 0)),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('for (; i < 10; ) {}');
+});
+
+it('can render a foreach statement without a key', function () {
     $program = new Program([
         new ForeachStatement(
             new Variable('items'),
             new Variable('item'),
-            new Variable('key'),
+            null,
             new Program([]),
             new Token(TokenType::T_FOREACH, 'foreach', 1, 1, 0)
         ),
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
-    expect(trim($output))->toBe('foreach (items as key => item) {}');
+    expect(trim($output))->toBe('foreach (items as item) {}');
 });
 
 it('can render various binary operators', function () {
@@ -176,6 +188,42 @@ it('can render a LINEBREAK literal', function () {
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
     expect(trim($output))->toBe('echo LINEBREAK;');
+});
+
+it('can render a member access', function () {
+    $program = new Program([
+        new MemberAccess(new Variable('foo'), new Identifier('bar')),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('foo.bar');
+});
+
+it('can render a function call with arguments', function () {
+    $program = new Program([
+        new FunctionCall(new Identifier('foo'), [new Literal(1), new Literal('bar')]),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe("foo(1, 'bar')");
+});
+
+it('can render a function call with no arguments', function () {
+    $program = new Program([
+        new FunctionCall(new Identifier('foo'), []),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('foo()');
+});
+
+it('can render a null literal', function () {
+    $program = new Program([
+        new Literal(null),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('null');
 });
 
 it('throws an exception for unknown binary operator', function () {

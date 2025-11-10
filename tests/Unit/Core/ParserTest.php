@@ -7,17 +7,22 @@ use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
 use PhpScript\Ast\IfStatement;
+use PhpScript\Ast\Literal;
 use PhpScript\Ast\NoOp;
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
+use PhpScript\Contracts\Node;
 use PhpScript\Core\Lexer;
 use PhpScript\Core\Parser;
 use PhpScript\Core\TokenType;
 use PhpScript\Exceptions\ParseException;
 
-function parse(string $code): Program
+/**
+ * @return \PhpScript\Contracts\Node|Program
+ */
+function parse(string $code): Node
 {
     $lexer = new Lexer;
     $tokens = $lexer->tokenize($code);
@@ -60,6 +65,12 @@ it('parses an if statement without an else block', function () {
     expect($program->statements[0]->else)->toBeNull();
 });
 
+it('parses an if statement with an else block', function () {
+    $program = parse('if (true) { echo "hello"; } else { echo "world"; }');
+    expect($program->statements[0])->toBeInstanceOf(IfStatement::class);
+    expect($program->statements[0]->else)->toBeInstanceOf(Program::class);
+});
+
 it('parses a parenthesized expression', function () {
     $program = parse('echo (1 + 2);');
     $statement = $program->statements[0];
@@ -86,6 +97,12 @@ it('parses a unary not operation', function () {
     $statement = $program->statements[0];
     expect($statement)->toBeInstanceOf(UnaryOperation::class);
     expect($statement->operator)->toBe(TokenType::T_BANG);
+});
+
+it('parses a false operation', function () {
+    $program = parse('false;');
+    $statement = $program->statements[0];
+    expect($statement)->toBeInstanceOf(Literal::class);
 });
 
 it('parses a postfix decrement operation', function () {

@@ -55,7 +55,9 @@ final class PhpScriptRenderer implements AstTraverserInterface
             Identifier::class => $this->traverseIdentifier($node),
             Literal::class => $this->traverseLiteral($node),
             NoOp::class => $this->traverseNoOp(),
+            // @codeCoverageIgnoreStart
             default => throw AstTraverserException::unknownNodeType($node::class),
+            // @codeCoverageIgnoreEnd
         };
     }
 

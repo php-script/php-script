@@ -98,6 +98,15 @@ it('can render an if statement without an else block', function () {
     expect(trim($output))->toBe('if (true) {}');
 });
 
+it('can render an if statement with an else block', function () {
+    $program = new Program([
+        new IfStatement(new Literal(true), new Program([]), new Program([]), new Token(TokenType::T_IF, 'if', 1, 1, 0)),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('if (true) {} else {}');
+});
+
 it('can render a for statement with partial null parts', function () {
     $program = new Program([
         new ForStatement(new Assignment(new Variable('i'), new Literal(0)), null, null, new Program([]), new Token(TokenType::T_FOR, 'for', 1, 1, 0)),
@@ -129,6 +138,21 @@ it('can render a foreach statement without a key', function () {
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
     expect(trim($output))->toBe('foreach (items as item) {}');
+});
+
+it('can render a foreach statement with a key', function () {
+    $program = new Program([
+        new ForeachStatement(
+            new Variable('items'),
+            new Variable('item'),
+            new Variable('i'),
+            new Program([]),
+            new Token(TokenType::T_FOREACH, 'foreach', 1, 1, 0)
+        ),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('foreach (items as i => item) {}');
 });
 
 it('can render various binary operators', function () {

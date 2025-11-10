@@ -165,7 +165,7 @@ final class Parser implements ParserInterface
      */
     private function parseBlock(): Node
     {
-        $token = $this->consume(TokenType::T_LEFT_BRACE, "Expect '{' before block.");
+        $this->consume(TokenType::T_LEFT_BRACE, "Expect '{' before block.");
 
         $statements = [];
         while (! $this->check(TokenType::T_RIGHT_BRACE) && ! $this->isAtEnd()) {
@@ -174,7 +174,7 @@ final class Parser implements ParserInterface
 
         $this->consume(TokenType::T_RIGHT_BRACE, "Expect '}' after block.");
 
-        return new Program($statements, $token);
+        return new Program($statements);
     }
 
     /**

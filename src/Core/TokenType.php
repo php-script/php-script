@@ -19,6 +19,8 @@ enum TokenType: string
     case T_SEMICOLON = 'T_SEMICOLON';   // ;
     case T_COMMA = 'T_COMMA';       // ,
     case T_EQUALS = 'T_EQUALS';     // =
+    case T_INCREMENT = 'T_INCREMENT'; // ++
+    case T_DECREMENT = 'T_DECREMENT'; // --
     case T_PLUS = 'T_PLUS';       // +
     case T_MINUS = 'T_MINUS';      // -
     case T_MULTIPLY = 'T_MULTIPLY';   // *

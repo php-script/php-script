@@ -49,6 +49,8 @@ final readonly class Lexer
             TokenType::T_IDENTIFIER->value => '\b[a-zA-Z_]\w*\b',
 
             // Operators
+            TokenType::T_INCREMENT->value => '\+\+',
+            TokenType::T_DECREMENT->value => '--',
             TokenType::T_COMPARE_EQUALS->value => '==(=)?',
             TokenType::T_COMPARE_UNEQUALS->value => '!=(=)?',
             TokenType::T_EQUALS->value => '=',

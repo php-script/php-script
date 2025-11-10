@@ -173,11 +173,12 @@ final class MonarchLanguageDefinitionService
         }
         $this->reflectionCache[$className] = true;
 
-        try {
-            $refClass = new ReflectionClass($className);
-        } catch (ReflectionException) {
+        // Check if the class exists before attempting to reflect it
+        if (! class_exists($className)) {
             return;
         }
+
+        $refClass = new ReflectionClass($className);
 
         $classDef = [
             'properties' => [],

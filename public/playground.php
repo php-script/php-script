@@ -35,8 +35,6 @@ $engine->allow('count')
     ->set('app_version', '1.0.0', 'Application version')
     ->set('users_list', ['Alice', 'Bob', 'Charlie'], 'List of users');
 
-$completionItems = $engine->monarchLanguageDefinition()->getCompletionItems();
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
     $code = $input['code'] ?? '';
@@ -105,42 +103,163 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.54.0/min/vs/loader.min.js"></script>
 <script>
-    let editor;
+    const suggestionModel = <?php echo json_encode($engine->monarchLanguageDefinition()->getCompletionItems()); ?>;
 
     require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.54.0/min/vs' }});
+
     require(['vs/editor/editor.main'], function() {
         // Register a new language
         monaco.languages.register({ id: 'php-script' });
 
+        const phpScriptLanguageDef = <?php echo json_encode($engine->monarchLanguageDefinition()->getDefinition()); ?>;
+
         // Register a tokens provider for the language
-        monaco.languages.setMonarchTokensProvider('php-script', <?php echo json_encode($engine->monarchLanguageDefinition()->getDefinition()); ?>);
+        monaco.languages.setMonarchTokensProvider('php-script', phpScriptLanguageDef);
 
-        const completionItems = <?php echo json_encode($engine->monarchLanguageDefinition()->getCompletionItems()); ?>;
+        // suggestion provider
+        const kinds = {
+            'Function': monaco.languages.CompletionItemKind.Function,
+            'Method': monaco.languages.CompletionItemKind.Method,
+            'Variable': monaco.languages.CompletionItemKind.Variable,
+            'Property': monaco.languages.CompletionItemKind.Property,
+            'Keyword': monaco.languages.CompletionItemKind.Keyword,
+        };
+
+        function createSuggestion(item, range) {
+            const suggestion = {
+                label: item.label,
+                kind: kinds[item.kind] || monaco.languages.CompletionItemKind.Text,
+                detail: item.detail || '',
+                documentation: item.doc || '',
+                range: range
+            };
+
+            // **********************************************************
+            // * HIER IST DIE ÄNDERUNG FÜR SNIPPETS
+            // **********************************************************
+            if (item.snippet) {
+                // Wir haben ein Snippet!
+                suggestion.insertText = item.snippet;
+                // WICHTIG: Sagen Sie Monaco, dass dies ein Snippet ist
+                suggestion.insertTextRules = monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet;
+            } else {
+                // Fallback auf normalen Text
+                suggestion.insertText = item.insertText || item.label;
+                suggestion.insertTextRules = monaco.languages.CompletionItemInsertTextRule.KeepWhitespace;
+            }
+            // **********************************************************
+
+            return suggestion;
+        }
+
+        //const completionItems = <?php // echo $engine->monarchLanguageDefinition()->getCompletionItems();?>//;
         monaco.languages.registerCompletionItemProvider('php-script', {
-            provideCompletionItems: (model, position) => {
-                const word = model.getWordUntilPosition(position);
-                const range = {
-                    startLineNumber: position.lineNumber,
-                    endLineNumber: position.lineNumber,
-                    startColumn: word.startColumn,
-                    endColumn: word.endColumn
-                };
+            triggerCharacters: ['.'],
 
-                // Erstellen der Vorschlagslisten
-                const createSuggestions = (items) => items.map(item => ({
-                    ...item,
-                    range: range
-                }));
+            provideCompletionItems: function(model, position, context) {
+                const triggerKind = context.triggerKind;
+                const triggerChar = context.triggerCharacter;
 
-                // Hier könnte man zwischen Keyword/Variablen und Funktionen unterscheiden,
-                // aber zur Vereinfachung kombinieren wir sie hier.
-                const allSuggestions = [
-                    ...createSuggestions(completionItems.text),
-                    ...createSuggestions(completionItems.keyword)
-                ];
+                // --- Fall 1: Benutzer hat explizit '.' getippt ---
+                if (triggerKind === monaco.languages.CompletionTriggerKind.TriggerCharacter && triggerChar === '.') {
 
-                return { suggestions: allSuggestions };
-            },
+                    const lineContent = model.getLineContent(position.lineNumber);
+                    const textBeforeDot = lineContent.substring(0, position.column - 1);
+
+                    const chainMatch = textBeforeDot.match(/([a-zA-Z_][\w\.]*)$/);
+                    if (!chainMatch) return { suggestions: [] };
+
+                    let chainStr = chainMatch[1];
+
+                    if (chainStr.endsWith('.')) {
+                        chainStr = chainStr.substring(0, chainStr.length - 1);
+                    }
+
+                    const chain = chainStr.split('.');
+
+                    // Kette auflösen
+                    let currentClassName = null;
+                    const startVarName = chain[0];
+                    const variable = suggestionModel.globalVariables.find(v => v.label === startVarName);
+
+                    if (!variable) return { suggestions: [] };
+                    currentClassName = variable.detail;
+
+                    for (let i = 1; i < chain.length; i++) {
+                        const propName = chain[i];
+                        if (!currentClassName) return { suggestions: [] };
+
+                        const classDef = suggestionModel.classes[currentClassName];
+                        if (!classDef) return { suggestions: [] };
+
+                        const prop = classDef.properties.find(p => p.label === propName);
+                        if (prop) {
+                            currentClassName = prop.detail;
+                        } else {
+                            const method = classDef.methods.find(m => m.label === propName);
+                            if (method && method.detail) {
+                                // Versuchen, den Rückgabetyp aus "detail" zu parsen
+                                const returnTypeMatch = method.detail.match(/:\s*(\w+)$/);
+                                if (returnTypeMatch && suggestionModel.classes[returnTypeMatch[1]]) {
+                                    currentClassName = returnTypeMatch[1];
+                                } else {
+                                    return { suggestions: [] };
+                                }
+                            } else {
+                                return { suggestions: [] };
+                            }
+                        }
+                    }
+
+                    // Vorschläge generieren
+                    const finalClassDef = suggestionModel.classes[currentClassName];
+                    if (finalClassDef) {
+                        const replacementRange = {
+                            startLineNumber: position.lineNumber,
+                            endLineNumber: position.lineNumber,
+                            startColumn: position.column,
+                            endColumn: position.column
+                        };
+
+                        const suggestions = [
+                            ...finalClassDef.properties.map(p => createSuggestion(p, replacementRange)),
+                            ...finalClassDef.methods.map(m => createSuggestion(m, replacementRange))
+                        ];
+                        return { suggestions: suggestions, incomplete: false };
+                    }
+
+                    return { suggestions: [] };
+                }
+
+                // --- Fall 2: Standard-Vorschläge (Globale Vars, Funktionen, Keywords) ---
+                if (triggerKind === monaco.languages.CompletionTriggerKind.Invoke ||
+                    triggerKind === monaco.languages.CompletionTriggerKind.TriggerForIncompleteCompletions) {
+
+                    const word = model.getWordUntilPosition(position);
+                    const replacementRange = {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endColumn: word.endColumn
+                    };
+
+                    const globalVars = suggestionModel.globalVariables.map(v => createSuggestion(v, replacementRange));
+                    const globalFuncs = suggestionModel.globalFunctions.map(f => createSuggestion(f, replacementRange));
+
+                    const staticKeywords = phpScriptLanguageDef.keywords.map(k => ({
+                        label: k,
+                        kind: kinds.Keyword,
+                        insertText: k,
+                        range: replacementRange,
+                        detail: 'Keyword',
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace
+                    }));
+
+                    return { suggestions: [...globalVars, ...globalFuncs, ...staticKeywords] };
+                }
+
+                return { suggestions: [] };
+            }
         });
 
         const editor = monaco.editor.create(document.getElementById('editor'), {
@@ -152,7 +271,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             scrollBeyondLastLine: false,
             minimap: {
                 enabled: true,
-            }
+            },
+            snippetSuggestions: 'inline',
         });
 
         document.getElementById('run-button').addEventListener('click', function () {

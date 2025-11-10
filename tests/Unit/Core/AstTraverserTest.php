@@ -1,5 +1,6 @@
 <?php
 
+use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
@@ -125,6 +126,90 @@ it('can traverse a for statement with an empty body', function () {
     $output = $traverser->traverse($program);
 
     $expected = "for (; ; ) {};\n";
+    expect($output)->toBe($expected);
+});
+
+it('can traverse a for statement with only a condition', function () {
+    // AST for: for (; i < 10;) { echo "loop"; }
+    $program = new Program([
+        new ForStatement(
+            null,
+            new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
+            null,
+            new Program([
+                new EchoStatement(new Literal('loop')),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "for (; \$i < 10; ) {echo 'loop';\n};\n";
+    expect($output)->toBe($expected);
+});
+
+it('can traverse a for statement with an initializer and a condition', function () {
+    // AST for: for (; i < 10;) { echo "loop"; }
+    $program = new Program([
+        new ForStatement(
+            new Assignment(new Variable('i'), new Literal(0)),
+            new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
+            null,
+            new Program([
+                new EchoStatement(new Literal('loop')),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "for (\$i = 0; \$i < 10; ) {echo 'loop';\n};\n";
+    expect($output)->toBe($expected);
+});
+
+it('can traverse a for statement with an initializer and a condition and an increment', function () {
+    // AST for: for (; i < 10;) { echo "loop"; }
+    $program = new Program([
+        new ForStatement(
+            new Assignment(new Variable('i'), new Literal(0)),
+            new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
+            new PostfixOperation(new Variable('i'), TokenType::T_INCREMENT),
+            new Program([
+                new EchoStatement(new Literal('loop')),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "for (\$i = 0; \$i < 10; \$i++) {echo 'loop';\n};\n";
+    expect($output)->toBe($expected);
+});
+
+it('can traverse a for statement with an initializer and a condition and an decrement', function () {
+    // AST for: for (; i < 10;) { echo "loop"; }
+    $program = new Program([
+        new ForStatement(
+            new Assignment(new Variable('i'), new Literal(10)),
+            new BinaryOperation(new Variable('i'), TokenType::T_GREATER_THAN, new Literal(0)),
+            new PostfixOperation(new Variable('i'), TokenType::T_DECREMENT),
+            new Program([
+                new EchoStatement(new Literal('loop')),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "for (\$i = 10; \$i > 0; \$i--) {echo 'loop';\n};\n";
     expect($output)->toBe($expected);
 });
 

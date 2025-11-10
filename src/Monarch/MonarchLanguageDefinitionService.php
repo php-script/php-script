@@ -110,8 +110,14 @@ final class MonarchLanguageDefinitionService
     }
 
     /**
-     * @return array{globalFunctions: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>, globalVariables: list<array{label: string, kind: 'Variable', detail: mixed, doc: string}>, classes: array<int, array{properties: array<int, array{label: string, kind: 'Prop
-     * erty', detail: string, doc: string}>, methods: array<int, array{label: string, kind: string, detail: string, doc: string, snippet: string}>}>}
+     * @return array{
+     *     globalFunctions: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>,
+     *     globalVariables: list<array{label: string, kind: 'Variable', detail: mixed, doc: string}>,
+     *     classes: array<string, array{
+     *         properties: list<array{label: string, kind: 'Property', detail: string, doc: string}>,
+     *         methods: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>
+     *     }>
+     * }
      */
     public function getCompletionItems(): array
     {

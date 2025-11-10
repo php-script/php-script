@@ -16,9 +16,13 @@ enum TokenType: string
     case T_RIGHT_PARENTHESIS = 'T_RIGHT_PARENTHESIS';     // )
     case T_LEFT_BRACE = 'T_LEFT_BRACE';     // {
     case T_RIGHT_BRACE = 'T_RIGHT_BRACE';     // }
+    case T_LEFT_BRACKET = 'T_LEFT_BRACKET';   // [
+    case T_RIGHT_BRACKET = 'T_RIGHT_BRACKET';  // ]
     case T_SEMICOLON = 'T_SEMICOLON';   // ;
     case T_COMMA = 'T_COMMA';       // ,
     case T_EQUALS = 'T_EQUALS';     // =
+    case T_INCREMENT = 'T_INCREMENT'; // ++
+    case T_DECREMENT = 'T_DECREMENT'; // --
     case T_PLUS = 'T_PLUS';       // +
     case T_MINUS = 'T_MINUS';      // -
     case T_MULTIPLY = 'T_MULTIPLY';   // *
@@ -30,10 +34,12 @@ enum TokenType: string
     case T_WHITESPACE = 'T_WHITESPACE';  // (whitespace)
     case T_COMMENT = 'T_COMMENT';     // // line comment
     case T_UNKNOWN = 'T_UNKNOWN';     // unknown char
+    case T_BANG = 'T_BANG'; // !
 
     // Keywords
     case T_IF = 'T_IF';
     case T_ELSE = 'T_ELSE';
+    case T_FOR = 'T_FOR';
     case T_FOREACH = 'T_FOREACH';
     case T_AS = 'T_AS';
     case T_ECHO = 'T_ECHO';

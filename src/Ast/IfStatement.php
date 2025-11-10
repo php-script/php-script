@@ -7,12 +7,13 @@ namespace PhpScript\Ast;
 use PhpScript\Contracts\Node;
 use PhpScript\Core\Token;
 
-final readonly class Assignment extends BaseNode
+final readonly class IfStatement extends BaseNode
 {
     public function __construct(
-        public Variable|MemberAccess|ArrayAccess $variable,
-        public Node $expression,
-        ?Token $token = null,
+        public Node $condition,
+        public Node $then,
+        public ?Node $else,
+        Token $token
     ) {
         parent::__construct($token);
     }
@@ -21,8 +22,9 @@ final readonly class Assignment extends BaseNode
     {
         return [
             'type' => self::class,
-            'variable' => $this->variable->toArray(),
-            'expression' => $this->expression->toArray(),
+            'condition' => $this->condition->toArray(),
+            'then' => $this->then->toArray(),
+            'else' => $this->else?->toArray() ?? null,
         ];
     }
 }

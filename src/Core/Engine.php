@@ -24,6 +24,8 @@ final class Engine
      */
     private array $allowedFunctions = [];
 
+    private int $executionTimeLimit = 0; // Default to no time limit
+
     public function __construct(
         private readonly Lexer $lexer = new Lexer,
         private readonly Parser $parser = new Parser,
@@ -55,6 +57,16 @@ final class Engine
     }
 
     /**
+     * @codeCoverageIgnore
+     */
+    public function setExecutionTimeLimit(int $seconds): self
+    {
+        $this->executionTimeLimit = $seconds;
+
+        return $this;
+    }
+
+    /**
      * @throws \PhpScript\Exceptions\EngineException
      */
     public function execute(string $script): mixed
@@ -80,17 +92,20 @@ final class Engine
             $tmpFile = $this->createTemporaryFile();
 
             file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n" . $phpCode);
+
+            // Set the execution time limit before including the file
+            set_time_limit($this->executionTimeLimit);
+
             include $tmpFile;
 
             unlink($tmpFile);
         } catch (ParseException $e) {
             $token = $e->getToken();
-            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset,
-                $e);
+            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset, $token instanceof Token ? strlen($token->value) : 1, $e);
         } catch (EngineException $e) {
             throw $e;
         } catch (LexerException $e) {
-            throw new EngineException($e->getMessage(), $e->line, $e->column, $e->offset, $e);
+            throw new EngineException($e->getMessage(), $e->line, $e->column, $e->offset, 1, $e);
         } catch (Throwable $e) {
             ob_end_clean();
             if (isset($tmpFile) && file_exists($tmpFile)) {
@@ -100,11 +115,12 @@ final class Engine
             $line = $e->getLine() - 2;
             $token = $sourceMap[$line] ?? null;
             if ($token instanceof Token) {
-                throw EngineException::runtimeError($e->getMessage(), $token->line, $token->column, $token->offset, $e);
+                $length = strlen($token->value);
+                throw EngineException::runtimeError($e->getMessage(), $token->line, $token->column, $token->offset, $length, $e);
             }
 
             // @codeCoverageIgnoreStart
-            throw EngineException::runtimeError($e->getMessage(), 0, 0, 0, $e);
+            throw EngineException::runtimeError($e->getMessage(), 0, 0, 0, 1, $e);
             // @codeCoverageIgnoreEnd
         } finally {
             restore_error_handler();

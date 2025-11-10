@@ -6,12 +6,13 @@ namespace PhpScript\Ast;
 
 use PhpScript\Contracts\Node;
 use PhpScript\Core\Token;
+use PhpScript\Core\TokenType;
 
-final readonly class Assignment extends BaseNode
+final readonly class PostfixOperation extends BaseNode
 {
     public function __construct(
-        public Variable|MemberAccess|ArrayAccess $variable,
-        public Node $expression,
+        public Node $left,
+        public TokenType $operator,
         ?Token $token = null,
     ) {
         parent::__construct($token);
@@ -21,8 +22,8 @@ final readonly class Assignment extends BaseNode
     {
         return [
             'type' => self::class,
-            'variable' => $this->variable->toArray(),
-            'expression' => $this->expression->toArray(),
+            'left' => $this->left->toArray(),
+            'operator' => $this->operator->value,
         ];
     }
 }

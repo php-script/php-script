@@ -36,6 +36,7 @@ final readonly class Lexer
             // Keywords (have to be before T_IDENTIFIER)
             TokenType::T_IF->value => '\bif\b',
             TokenType::T_ELSE->value => '\belse\b',
+            TokenType::T_FOR->value => '\bfor\b',
             TokenType::T_FOREACH->value => '\bforeach\b',
             TokenType::T_AS->value => '\bas\b',
             TokenType::T_ECHO->value => '\becho\b',
@@ -49,14 +50,19 @@ final readonly class Lexer
             TokenType::T_IDENTIFIER->value => '\b[a-zA-Z_]\w*\b',
 
             // Operators
+            TokenType::T_INCREMENT->value => '\+\+',
+            TokenType::T_DECREMENT->value => '--',
             TokenType::T_COMPARE_EQUALS->value => '==(=)?',
             TokenType::T_COMPARE_UNEQUALS->value => '!=(=)?',
             TokenType::T_EQUALS->value => '=',
+            TokenType::T_BANG->value => '!',
             TokenType::T_DOT->value => '\.',
             TokenType::T_LEFT_PARENTHESIS->value => '\(',
             TokenType::T_RIGHT_PARENTHESIS->value => '\)',
             TokenType::T_LEFT_BRACE->value => '\{',
             TokenType::T_RIGHT_BRACE->value => '\}',
+            TokenType::T_LEFT_BRACKET->value => '\[',
+            TokenType::T_RIGHT_BRACKET->value => '\]',
             TokenType::T_SEMICOLON->value => ';',
             TokenType::T_COMMA->value => ',',
             TokenType::T_PLUS->value => '\+',

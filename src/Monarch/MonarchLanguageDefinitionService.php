@@ -4,12 +4,26 @@ declare(strict_types=1);
 
 namespace PhpScript\Monarch;
 
-final readonly class MonarchLanguageDefinitionService
+use ReflectionClass;
+use ReflectionException;
+use ReflectionFunction;
+use ReflectionFunctionAbstract;
+use ReflectionIntersectionType;
+use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionProperty;
+use ReflectionType;
+use ReflectionUnionType;
+
+final class MonarchLanguageDefinitionService
 {
     /** @var string[] */
     private const array KEYWORDS = [
         'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
     ];
+
+    /** @var array<string, bool> */
+    private array $reflectionCache = [];
 
     /**
      * @param  string[]  $allowedFunctions
@@ -17,9 +31,9 @@ final readonly class MonarchLanguageDefinitionService
      * @param  array<string, string>  $contextDocumentation
      */
     public function __construct(
-        private array $allowedFunctions = [],
-        private array $contextVariables = [],
-        private array $contextDocumentation = [],
+        private readonly array $allowedFunctions = [],
+        private readonly array $contextVariables = [],
+        private readonly array $contextDocumentation = [],
     ) {}
 
     /**
@@ -36,12 +50,18 @@ final readonly class MonarchLanguageDefinitionService
     {
         return [
             'keywords' => self::KEYWORDS,
-            'allowedFunctions' => array_values($this->allowedFunctions),
+            'allowedFunctions' => array_map(function (string $fqn): string {
+                try {
+                    return new ReflectionFunction($fqn)->getShortName();
+                } catch (ReflectionException) {
+                    return $fqn;
+                }
+            }, $this->allowedFunctions),
             'contextVariables' => array_keys($this->contextVariables),
             'operators' => [
                 '==', '===', '!=', '!==', '=', '.', '+', '-', '*', '/', '>', '<', '~',
             ],
-            'symbols' => '[=><!~?&|+\-*/^%.,;()\{}\[\]]',
+            'symbols' => '[=><!~?&|+\\-*/^%.,;()\\{}\\[\\]]',
             'tokenizer' => [
                 'root' => [
                     [
@@ -56,7 +76,7 @@ final readonly class MonarchLanguageDefinitionService
                         ],
                     ],
                     ['include' => '@whitespace'],
-                    ['[{}()\[\]]', '@brackets'],
+                    ['[{}()\\[\\]]', '@brackets'],
                     ['[<>](?!@symbols)', '@brackets'],
                     [
                         '@symbols',
@@ -91,39 +111,216 @@ final readonly class MonarchLanguageDefinitionService
 
     /**
      * @return array{
-     *     text: non-empty-list<array{label: string, kind: int, insertText: string, detail: string, documentation: string}>,
-     *     keyword: array<array{label: string, kind: int, insertText: non-falsy-string, detail: string, documentation: string}>
+     *     globalFunctions: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>,
+     *     globalVariables: list<array{label: string, kind: 'Variable', detail: mixed, doc: string}>,
+     *     classes: array<string, array{
+     *         properties: list<array{label: string, kind: 'Property', detail: string, doc: string}>,
+     *         methods: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>
+     *     }>
      * }
      */
     public function getCompletionItems(): array
     {
-        $functionItems = array_map(fn (string $functionName): array => [
-            'label' => $functionName,
-            'kind' => CompletionItemKind::Function->value,
-            'insertText' => $functionName . '(${1:condition})',
-            'detail' => 'Allowed function',
-            'documentation' => '',
-        ], $this->allowedFunctions);
+        $this->reflectionCache = [];
+        $model = [
+            'globalFunctions' => [],
+            'globalVariables' => [],
+            'classes' => [],
+        ];
 
-        $variableItems = array_map(fn (string $variableName): array => [
-            'label' => $variableName,
-            'kind' => CompletionItemKind::Variable->value,
-            'insertText' => $variableName,
-            'detail' => 'Context variable',
-            'documentation' => $this->contextDocumentation[$variableName] ?? '',
-        ], array_keys($this->contextVariables));
+        // 1. Erlaubte globale Funktionen (Whitelist)
+        foreach ($this->allowedFunctions as $funcName) {
+            try {
+                $model['globalFunctions'][] = $this->formatFunctionSuggestion(new ReflectionFunction($funcName));
+            } catch (ReflectionException) {
+            }
+        }
 
-        $keywordItems = array_map(static fn (string $keyword): array => [
-            'label' => $keyword,
-            'kind' => CompletionItemKind::Keyword->value,
-            'insertText' => $keyword,
-            'detail' => 'Keyword',
-            'documentation' => '',
-        ], self::KEYWORDS);
+        // 2. Globale Kontext-Variablen (set)
+        foreach ($this->contextVariables as $name => $value) {
+            $type = gettype($value);
+
+            $detailType = $type;
+
+            // 3. Klassen-Definitionen rekursiv analysieren
+            if (is_object($value)) {
+                $detailType = $value::class;
+                $this->reflectClass($value::class, $model['classes']);
+            }
+
+            $model['globalVariables'][] = [
+                'label' => $name,
+                'kind' => 'Variable',
+                'detail' => $detailType,
+                'doc' => $this->parseDocComment($name),
+            ];
+        }
+
+        return $model;
+    }
+
+    /**
+     * Analysiert eine Klasse und fügt sie (und alle Kind-Klassen)
+     * dem 'classes'-Modell hinzu.
+     *
+     * @param  class-string  $className
+     * @param  array<string, array{properties: list<array{label: string, kind: 'Property', detail: string, doc: string}>, methods: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>}>  $classesModel
+     */
+    private function reflectClass(string $className, array &$classesModel): void
+    {
+        if (isset($this->reflectionCache[$className])) {
+            return;
+        }
+        $this->reflectionCache[$className] = true;
+
+        // Check if the class exists before attempting to reflect it
+        if (! class_exists($className)) {
+            return;
+        }
+
+        $refClass = new ReflectionClass($className);
+
+        $classDef = [
+            'properties' => [],
+            'methods' => [],
+        ];
+
+        // Public Properties
+        foreach ($refClass->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
+            $this->reflectType($prop->getType(), $classesModel);
+            $classDef['properties'][] = [
+                'label' => $prop->getName(),
+                'kind' => 'Property',
+                'detail' => $this->parseTypeHint($prop->getType()),
+                'doc' => $this->parseDocComment($prop->getDocComment()),
+            ];
+        }
+
+        // Public Methods
+        foreach ($refClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
+            if ($method->isConstructor() || $method->isDestructor() || str_starts_with($method->getName(), '__')) {
+                // @codeCoverageIgnoreStart
+                continue;
+                // @codeCoverageIgnoreEnd
+            }
+            $classDef['methods'][] = $this->formatFunctionSuggestion($method);
+
+            // Rückgabetyp ebenfalls rekursiv analysieren
+            $this->reflectType($method->getReturnType(), $classesModel);
+        }
+
+        $classesModel[$className] = $classDef;
+    }
+
+    /**
+     * @param  array<string, array{properties: list<array{label: string, kind: 'Property', detail: string, doc: string}>, methods: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>}>  $classesModel
+     */
+    private function reflectType(?ReflectionType $type, array &$classesModel): void
+    {
+        if (! $type instanceof ReflectionType) {
+            return;
+        }
+
+        if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
+            foreach ($type->getTypes() as $innerType) {
+                $this->reflectType($innerType, $classesModel);
+            }
+
+            return;
+        }
+
+        if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
+            $typeName = $type->getName();
+            /** @var class-string $typeName */
+            $this->reflectClass($typeName, $classesModel);
+        }
+    }
+
+    /**
+     * Formatiert eine Reflection-Funktion/-Methode in ein Suggestion-Objekt.
+     *
+     * @return array{label: string, kind: string, detail: string, doc: string, snippet: string}
+     */
+    private function formatFunctionSuggestion(ReflectionFunctionAbstract $ref): array
+    {
+        $params = [];
+        $snippetParams = []; // Für Snippet-Generierung
+        $paramIndex = 1;
+
+        foreach ($ref->getParameters() as $param) {
+            $paramType = $this->parseTypeHint($param->getType());
+            $paramName = '$' . $param->getName();
+            $paramStr = $paramType . ' ' . $paramName;
+
+            $snippetParam = '${' . ($paramIndex++) . ':' . $param->getName() . '}';
+
+            if ($param->isDefaultValueAvailable()) {
+                $paramStr .= ' = ...'; // Standardwert andeuten
+                // Optional: Snippet für optionale Parameter anders behandeln (hier nicht implementiert)
+            }
+            $params[] = $paramStr;
+            $snippetParams[] = $snippetParam;
+        }
+
+        $paramSignature = implode(', ', $params);
+        $snippetSignature = implode(', ', $snippetParams);
+        $returnType = $this->parseTypeHint($ref->getReturnType());
+        $label = $ref->getShortName();
 
         return [
-            'text' => array_merge($keywordItems, $variableItems),
-            'keyword' => $functionItems,
+            'label' => $label,
+            'kind' => $ref instanceof ReflectionMethod ? 'Method' : 'Function',
+            'detail' => "$label($paramSignature): $returnType",
+            'doc' => $this->parseDocComment($ref->getDocComment()),
+            'snippet' => $label . '(' . $snippetSignature . ')', // Snippet hinzufügen
         ];
+    }
+
+    /**
+     * Liest den Typ aus einem ReflectionType (kann ?string, string|int, etc. sein).
+     */
+    private function parseTypeHint(?ReflectionType $type): string
+    {
+        if (! $type instanceof ReflectionType) {
+            return 'mixed';
+        }
+
+        $name = '';
+        if ($type instanceof ReflectionNamedType) {
+            $name = $type->getName();
+        } elseif ($type instanceof ReflectionUnionType) {
+            $types = array_map($this->parseTypeHint(...), $type->getTypes());
+            $name = implode('|', $types);
+        } elseif ($type instanceof ReflectionIntersectionType) {
+            $types = array_map($this->parseTypeHint(...), $type->getTypes());
+            $name = implode('&', $types);
+        }
+
+        return ($type->allowsNull() && $name !== 'mixed') ? "?$name" : $name;
+    }
+
+    /**
+     * Extrahiert die erste Zeile eines Doc-Kommentars.
+     */
+    private function parseDocComment(string|false $doc): string
+    {
+        if ($doc === false || ($doc === '' || $doc === '0')) {
+            return '';
+        }
+
+        if (array_key_exists($doc, $this->contextDocumentation)) {
+            return $this->contextDocumentation[$doc];
+        }
+
+        $doc = preg_replace('/[\t ]*(\*\/|\/\*\*|\* ?)/', '', $doc);
+        $lines = explode("\n", (string) $doc);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line !== '' && $line !== '0' && ! str_starts_with($line, '@')) {
+                return $line;
+            }
+        }
+
+        return '';
     }
 }

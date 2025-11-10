@@ -12,9 +12,11 @@ use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
+use PhpScript\Contracts\Node;
 use PhpScript\Core\AstTraverser;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
+use PhpScript\Exceptions\AstTraverserException;
 use PhpScript\Exceptions\EngineException;
 
 it('can traverse an if-else statement', function () {
@@ -202,4 +204,78 @@ it('can traverse a simple identifier', function () {
 
     $expected = "i;\n";
     expect($output)->toBe($expected);
+});
+
+it('throws an exception for unknown node type', function () {
+    $unknownNode = new class implements Node
+    {
+        public function getToken(): ?Token
+        {
+            return null;
+        }
+
+        public function toArray(): array
+        {
+            return [];
+        }
+    };
+
+    $program = new Program([$unknownNode]);
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+})->throws(AstTraverserException::class);
+
+it('throws an exception for unknown binary operator', function () {
+    $program = new Program([
+        new BinaryOperation(new Literal(1), TokenType::T_UNKNOWN, new Literal(2)),
+    ]);
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+})->throws(AstTraverserException::class);
+
+it('throws an exception for unknown unary operator', function () {
+    $program = new Program([
+        new UnaryOperation(TokenType::T_UNKNOWN, new Literal(1)),
+    ]);
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+})->throws(AstTraverserException::class);
+
+it('throws an exception for unknown postfix operator', function () {
+    $program = new Program([
+        new PostfixOperation(new Variable('i'), TokenType::T_UNKNOWN),
+    ]);
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+})->throws(AstTraverserException::class);
+
+it('throws an exception for unknown literal type', function () {
+    $program = new Program([
+        new EchoStatement(new Literal([])),
+    ]);
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+})->throws(AstTraverserException::class);
+
+it('throws an exception for invalid function call with token', function () {
+    $program = new Program([
+        new FunctionCall(
+            new Identifier('invalid', new Token(TokenType::T_IDENTIFIER, 'invalid', 1, 1, 0)),
+            []
+        ),
+    ]);
+    $traverser = new AstTraverser;
+    $traverser->setAllowedFunctions([]);
+    $traverser->traverse($program);
+})->throws(EngineException::class);
+
+it('returns a source map', function () {
+    $program = new Program([
+        new EchoStatement(new Literal('hello'), new Token(TokenType::T_ECHO, 'echo', 1, 1, 0)),
+    ]);
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+    $sourceMap = $traverser->getSourceMap();
+    expect($sourceMap)->toBeArray();
+    expect($sourceMap[1]->type)->toBe(TokenType::T_ECHO);
 });

@@ -17,6 +17,11 @@ interface MyTestInterface
     public function interfaceMethod(): bool;
 }
 
+class ClassWithBadReturn
+{
+    public function getBadClass(): \Some\Non\Existent\ClassName {}
+}
+
 class MyTestClass implements MyTestInterface
 {
     /** This is a public property. */
@@ -25,6 +30,13 @@ class MyTestClass implements MyTestInterface
     protected string $protectedProp = 'protected';
 
     private string $privateProp = 'private';
+
+    public string $propWithoutDoc;
+
+    /**
+     * @internal
+     */
+    public string $propWithOnlyTags;
 
     /**
      * This is a public method.
@@ -53,6 +65,8 @@ class MyTestClass implements MyTestInterface
     {
         return $this;
     }
+
+    public function methodWithoutReturnType() {}
 
     public function interfaceMethod(): bool
     {
@@ -263,4 +277,58 @@ it('provides completion for allowed global functions', function () {
     expect($functionDef['label'])->toBe('my_test_function');
     expect($functionDef['detail'])->toBe('my_test_function(array $items): int');
     expect($functionDef['snippet'])->toBe('my_test_function(${1:items})');
+});
+
+it('handles non-existent classes gracefully', function () {
+    $service = new MonarchLanguageDefinitionService(
+        contextVariables: ['myObject' => new ClassWithBadReturn],
+    );
+
+    // This should not throw an exception
+    $completionItems = $service->getCompletionItems();
+
+    // We expect ClassWithBadReturn to be in the classes...
+    expect(array_key_exists(ClassWithBadReturn::class, $completionItems['classes']))->toBeTrue();
+    // ... but NonExistentClass should not be, and no error should be thrown.
+    expect(array_key_exists('Some\Non\Existent\ClassName', $completionItems['classes']))->toBeFalse();
+    expect(count($completionItems['classes']))->toBe(1);
+});
+
+it('handles methods without a return type', function () {
+    $service = new MonarchLanguageDefinitionService(
+        contextVariables: ['myObject' => new MyTestClass],
+    );
+
+    $completionItems = $service->getCompletionItems();
+    $classDef = $completionItems['classes'][MyTestClass::class];
+
+    $method = current(array_filter($classDef['methods'], fn ($method) => $method['label'] === 'methodWithoutReturnType'));
+
+    expect($method['detail'])->toBe('methodWithoutReturnType(): mixed');
+});
+
+it('handles properties without a doc comment', function () {
+    $service = new MonarchLanguageDefinitionService(
+        contextVariables: ['myObject' => new MyTestClass],
+    );
+
+    $completionItems = $service->getCompletionItems();
+    $classDef = $completionItems['classes'][MyTestClass::class];
+
+    $prop = current(array_filter($classDef['properties'], fn ($prop) => $prop['label'] === 'propWithoutDoc'));
+
+    expect($prop['doc'])->toBe('');
+});
+
+it('handles doc comments with only tags', function () {
+    $service = new MonarchLanguageDefinitionService(
+        contextVariables: ['myObject' => new MyTestClass],
+    );
+
+    $completionItems = $service->getCompletionItems();
+    $classDef = $completionItems['classes'][MyTestClass::class];
+
+    $prop = current(array_filter($classDef['properties'], fn ($prop) => $prop['label'] === 'propWithOnlyTags'));
+
+    expect($prop['doc'])->toBe('');
 });

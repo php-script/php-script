@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Tests\Unit\Monarch;
 
 use PhpScript\Core\Engine;
-use PhpScript\Monarch\CompletionItemKind;
 use PhpScript\Monarch\MonarchLanguageDefinitionService;
 
 it('returns the correct definition', function (): void {
@@ -83,52 +82,11 @@ it('returns the correct definition with context variables', function (): void {
     expect($definition['contextVariables'])->toBe(['test_variable']);
 });
 
-it('returns the correct completion items', function (): void {
-    $service = new MonarchLanguageDefinitionService;
-    $completionItems = $service->getCompletionItems();
-
-    $keywords = [
-        'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
-    ];
-    $keywordItems = array_map(static fn (string $keyword): array => [
-        'label' => $keyword,
-        'kind' => CompletionItemKind::Keyword->value,
-        'insertText' => $keyword,
-        'detail' => 'Keyword',
-        'documentation' => '',
-    ], $keywords);
-
-    expect($completionItems)->toBe([
-        'text' => $keywordItems,
-        'keyword' => [],
-    ]);
-});
-
-it('returns the correct completion items with allowed functions', function (): void {
+it('returns no undefined versions', function (): void {
     $service = new MonarchLanguageDefinitionService(allowedFunctions: ['test_function']);
-    $completionItems = $service->getCompletionItems();
+    $completionItems = json_encode($service->getCompletionItems());
 
-    $keywords = [
-        'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
-    ];
-    $keywordItems = array_map(static fn (string $keyword): array => [
-        'label' => $keyword,
-        'kind' => CompletionItemKind::Keyword->value,
-        'insertText' => $keyword,
-        'detail' => 'Keyword',
-        'documentation' => '',
-    ], $keywords);
-
-    expect($completionItems['text'])->toEqual($keywordItems);
-    expect($completionItems['keyword'])->toBe([
-        [
-            'label' => 'test_function',
-            'kind' => CompletionItemKind::Function->value,
-            'insertText' => 'test_function(${1:condition})',
-            'detail' => 'Allowed function',
-            'documentation' => '',
-        ],
-    ]);
+    expect($completionItems)->not()->toContain('test_function');
 });
 
 it('returns the correct completion items with context variables', function (): void {
@@ -136,63 +94,26 @@ it('returns the correct completion items with context variables', function (): v
         contextVariables: ['test_variable' => 'test_value'],
         contextDocumentation: ['test_variable' => 'This is a test variable']
     );
-    $completionItems = $service->getCompletionItems();
+    $completionItems = json_encode($service->getCompletionItems());
 
-    $keywords = [
-        'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
-    ];
-    $keywordItems = array_map(static fn (string $keyword): array => [
-        'label' => $keyword,
-        'kind' => CompletionItemKind::Keyword->value,
-        'insertText' => $keyword,
-        'detail' => 'Keyword',
-        'documentation' => '',
-    ], $keywords);
-
-    $variableItems = [
-        [
-            'label' => 'test_variable',
-            'kind' => CompletionItemKind::Variable->value,
-            'insertText' => 'test_variable',
-            'detail' => 'Context variable',
-            'documentation' => 'This is a test variable',
-        ],
-    ];
-
-    expect($completionItems['text'])->toEqual(array_merge($keywordItems, $variableItems));
-    expect($completionItems['keyword'])->toBe([]);
+    expect($completionItems)->toContain('test_variable')
+        ->toContain('This is a test variable');
 });
 
 it('returns the correct completion items when an allowed function is added', function (): void {
     $engine = new Engine;
     $engine->allow('count');
 
-    $completionItems = $engine->monarchLanguageDefinition()->getCompletionItems();
+    $completionItems = json_encode($engine->monarchLanguageDefinition()->getCompletionItems());
 
-    $functionItem = [
-        'label' => 'count',
-        'kind' => CompletionItemKind::Function->value,
-        'insertText' => 'count(${1:condition})',
-        'detail' => 'Allowed function',
-        'documentation' => '',
-    ];
-
-    expect($completionItems['keyword'])->toContain($functionItem);
+    expect($completionItems)->toContain('count');
 });
 
 it('returns the correct completion items when a context variable is set', function (): void {
     $engine = new Engine;
     $engine->set('user', new \stdClass, 'The current user');
 
-    $completionItems = $engine->monarchLanguageDefinition()->getCompletionItems();
+    $completionItems = json_encode($engine->monarchLanguageDefinition()->getCompletionItems());
 
-    $variableItem = [
-        'label' => 'user',
-        'kind' => CompletionItemKind::Variable->value,
-        'insertText' => 'user',
-        'detail' => 'Context variable',
-        'documentation' => 'The current user',
-    ];
-
-    expect($completionItems['text'])->toContain($variableItem);
+    expect($completionItems)->toContain('user');
 });

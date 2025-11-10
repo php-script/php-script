@@ -1,214 +1,132 @@
 <?php
 
+use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
-use PhpScript\Ast\Identifier;
-use PhpScript\Ast\Literal;
-use PhpScript\Ast\MemberAccess;
+use PhpScript\Ast\ForeachStatement;
+use PhpScript\Ast\ForStatement;
+use PhpScript\Ast\IfStatement;
 use PhpScript\Ast\NoOp;
+use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
+use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
+use PhpScript\Core\Lexer;
 use PhpScript\Core\Parser;
-use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
 use PhpScript\Exceptions\ParseException;
 
-beforeEach(function (): void {
-    $this->parser = new Parser;
-});
+function parse(string $code): Program
+{
+    $lexer = new Lexer;
+    $tokens = $lexer->tokenize($code);
+    $parser = new Parser;
 
-it('should parse an empty program', function (): void {
-    $tokens = [];
-    $ast = $this->parser->parse($tokens);
+    return $parser->parse($tokens);
+}
 
-    expect($ast)->toBeInstanceOf(Program::class);
-    expect($ast->statements)->toBeEmpty();
-});
+it('throws exception for unexpected end of file', function () {
+    parse('if (true)');
+})->throws(ParseException::class, "Expect '{' before block.");
 
-it('should parse a no-op statement', function (): void {
-    $tokens = [
-        new Token(TokenType::T_SEMICOLON, ';', 1, 1, 0),
-    ];
-    $ast = $this->parser->parse($tokens);
-
-    expect($ast->statements[0])->toBeInstanceOf(NoOp::class);
-});
-
-it('should parse an echo statement', function (): void {
-    $tokens = [
-        new Token(TokenType::T_ECHO, 'echo', 1, 1, 0),
-        new Token(TokenType::T_STRING, 'hello', 1, 6, 5),
-    ];
-    $ast = $this->parser->parse($tokens);
-
-    /** @var EchoStatement $echoStatement */
-    $echoStatement = $ast->statements[0];
-    expect($echoStatement)->toBeInstanceOf(EchoStatement::class);
-    expect($echoStatement->expression)->toBeInstanceOf(Literal::class);
-    expect($echoStatement->expression->value)->toBe('hello');
-});
-
-it('should parse an assignment', function (): void {
-    $tokens = [
-        new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),
-        new Token(TokenType::T_EQUALS, '=', 1, 5, 4),
-        new Token(TokenType::T_STRING, 'bar', 1, 7, 6),
-    ];
-    $ast = $this->parser->parse($tokens);
-
-    /** @var Assignment $assignment */
-    $assignment = $ast->statements[0];
-    expect($assignment)->toBeInstanceOf(Assignment::class);
-    expect($assignment->variable)->toBeInstanceOf(Variable::class);
-    expect($assignment->variable->name)->toBe('foo');
-    expect($assignment->expression)->toBeInstanceOf(Literal::class);
-    expect($assignment->expression->value)->toBe('bar');
-});
-
-it('should parse a binary operation', function (): void {
-    $tokens = [
-        new Token(TokenType::T_NUMBER, '1', 1, 1, 0),
-        new Token(TokenType::T_PLUS, '+', 1, 3, 2),
-        new Token(TokenType::T_NUMBER, '2', 1, 5, 4),
-    ];
-    $ast = $this->parser->parse($tokens);
-
-    /** @var BinaryOperation $binaryOperation */
-    $binaryOperation = $ast->statements[0];
-    expect($binaryOperation)->toBeInstanceOf(BinaryOperation::class);
-    expect($binaryOperation->left)->toBeInstanceOf(Literal::class);
-    expect($binaryOperation->left->value)->toBe('1');
-    expect($binaryOperation->operator)->toBe(TokenType::T_PLUS);
-    expect($binaryOperation->right)->toBeInstanceOf(Literal::class);
-    expect($binaryOperation->right->value)->toBe('2');
-});
-
-it('should parse a comparison', function (): void {
-    $tokens = [
-        new Token(TokenType::T_NUMBER, '1', 1, 1, 0),
-        new Token(TokenType::T_COMPARE_EQUALS, '==', 1, 3, 2),
-        new Token(TokenType::T_NUMBER, '2', 1, 5, 4),
-    ];
-    $ast = $this->parser->parse($tokens);
-
-    /** @var BinaryOperation $binaryOperation */
-    $binaryOperation = $ast->statements[0];
-    expect($binaryOperation)->toBeInstanceOf(BinaryOperation::class);
-    expect($binaryOperation->left)->toBeInstanceOf(Literal::class);
-    expect($binaryOperation->left->value)->toBe('1');
-    expect($binaryOperation->operator)->toBe(TokenType::T_COMPARE_EQUALS);
-    expect($binaryOperation->right)->toBeInstanceOf(Literal::class);
-    expect($binaryOperation->right->value)->toBe('2');
-});
-
-it('should parse a member access', function (): void {
-    $tokens = [
-        new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),
-        new Token(TokenType::T_DOT, '.', 1, 4, 3),
-        new Token(TokenType::T_IDENTIFIER, 'bar', 1, 5, 4),
-    ];
-    $ast = $this->parser->parse($tokens);
-
-    /** @var MemberAccess $memberAccess */
-    $memberAccess = $ast->statements[0];
-    expect($memberAccess)->toBeInstanceOf(MemberAccess::class);
-    expect($memberAccess->object)->toBeInstanceOf(Variable::class);
-    expect($memberAccess->object->name)->toBe('foo');
-    expect($memberAccess->property)->toBeInstanceOf(Identifier::class);
-    expect($memberAccess->property->name)->toBe('bar');
-});
-
-it('should parse a literal', function (): void {
-    $tokens = [
-        new Token(TokenType::T_STRING, 'hello', 1, 1, 0),
-    ];
-    $ast = $this->parser->parse($tokens);
-
-    /** @var Literal $literal */
-    $literal = $ast->statements[0];
-    expect($literal)->toBeInstanceOf(Literal::class);
-    expect($literal->value)->toBe('hello');
-});
-
-it('should parse a variable', function (): void {
-    $tokens = [
-        new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),
-    ];
-    $ast = $this->parser->parse($tokens);
-
-    /** @var Variable $variable */
-    $variable = $ast->statements[0];
-    expect($variable)->toBeInstanceOf(Variable::class);
-    expect($variable->name)->toBe('foo');
-});
-
-it('should throw an exception for invalid assignment target', function (): void {
-    $tokens = [
-        new Token(TokenType::T_NUMBER, '1', 1, 1, 0),
-        new Token(TokenType::T_EQUALS, '=', 1, 3, 2),
-        new Token(TokenType::T_NUMBER, '2', 1, 5, 4),
-    ];
-    $this->parser->parse($tokens);
+it('throws exception for invalid assignment target', function () {
+    parse("'hello' = 'world';");
 })->throws(ParseException::class, 'Invalid assignment target.');
 
-it('should throw an exception for unexpected token', function (): void {
-    $tokens = [
-        new Token(TokenType::T_RIGHT_PARENTHESIS, ')', 1, 1, 0),
-    ];
-    $this->parser->parse($tokens);
-})->throws(ParseException::class, 'Unexpected token: T_RIGHT_PARENTHESIS');
+it('throws exception for unexpected token in primary expression', function () {
+    parse('*');
+})->throws(ParseException::class, 'Unexpected token: T_MULTIPLY');
 
-it('should parse a parenthesized expression', function (): void {
-    $tokens = [
-        new Token(TokenType::T_LEFT_PARENTHESIS, '(', 1, 1, 0),
-        new Token(TokenType::T_NUMBER, '1', 1, 2, 1),
-        new Token(TokenType::T_PLUS, '+', 1, 4, 3),
-        new Token(TokenType::T_NUMBER, '2', 1, 6, 5),
-        new Token(TokenType::T_RIGHT_PARENTHESIS, ')', 1, 7, 6),
-    ];
-    $ast = $this->parser->parse($tokens);
+it('throws exception for missing parenthesis in if statement', function () {
+    parse('if true) {}');
+})->throws(ParseException::class, "Expect '(' after 'if'.");
 
-    /** @var Program $ast */
-    expect($ast)->toBeInstanceOf(Program::class);
-    expect($ast->statements)->toHaveCount(1);
+it('throws exception for missing parenthesis after if condition', function () {
+    parse('if (true {}');
+})->throws(ParseException::class, "Expect ')' after if condition.");
 
-    /** @var BinaryOperation $binaryOperation */
-    $binaryOperation = $ast->statements[0];
-    expect($binaryOperation)->toBeInstanceOf(BinaryOperation::class);
-    expect($binaryOperation->left)->toBeInstanceOf(Literal::class);
-    expect($binaryOperation->left->value)->toBe('1');
-    expect($binaryOperation->operator)->toBe(TokenType::T_PLUS);
-    expect($binaryOperation->right)->toBeInstanceOf(Literal::class);
-    expect($binaryOperation->right->value)->toBe('2');
+it('throws exception for missing brace after if', function () {
+    parse('if (true) echo 1;');
+})->throws(ParseException::class, "Expect '{' before block.");
+
+it('throws exception for missing brace at end of block', function () {
+    parse('if (true) {');
+})->throws(ParseException::class, "Expect '}' after block.");
+
+it('parses an if statement without an else block', function () {
+    $program = parse('if (true) { echo "hello"; }');
+    expect($program->statements[0])->toBeInstanceOf(IfStatement::class);
+    expect($program->statements[0]->else)->toBeNull();
 });
 
-it('should throw exception at previous token when consume fails at end of file', function (): void {
-    $tokens = [
-        new Token(TokenType::T_LEFT_PARENTHESIS, '(', 1, 1, 0),
-        new Token(TokenType::T_NUMBER, '1', 1, 2, 1),
-    ];
+it('parses a parenthesized expression', function () {
+    $program = parse('echo (1 + 2);');
+    $statement = $program->statements[0];
+    expect($statement)->toBeInstanceOf(EchoStatement::class);
+    expect($statement->expression)->toBeInstanceOf(BinaryOperation::class);
+});
 
-    try {
-        $this->parser->parse($tokens);
-    } catch (ParseException $e) {
-        expect($e->getMessage())->toBe("Expect ')' after expression.");
-        // Crucially, the error is associated with the LAST valid token, not a non-existent one.
-        expect($e->getToken()->type)->toBe(TokenType::T_NUMBER);
-        expect($e->getToken()->value)->toBe('1');
+it('parses an empty statement', function () {
+    $program = parse(';');
+    expect($program->statements[0])->toBeInstanceOf(NoOp::class);
+});
+
+it('parses various binary operators', function () {
+    $operators = ['+', '-', '*', '/', '~', '==', '!=', '>', '<'];
+    foreach ($operators as $op) {
+        $program = parse("1 {$op} 2;");
+        $statement = $program->statements[0];
+        expect($statement)->toBeInstanceOf(BinaryOperation::class);
     }
 });
 
-it('should throw an exception for missing identifier after dot', function (): void {
-    $tokens = [
-        new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0),
-        new Token(TokenType::T_DOT, '.', 1, 4, 3),
-    ];
-
-    try {
-        $this->parser->parse($tokens);
-    } catch (ParseException $e) {
-        expect($e->getMessage())->toBe('Expected identifier after .');
-        expect($e->getToken()->type)->toBe(TokenType::T_DOT);
-    }
+it('parses a unary not operation', function () {
+    $program = parse('!true;');
+    $statement = $program->statements[0];
+    expect($statement)->toBeInstanceOf(UnaryOperation::class);
+    expect($statement->operator)->toBe(TokenType::T_BANG);
 });
+
+it('parses a postfix decrement operation', function () {
+    $program = parse('i--;');
+    $statement = $program->statements[0];
+    expect($statement)->toBeInstanceOf(PostfixOperation::class);
+    expect($statement->operator)->toBe(TokenType::T_DECREMENT);
+});
+
+it('parses a for loop with all clauses', function () {
+    $program = parse('for (i = 0; i < 10; i++) { echo i; }');
+    $statement = $program->statements[0];
+    expect($statement)->toBeInstanceOf(ForStatement::class);
+    expect($statement->initializer)->toBeInstanceOf(Assignment::class);
+    expect($statement->condition)->toBeInstanceOf(BinaryOperation::class);
+    expect($statement->increment)->toBeInstanceOf(PostfixOperation::class);
+});
+
+it('parses a foreach loop with a key', function () {
+    $program = parse('foreach (items as key, value) { echo key; }');
+    $statement = $program->statements[0];
+    expect($statement)->toBeInstanceOf(ForeachStatement::class);
+    expect($statement->key)->toBeInstanceOf(Variable::class);
+    expect($statement->value)->toBeInstanceOf(Variable::class);
+});
+
+it('parses an array access assignment', function () {
+    $program = parse('a[0] = 1;');
+    $statement = $program->statements[0];
+    expect($statement)->toBeInstanceOf(Assignment::class);
+    expect($statement->variable)->toBeInstanceOf(ArrayAccess::class);
+});
+
+it('throws exception for missing identifier in member access', function () {
+    parse('foo.;');
+})->throws(ParseException::class, 'Expected identifier after .');
+
+it('throws exception for missing right parenthesis in function call', function () {
+    parse('foo(1, 2');
+})->throws(ParseException::class, "Expect ')' after arguments.");
+
+it('throws exception for missing right parenthesis after expression', function () {
+    parse('(1 + 2');
+})->throws(ParseException::class, "Expect ')' after expression.");

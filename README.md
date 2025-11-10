@@ -140,20 +140,22 @@ App Version: 1.2.3
 
 - Abstract Syntax Tree (AST) is in use
 - we render PHP from AST
+- we can render PHP Script from AST
 - robust error handling with a pointer to the root cause in the PHP Script
 - 100% code coverage
 - Whitelist implementation for allowing function calls
 - Playground
   - use `make playground` and open http://localhost:8080/playground.php in your browser
+  - with a Monaco prepared editor
+- Monarch language definition for the keywords and dynamic code suggestion for provided context
+  - Monaco-based editors can learn the language and provide code completion (Monaco, vscode)
 
 ## TODO
 
-- [ ] render PHP Script from AST
 - [ ] render Mermaid.js Flowchart from AST
 - [ ] Provide a Monaco editor component for vanilla JavaScript
 - [ ] Provide a Monaco editor component for Vue.js
 - [ ] Provide a Monaco editor component for React.js
-- [ ] Implement dynamic code completion for the editor component based on the provided context
 
 ## Contribution
 

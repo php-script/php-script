@@ -109,6 +109,25 @@ it('can traverse a for statement with null parts', function () {
     expect($output)->toBe($expected);
 });
 
+it('can traverse a for statement with an empty body', function () {
+    // AST for: for (;;) {}
+    $program = new Program([
+        new ForStatement(
+            null,
+            null,
+            null,
+            new Program([]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "for (; ; ) {};\n";
+    expect($output)->toBe($expected);
+});
+
 it('can traverse a foreach statement without a key', function () {
     // AST for: foreach ($items as $item) { echo $item; }
     $program = new Program([
@@ -127,6 +146,28 @@ it('can traverse a foreach statement without a key', function () {
     $output = $traverser->traverse($program);
 
     $expected = "foreach (\$items as \$item) {echo \$item;\n};\n";
+    expect($output)->toBe($expected);
+});
+
+it('can traverse a foreach statement with a key', function () {
+    // AST for: foreach ($items as $key => $value) { echo $key; echo $value; }
+    $program = new Program([
+        new ForeachStatement(
+            new Variable('items'),
+            new Variable('value'),
+            new Variable('key'),
+            new Program([
+                new EchoStatement(new Variable('key')),
+                new EchoStatement(new Variable('value')),
+            ]),
+            new Token(TokenType::T_FOREACH, 'foreach', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "foreach (\$items as \$key => \$value) {echo \$key;\necho \$value;\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -227,7 +268,7 @@ it('throws an exception for unknown node type', function () {
 
 it('throws an exception for unknown binary operator', function () {
     $program = new Program([
-        new BinaryOperation(new Literal(1), TokenType::T_UNKNOWN, new Literal(2)),
+        new BinaryOperation(new Literal(1), TokenType::T_IF, new Literal(2)),
     ]);
     $traverser = new AstTraverser;
     $traverser->traverse($program);
@@ -235,7 +276,7 @@ it('throws an exception for unknown binary operator', function () {
 
 it('throws an exception for unknown unary operator', function () {
     $program = new Program([
-        new UnaryOperation(TokenType::T_UNKNOWN, new Literal(1)),
+        new UnaryOperation(TokenType::T_IF, new Literal(1)),
     ]);
     $traverser = new AstTraverser;
     $traverser->traverse($program);
@@ -243,7 +284,7 @@ it('throws an exception for unknown unary operator', function () {
 
 it('throws an exception for unknown postfix operator', function () {
     $program = new Program([
-        new PostfixOperation(new Variable('i'), TokenType::T_UNKNOWN),
+        new PostfixOperation(new Variable('i'), TokenType::T_IF),
     ]);
     $traverser = new AstTraverser;
     $traverser->traverse($program);

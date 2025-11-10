@@ -14,6 +14,7 @@ use PhpScript\Ast\Literal;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
 use PhpScript\Ast\Program;
+use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
 use PhpScript\Contracts\AstTraverserInterface;
 use PhpScript\Contracts\Node;
@@ -82,6 +83,7 @@ final class AstTraverser implements AstTraverserInterface
             IfStatement::class => $this->traverseIfStatement($node),
             Assignment::class => $this->traverseAssignment($node),
             BinaryOperation::class => $this->traverseBinaryOperation($node),
+            UnaryOperation::class => $this->traverseUnaryOperation($node),
             MemberAccess::class => $this->traverseMemberAccess($node),
             FunctionCall::class => $this->traverseFunctionCall($node),
             Variable::class => $this->traverseVariable($node),
@@ -148,6 +150,20 @@ final class AstTraverser implements AstTraverserInterface
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
         $this->generatedCode .= ' ' . $operator . ' ';
+        $this->doTraverse($node->right);
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
+    private function traverseUnaryOperation(UnaryOperation $node): void
+    {
+        $operator = match ($node->operator) {
+            TokenType::T_BANG => '!',
+            TokenType::T_MINUS => '-',
+            default => throw AstTraverserException::unknownOperator($node->operator->value),
+        };
+        $this->generatedCode .= $operator;
         $this->doTraverse($node->right);
     }
 

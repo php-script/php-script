@@ -52,6 +52,7 @@ final readonly class Lexer
             TokenType::T_COMPARE_EQUALS->value => '==(=)?',
             TokenType::T_COMPARE_UNEQUALS->value => '!=(=)?',
             TokenType::T_EQUALS->value => '=',
+            TokenType::T_BANG->value => '!',
             TokenType::T_DOT->value => '\.',
             TokenType::T_LEFT_PARENTHESIS->value => '\(',
             TokenType::T_RIGHT_PARENTHESIS->value => '\)',

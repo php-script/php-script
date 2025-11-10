@@ -30,6 +30,7 @@ enum TokenType: string
     case T_WHITESPACE = 'T_WHITESPACE';  // (whitespace)
     case T_COMMENT = 'T_COMMENT';     // // line comment
     case T_UNKNOWN = 'T_UNKNOWN';     // unknown char
+    case T_BANG = 'T_BANG'; // !
 
     // Keywords
     case T_IF = 'T_IF';

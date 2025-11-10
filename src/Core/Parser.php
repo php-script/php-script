@@ -14,6 +14,7 @@ use PhpScript\Ast\Literal;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
 use PhpScript\Ast\Program;
+use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
 use PhpScript\Contracts\Node;
 use PhpScript\Contracts\ParserInterface;
@@ -206,16 +207,32 @@ final class Parser implements ParserInterface
      */
     private function parseMultiplicative(): Node
     {
-        $node = $this->parseCall();
+        $node = $this->parseUnary();
 
         while ($this->match(TokenType::T_MULTIPLY, TokenType::T_DIVIDE)) {
             $token = $this->previous();
             $operator = $this->previous()->type;
-            $right = $this->parseCall();
+            $right = $this->parseUnary();
             $node = new BinaryOperation($node, $operator, $right, $token);
         }
 
         return $node;
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseUnary(): Node
+    {
+        if ($this->match(TokenType::T_BANG, TokenType::T_MINUS)) {
+            $token = $this->previous();
+            $operator = $this->previous()->type;
+            $right = $this->parseUnary();
+
+            return new UnaryOperation($operator, $right, $token);
+        }
+
+        return $this->parseCall();
     }
 
     /**

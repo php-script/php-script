@@ -332,6 +332,23 @@ it('can traverse a simple identifier', function () {
     expect($output)->toBe($expected);
 });
 
+it('can traverse an array access statement', function () {
+    // AST for: if (true) { echo 'true'; } else { echo 'false'; }
+    $program = new Program([
+        new \PhpScript\Ast\ArrayAccess(
+            new Variable('a'),
+            new Literal(1),
+            new Token(TokenType::T_LEFT_BRACKET, '[', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "\$a[1];\n";
+    expect($output)->toBe($expected);
+});
+
 it('throws an exception for unknown node type', function () {
     $unknownNode = new class implements Node
     {

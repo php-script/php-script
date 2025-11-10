@@ -70,6 +70,9 @@ $engine = new Engine();
 $engine->set('user', new User());
 $engine->set('app_version', '1.2.3');
 $engine->set('users_list', ['Alice', 'Bob', 'Charlie']);
+
+// Optionally, set an execution time limit to prevent infinite loops
+$engine->setExecutionTimeLimit(5); // Script will time out after 5 seconds
 ```
 
 ### 2. Writing a PHP Script

@@ -144,8 +144,8 @@ final class MonarchLanguageDefinitionService
 
             // 3. Klassen-Definitionen rekursiv analysieren
             if (is_object($value)) {
-                $detailType = get_class($value);
-                $this->reflectClass(get_class($value), $model['classes']);
+                $detailType = $value::class;
+                $this->reflectClass($value::class, $model['classes']);
             }
 
             $model['globalVariables'][] = [

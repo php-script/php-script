@@ -7,7 +7,7 @@ use PhpScript\Ast\Variable;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
 
-it('can create a for statement', function () {
+it('can create a for statement', function (): void {
     $initializer = new Variable('i', new Token(TokenType::T_IDENTIFIER, 'i', 1, 1, 0));
     $condition = new Literal(true, new Token(TokenType::T_TRUE, 'true', 1, 1, 0));
     $increment = new Variable('i', new Token(TokenType::T_IDENTIFIER, 'i', 1, 1, 0));

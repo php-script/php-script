@@ -20,7 +20,7 @@ use PhpScript\Core\TokenType;
 use PhpScript\Exceptions\AstTraverserException;
 use PhpScript\Exceptions\EngineException;
 
-it('can traverse an if-else statement', function () {
+it('can traverse an if-else statement', function (): void {
     // AST for: if (true) { echo 'true'; } else { echo 'false'; }
     $program = new Program([
         new IfStatement(
@@ -42,7 +42,7 @@ it('can traverse an if-else statement', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse a null literal', function () {
+it('can traverse a null literal', function (): void {
     // AST for: echo null;
     $program = new Program([
         new EchoStatement(new Literal(null)),
@@ -55,7 +55,7 @@ it('can traverse a null literal', function () {
     expect($output)->toBe($expected);
 });
 
-it('throws an exception for invalid function calls', function () {
+it('throws an exception for invalid function calls', function (): void {
     // AST for: invalid_function();
     $program = new Program([
         new FunctionCall(
@@ -69,7 +69,7 @@ it('throws an exception for invalid function calls', function () {
     $traverser->traverse($program);
 })->throws(EngineException::class);
 
-it('can traverse a function call with arguments', function () {
+it('can traverse a function call with arguments', function (): void {
     // AST for: valid_function('foo', 123);
     $program = new Program([
         new FunctionCall(
@@ -89,7 +89,7 @@ it('can traverse a function call with arguments', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse a for statement with null parts', function () {
+it('can traverse a for statement with null parts', function (): void {
     // AST for: for (;;) { echo "loop"; }
     $program = new Program([
         new ForStatement(
@@ -110,7 +110,7 @@ it('can traverse a for statement with null parts', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse a for statement with an empty body', function () {
+it('can traverse a for statement with an empty body', function (): void {
     // AST for: for (;;) {}
     $program = new Program([
         new ForStatement(
@@ -129,7 +129,7 @@ it('can traverse a for statement with an empty body', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse a for statement with only a condition', function () {
+it('can traverse a for statement with only a condition', function (): void {
     // AST for: for (; i < 10;) { echo "loop"; }
     $program = new Program([
         new ForStatement(
@@ -150,7 +150,7 @@ it('can traverse a for statement with only a condition', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse a for statement with an initializer and a condition', function () {
+it('can traverse a for statement with an initializer and a condition', function (): void {
     // AST for: for (; i < 10;) { echo "loop"; }
     $program = new Program([
         new ForStatement(
@@ -171,7 +171,7 @@ it('can traverse a for statement with an initializer and a condition', function 
     expect($output)->toBe($expected);
 });
 
-it('can traverse a for statement with an initializer and a condition and an increment', function () {
+it('can traverse a for statement with an initializer and a condition and an increment', function (): void {
     // AST for: for (; i < 10;) { echo "loop"; }
     $program = new Program([
         new ForStatement(
@@ -192,7 +192,7 @@ it('can traverse a for statement with an initializer and a condition and an incr
     expect($output)->toBe($expected);
 });
 
-it('can traverse a for statement with an initializer and a condition and an decrement', function () {
+it('can traverse a for statement with an initializer and a condition and an decrement', function (): void {
     // AST for: for (; i < 10;) { echo "loop"; }
     $program = new Program([
         new ForStatement(
@@ -213,7 +213,7 @@ it('can traverse a for statement with an initializer and a condition and an decr
     expect($output)->toBe($expected);
 });
 
-it('can traverse a foreach statement without a key', function () {
+it('can traverse a foreach statement without a key', function (): void {
     // AST for: foreach ($items as $item) { echo $item; }
     $program = new Program([
         new ForeachStatement(
@@ -234,7 +234,7 @@ it('can traverse a foreach statement without a key', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse a foreach statement with a key', function () {
+it('can traverse a foreach statement with a key', function (): void {
     // AST for: foreach ($items as $key => $value) { echo $key; echo $value; }
     $program = new Program([
         new ForeachStatement(
@@ -256,7 +256,7 @@ it('can traverse a foreach statement with a key', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse all binary operators', function () {
+it('can traverse all binary operators', function (): void {
     $operators = [
         TokenType::T_PLUS->value => '+',
         TokenType::T_MINUS->value => '-',
@@ -280,7 +280,7 @@ it('can traverse all binary operators', function () {
     }
 });
 
-it('can traverse a unary minus operation', function () {
+it('can traverse a unary minus operation', function (): void {
     // AST for: -1;
     $program = new Program([
         new UnaryOperation(TokenType::T_MINUS, new Literal(1)),
@@ -293,7 +293,7 @@ it('can traverse a unary minus operation', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse a postfix decrement operation', function () {
+it('can traverse a postfix decrement operation', function (): void {
     // AST for: i--;
     $program = new Program([
         new PostfixOperation(new Variable('i'), TokenType::T_DECREMENT),
@@ -306,7 +306,7 @@ it('can traverse a postfix decrement operation', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse a simple variable', function () {
+it('can traverse a simple variable', function (): void {
     // AST for: $i;
     $program = new Program([
         new Variable('i'),
@@ -319,7 +319,7 @@ it('can traverse a simple variable', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse a simple identifier', function () {
+it('can traverse a simple identifier', function (): void {
     // AST for: i;
     $program = new Program([
         new Identifier('i'),
@@ -332,7 +332,7 @@ it('can traverse a simple identifier', function () {
     expect($output)->toBe($expected);
 });
 
-it('can traverse an array access statement', function () {
+it('can traverse an array access statement', function (): void {
     // AST for: if (true) { echo 'true'; } else { echo 'false'; }
     $program = new Program([
         new \PhpScript\Ast\ArrayAccess(
@@ -349,7 +349,7 @@ it('can traverse an array access statement', function () {
     expect($output)->toBe($expected);
 });
 
-it('throws an exception for unknown node type', function () {
+it('throws an exception for unknown node type', function (): void {
     $unknownNode = new class implements Node
     {
         public function getToken(): ?Token
@@ -368,7 +368,7 @@ it('throws an exception for unknown node type', function () {
     $traverser->traverse($program);
 })->throws(AstTraverserException::class);
 
-it('throws an exception for unknown binary operator', function () {
+it('throws an exception for unknown binary operator', function (): void {
     $program = new Program([
         new BinaryOperation(new Literal(1), TokenType::T_IF, new Literal(2)),
     ]);
@@ -376,7 +376,7 @@ it('throws an exception for unknown binary operator', function () {
     $traverser->traverse($program);
 })->throws(AstTraverserException::class);
 
-it('throws an exception for unknown unary operator', function () {
+it('throws an exception for unknown unary operator', function (): void {
     $program = new Program([
         new UnaryOperation(TokenType::T_IF, new Literal(1)),
     ]);
@@ -384,7 +384,7 @@ it('throws an exception for unknown unary operator', function () {
     $traverser->traverse($program);
 })->throws(AstTraverserException::class);
 
-it('throws an exception for unknown postfix operator', function () {
+it('throws an exception for unknown postfix operator', function (): void {
     $program = new Program([
         new PostfixOperation(new Variable('i'), TokenType::T_IF),
     ]);
@@ -392,7 +392,7 @@ it('throws an exception for unknown postfix operator', function () {
     $traverser->traverse($program);
 })->throws(AstTraverserException::class);
 
-it('throws an exception for unknown literal type', function () {
+it('throws an exception for unknown literal type', function (): void {
     $program = new Program([
         new EchoStatement(new Literal([])),
     ]);
@@ -400,7 +400,7 @@ it('throws an exception for unknown literal type', function () {
     $traverser->traverse($program);
 })->throws(AstTraverserException::class);
 
-it('throws an exception for invalid function call with token', function () {
+it('throws an exception for invalid function call with token', function (): void {
     $program = new Program([
         new FunctionCall(
             new Identifier('invalid', new Token(TokenType::T_IDENTIFIER, 'invalid', 1, 1, 0)),
@@ -412,7 +412,7 @@ it('throws an exception for invalid function call with token', function () {
     $traverser->traverse($program);
 })->throws(EngineException::class);
 
-it('returns a source map', function () {
+it('returns a source map', function (): void {
     $program = new Program([
         new EchoStatement(new Literal('hello'), new Token(TokenType::T_ECHO, 'echo', 1, 1, 0)),
     ]);

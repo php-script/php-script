@@ -21,7 +21,7 @@ use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
 use PhpScript\Exceptions\AstTraverserException;
 
-it('can render a simple echo statement', function () {
+it('can render a simple echo statement', function (): void {
     // AST for: echo 'hello';
     $program = new Program([
         new EchoStatement(
@@ -36,7 +36,7 @@ it('can render a simple echo statement', function () {
     expect(trim($output))->toBe("echo 'hello';");
 });
 
-it('can render a more complex script', function () {
+it('can render a more complex script', function (): void {
     // AST for:
     // u = users_list;
     // for (i = 0; i < 2; i++) {
@@ -89,7 +89,7 @@ EOT;
     expect(trim($output))->toBe(trim($expected));
 });
 
-it('can render an if statement without an else block', function () {
+it('can render an if statement without an else block', function (): void {
     $program = new Program([
         new IfStatement(new Literal(true), new Program([]), null, new Token(TokenType::T_IF, 'if', 1, 1, 0)),
     ]);
@@ -98,7 +98,7 @@ it('can render an if statement without an else block', function () {
     expect(trim($output))->toBe('if (true) {}');
 });
 
-it('can render an if statement with an else block', function () {
+it('can render an if statement with an else block', function (): void {
     $program = new Program([
         new IfStatement(new Literal(true), new Program([]), new Program([]), new Token(TokenType::T_IF, 'if', 1, 1, 0)),
     ]);
@@ -107,7 +107,7 @@ it('can render an if statement with an else block', function () {
     expect(trim($output))->toBe('if (true) {} else {}');
 });
 
-it('can render a for statement with partial null parts', function () {
+it('can render a for statement with partial null parts', function (): void {
     $program = new Program([
         new ForStatement(new Assignment(new Variable('i'), new Literal(0)), null, null, new Program([]), new Token(TokenType::T_FOR, 'for', 1, 1, 0)),
     ]);
@@ -116,7 +116,7 @@ it('can render a for statement with partial null parts', function () {
     expect(trim($output))->toBe('for (i = 0; ; ) {}');
 });
 
-it('can render a for statement with only a condition', function () {
+it('can render a for statement with only a condition', function (): void {
     $program = new Program([
         new ForStatement(null, new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)), null, new Program([]), new Token(TokenType::T_FOR, 'for', 1, 1, 0)),
     ]);
@@ -125,7 +125,7 @@ it('can render a for statement with only a condition', function () {
     expect(trim($output))->toBe('for (; i < 10; ) {}');
 });
 
-it('can render a foreach statement without a key', function () {
+it('can render a foreach statement without a key', function (): void {
     $program = new Program([
         new ForeachStatement(
             new Variable('items'),
@@ -140,7 +140,7 @@ it('can render a foreach statement without a key', function () {
     expect(trim($output))->toBe('foreach (items as item) {}');
 });
 
-it('can render a foreach statement with a key', function () {
+it('can render a foreach statement with a key', function (): void {
     $program = new Program([
         new ForeachStatement(
             new Variable('items'),
@@ -155,7 +155,7 @@ it('can render a foreach statement with a key', function () {
     expect(trim($output))->toBe('foreach (items as i => item) {}');
 });
 
-it('can render various binary operators', function () {
+it('can render various binary operators', function (): void {
     $operators = [
         TokenType::T_PLUS->value => '+',
         TokenType::T_MINUS->value => '-',
@@ -178,7 +178,7 @@ it('can render various binary operators', function () {
     }
 });
 
-it('can render a unary minus operation', function () {
+it('can render a unary minus operation', function (): void {
     $program = new Program([
         new UnaryOperation(TokenType::T_MINUS, new Literal(1)),
     ]);
@@ -187,7 +187,7 @@ it('can render a unary minus operation', function () {
     expect(trim($output))->toBe('-1');
 });
 
-it('can render a postfix decrement operation', function () {
+it('can render a postfix decrement operation', function (): void {
     $program = new Program([
         new PostfixOperation(new Variable('i'), TokenType::T_DECREMENT),
     ]);
@@ -196,7 +196,7 @@ it('can render a postfix decrement operation', function () {
     expect(trim($output))->toBe('i--');
 });
 
-it('can render an empty statement', function () {
+it('can render an empty statement', function (): void {
     $program = new Program([
         new NoOp,
     ]);
@@ -205,7 +205,7 @@ it('can render an empty statement', function () {
     expect(trim($output))->toBe(';');
 });
 
-it('can render a LINEBREAK literal', function () {
+it('can render a LINEBREAK literal', function (): void {
     $program = new Program([
         new EchoStatement(new Literal(PHP_EOL)),
     ]);
@@ -214,7 +214,7 @@ it('can render a LINEBREAK literal', function () {
     expect(trim($output))->toBe('echo LINEBREAK;');
 });
 
-it('can render a member access', function () {
+it('can render a member access', function (): void {
     $program = new Program([
         new MemberAccess(new Variable('foo'), new Identifier('bar')),
     ]);
@@ -223,7 +223,7 @@ it('can render a member access', function () {
     expect(trim($output))->toBe('foo.bar');
 });
 
-it('can render a function call with arguments', function () {
+it('can render a function call with arguments', function (): void {
     $program = new Program([
         new FunctionCall(new Identifier('foo'), [new Literal(1), new Literal('bar')]),
     ]);
@@ -232,7 +232,7 @@ it('can render a function call with arguments', function () {
     expect(trim($output))->toBe("foo(1, 'bar')");
 });
 
-it('can render a function call with no arguments', function () {
+it('can render a function call with no arguments', function (): void {
     $program = new Program([
         new FunctionCall(new Identifier('foo'), []),
     ]);
@@ -241,7 +241,7 @@ it('can render a function call with no arguments', function () {
     expect(trim($output))->toBe('foo()');
 });
 
-it('can render a null literal', function () {
+it('can render a null literal', function (): void {
     $program = new Program([
         new Literal(null),
     ]);
@@ -250,7 +250,7 @@ it('can render a null literal', function () {
     expect(trim($output))->toBe('null');
 });
 
-it('throws an exception for unknown binary operator', function () {
+it('throws an exception for unknown binary operator', function (): void {
     $program = new Program([
         new BinaryOperation(new Literal(1), TokenType::T_UNKNOWN, new Literal(2)),
     ]);
@@ -258,7 +258,7 @@ it('throws an exception for unknown binary operator', function () {
     $renderer->traverse($program);
 })->throws(AstTraverserException::class);
 
-it('throws an exception for unknown unary operator', function () {
+it('throws an exception for unknown unary operator', function (): void {
     $program = new Program([
         new UnaryOperation(TokenType::T_UNKNOWN, new Literal(1)),
     ]);
@@ -266,7 +266,7 @@ it('throws an exception for unknown unary operator', function () {
     $renderer->traverse($program);
 })->throws(AstTraverserException::class);
 
-it('throws an exception for unknown postfix operator', function () {
+it('throws an exception for unknown postfix operator', function (): void {
     $program = new Program([
         new PostfixOperation(new Variable('i'), TokenType::T_UNKNOWN),
     ]);
@@ -274,7 +274,7 @@ it('throws an exception for unknown postfix operator', function () {
     $renderer->traverse($program);
 })->throws(AstTraverserException::class);
 
-it('throws an exception for unknown literal type', function () {
+it('throws an exception for unknown literal type', function (): void {
     $program = new Program([
         new EchoStatement(new Literal([])),
     ]);

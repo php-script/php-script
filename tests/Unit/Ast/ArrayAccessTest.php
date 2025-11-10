@@ -6,7 +6,7 @@ use PhpScript\Ast\Variable;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
 
-it('can create an array access', function () {
+it('can create an array access', function (): void {
     $array = new Variable('foo', new Token(TokenType::T_IDENTIFIER, 'foo', 1, 1, 0));
     $key = new Literal('bar', new Token(TokenType::T_STRING, 'bar', 1, 1, 0));
     $arrayAccess = new ArrayAccess($array, $key, new Token(TokenType::T_LEFT_BRACKET, '[', 1, 1, 0));

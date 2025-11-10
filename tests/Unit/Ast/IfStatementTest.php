@@ -6,7 +6,7 @@ use PhpScript\Ast\Program;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
 
-it('can create an if statement', function () {
+it('can create an if statement', function (): void {
     $condition = new Literal(true, new Token(TokenType::T_TRUE, 'true', 1, 1, 0));
     $then = new Program([], new Token(TokenType::T_LEFT_BRACE, '{', 1, 1, 0));
     $else = new Program([], new Token(TokenType::T_LEFT_BRACE, '{', 1, 1, 0));

@@ -125,7 +125,7 @@ final class AstTraverser implements AstTraverserInterface
         $this->doTraverse($node->then);
         $this->generatedCode .= '}';
 
-        if ($node->else) {
+        if ($node->else instanceof Node) {
             $this->generatedCode .= ' else {';
             $this->doTraverse($node->else);
             $this->generatedCode .= '}';
@@ -135,15 +135,15 @@ final class AstTraverser implements AstTraverserInterface
     private function traverseForStatement(ForStatement $node): void
     {
         $this->generatedCode .= 'for (';
-        if ($node->initializer) {
+        if ($node->initializer instanceof Node) {
             $this->doTraverse($node->initializer);
         }
         $this->generatedCode .= '; ';
-        if ($node->condition) {
+        if ($node->condition instanceof Node) {
             $this->doTraverse($node->condition);
         }
         $this->generatedCode .= '; ';
-        if ($node->increment) {
+        if ($node->increment instanceof Node) {
             $this->doTraverse($node->increment);
         }
         $this->generatedCode .= ') {';
@@ -156,7 +156,7 @@ final class AstTraverser implements AstTraverserInterface
         $this->generatedCode .= 'foreach (';
         $this->doTraverse($node->iterable);
         $this->generatedCode .= ' as ';
-        if ($node->key) {
+        if ($node->key instanceof Variable) {
             $this->doTraverse($node->key);
             $this->generatedCode .= ' => ';
         }

@@ -7,7 +7,7 @@ use PhpScript\Ast\Variable;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
 
-it('can create a foreach statement', function () {
+it('can create a foreach statement', function (): void {
     $iterable = new Literal([], new Token(TokenType::T_IDENTIFIER, 'test', 1, 1, 0));
     $value = new Variable('value', new Token(TokenType::T_IDENTIFIER, 'value', 1, 1, 0));
     $key = new Variable('key', new Token(TokenType::T_IDENTIFIER, 'key', 1, 1, 0));

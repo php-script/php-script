@@ -9,6 +9,7 @@ use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
+use PhpScript\Ast\IfStatement;
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
@@ -78,6 +79,7 @@ final class AstTraverser implements AstTraverserInterface
         match ($node::class) {
             Program::class => $this->traverseProgram($node),
             EchoStatement::class => $this->traverseEchoStatement($node),
+            IfStatement::class => $this->traverseIfStatement($node),
             Assignment::class => $this->traverseAssignment($node),
             BinaryOperation::class => $this->traverseBinaryOperation($node),
             MemberAccess::class => $this->traverseMemberAccess($node),
@@ -103,6 +105,21 @@ final class AstTraverser implements AstTraverserInterface
     {
         $this->generatedCode .= 'echo ';
         $this->doTraverse($node->expression);
+    }
+
+    private function traverseIfStatement(IfStatement $node): void
+    {
+        $this->generatedCode .= 'if (';
+        $this->doTraverse($node->condition);
+        $this->generatedCode .= ') {';
+        $this->doTraverse($node->then);
+        $this->generatedCode .= '}';
+
+        if ($node->else) {
+            $this->generatedCode .= ' else {';
+            $this->doTraverse($node->else);
+            $this->generatedCode .= '}';
+        }
     }
 
     private function traverseAssignment(Assignment $node): void

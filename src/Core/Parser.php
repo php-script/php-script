@@ -9,6 +9,7 @@ use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
+use PhpScript\Ast\IfStatement;
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
@@ -60,6 +61,10 @@ final class Parser implements ParserInterface
             return $this->parseEchoStatement($token);
         }
 
+        if ($this->match(TokenType::T_IF)) {
+            return $this->parseIfStatement($token);
+        }
+
         if ($this->match(TokenType::T_SEMICOLON)) {
             return new NoOp($token);
         }
@@ -69,6 +74,42 @@ final class Parser implements ParserInterface
         $this->match(TokenType::T_SEMICOLON);
 
         return $node;
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseIfStatement(Token $token): IfStatement
+    {
+        $this->consume(TokenType::T_LEFT_PARENTHESIS, "Expect '(' after 'if'.");
+        $condition = $this->parseExpression();
+        $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after if condition.");
+
+        $thenBranch = $this->parseBlock();
+        $elseBranch = null;
+
+        if ($this->match(TokenType::T_ELSE)) {
+            $elseBranch = $this->parseBlock();
+        }
+
+        return new IfStatement($condition, $thenBranch, $elseBranch, $token);
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseBlock(): Node
+    {
+        $token = $this->consume(TokenType::T_LEFT_BRACE, "Expect '{' before block.");
+
+        $statements = [];
+        while (! $this->check(TokenType::T_RIGHT_BRACE) && ! $this->isAtEnd()) {
+            $statements[] = $this->parseStatement();
+        }
+
+        $this->consume(TokenType::T_RIGHT_BRACE, "Expect '}' after block.");
+
+        return new Program($statements, $token);
     }
 
     /**

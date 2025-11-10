@@ -140,19 +140,20 @@ final class MonarchLanguageDefinitionService
         foreach ($this->contextVariables as $name => $value) {
             $type = gettype($value);
 
-            $className = ($type === 'object') ? get_class((object) $value) : $type;
+            $detailType = $type;
+
+            // 3. Klassen-Definitionen rekursiv analysieren
+            if (is_object($value)) {
+                $detailType = get_class($value);
+                $this->reflectClass(get_class($value), $model['classes']);
+            }
 
             $model['globalVariables'][] = [
                 'label' => $name,
                 'kind' => 'Variable',
-                'detail' => $className,
+                'detail' => $detailType,
                 'doc' => $this->parseDocComment($name),
             ];
-
-            // 3. Klassen-Definitionen rekursiv analysieren
-            if ((string) $type === 'object') {
-                $this->reflectClass((string) $className, $model['classes']);
-            }
         }
 
         return $model;
@@ -163,7 +164,7 @@ final class MonarchLanguageDefinitionService
      * dem 'classes'-Modell hinzu.
      *
      * @param  class-string  $className
-     * @param  array<int, array>  $classesModel
+     * @param  array<string, array{properties: list<array{label: string, kind: 'Property', detail: string, doc: string}>, methods: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>}>  $classesModel
      */
     private function reflectClass(string $className, array &$classesModel): void
     {
@@ -210,9 +211,12 @@ final class MonarchLanguageDefinitionService
         $classesModel[$className] = $classDef;
     }
 
+    /**
+     * @param  array<string, array{properties: list<array{label: string, kind: 'Property', detail: string, doc: string}>, methods: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>}>  $classesModel
+     */
     private function reflectType(?ReflectionType $type, array &$classesModel): void
     {
-        if (! $type instanceof \ReflectionType) {
+        if (! $type instanceof ReflectionType) {
             return;
         }
 
@@ -226,6 +230,7 @@ final class MonarchLanguageDefinitionService
 
         if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
             $typeName = $type->getName();
+            /** @var class-string $typeName */
             $this->reflectClass($typeName, $classesModel);
         }
     }
@@ -275,7 +280,7 @@ final class MonarchLanguageDefinitionService
      */
     private function parseTypeHint(?ReflectionType $type): string
     {
-        if (! $type instanceof \ReflectionType) {
+        if (! $type instanceof ReflectionType) {
             return 'mixed';
         }
 

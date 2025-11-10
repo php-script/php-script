@@ -318,7 +318,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const result = await response.json();
 
             if (result.success) {
-                outputContainer.textContent = result.output;
+                outputContainer.innerHTML = result.output.replace(/\n/g, '<br>');
                 outputContainer.classList.remove('text-red-400');
             } else {
                 // Das ist der Fehlerfall vom Backend

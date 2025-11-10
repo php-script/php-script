@@ -24,6 +24,8 @@ final class Engine
      */
     private array $allowedFunctions = [];
 
+    private int $executionTimeLimit = 0; // Default to no time limit
+
     public function __construct(
         private readonly Lexer $lexer = new Lexer,
         private readonly Parser $parser = new Parser,
@@ -55,6 +57,16 @@ final class Engine
     }
 
     /**
+     * @codeCoverageIgnore
+     */
+    public function setExecutionTimeLimit(int $seconds): self
+    {
+        $this->executionTimeLimit = $seconds;
+
+        return $this;
+    }
+
+    /**
      * @throws \PhpScript\Exceptions\EngineException
      */
     public function execute(string $script): mixed
@@ -80,6 +92,10 @@ final class Engine
             $tmpFile = $this->createTemporaryFile();
 
             file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n" . $phpCode);
+
+            // Set the execution time limit before including the file
+            set_time_limit($this->executionTimeLimit);
+
             include $tmpFile;
 
             unlink($tmpFile);

@@ -85,12 +85,11 @@ final class Engine
             unlink($tmpFile);
         } catch (ParseException $e) {
             $token = $e->getToken();
-            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset,
-                $e);
+            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset, $token?->length ?? 1, $e);
         } catch (EngineException $e) {
             throw $e;
         } catch (LexerException $e) {
-            throw new EngineException($e->getMessage(), $e->line, $e->column, $e->offset, $e);
+            throw new EngineException($e->getMessage(), $e->line, $e->column, $e->offset, 1, $e);
         } catch (Throwable $e) {
             ob_end_clean();
             if (isset($tmpFile) && file_exists($tmpFile)) {
@@ -100,11 +99,12 @@ final class Engine
             $line = $e->getLine() - 2;
             $token = $sourceMap[$line] ?? null;
             if ($token instanceof Token) {
-                throw EngineException::runtimeError($e->getMessage(), $token->line, $token->column, $token->offset, $e);
+                $length = strlen($token->value);
+                throw EngineException::runtimeError($e->getMessage(), $token->line, $token->column, $token->offset, $length, $e);
             }
 
             // @codeCoverageIgnoreStart
-            throw EngineException::runtimeError($e->getMessage(), 0, 0, 0, $e);
+            throw EngineException::runtimeError($e->getMessage(), 0, 0, 0, 1, $e);
             // @codeCoverageIgnoreEnd
         } finally {
             restore_error_handler();

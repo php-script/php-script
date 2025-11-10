@@ -6,9 +6,16 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 class LoginStats
 {
+    public int $countLogins = 42;
+
     public function count(): int
     {
-        return 42;
+        return $this->countLogins;
+    }
+
+    public function increment(): void
+    {
+        $this->countLogins++;
     }
 }
 
@@ -21,6 +28,11 @@ class User
     public function __construct()
     {
         $this->logins = new LoginStats;
+    }
+
+    public function login()
+    {
+        $this->logins->increment();
     }
 
     public function hasPermission(string $perm): bool

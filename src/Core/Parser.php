@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpScript\Core;
 
+use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
@@ -203,7 +204,7 @@ final class Parser implements ParserInterface
 
         if ($this->match(TokenType::T_EQUALS)) {
             $token = $this->previous();
-            if (! $left instanceof Variable && ! $left instanceof MemberAccess) {
+            if (! $left instanceof Variable && ! $left instanceof MemberAccess && ! $left instanceof ArrayAccess) {
                 throw new ParseException('Invalid assignment target.', $token);
             }
             $right = $this->parseAssignment();
@@ -329,6 +330,10 @@ final class Parser implements ParserInterface
                 $propertyToken = $this->consume(TokenType::T_IDENTIFIER, 'Expected identifier after .');
                 $property = new Identifier($propertyToken->value, $propertyToken);
                 $expr = new MemberAccess($expr, $property, $propertyToken);
+            } elseif ($this->match(TokenType::T_LEFT_BRACKET)) {
+                $key = $this->parseExpression();
+                $this->consume(TokenType::T_RIGHT_BRACKET, "Expect ']' after array key.");
+                $expr = new ArrayAccess($expr, $key);
             } else {
                 break;
             }

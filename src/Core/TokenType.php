@@ -16,6 +16,8 @@ enum TokenType: string
     case T_RIGHT_PARENTHESIS = 'T_RIGHT_PARENTHESIS';     // )
     case T_LEFT_BRACE = 'T_LEFT_BRACE';     // {
     case T_RIGHT_BRACE = 'T_RIGHT_BRACE';     // }
+    case T_LEFT_BRACKET = 'T_LEFT_BRACKET';   // [
+    case T_RIGHT_BRACKET = 'T_RIGHT_BRACKET';  // ]
     case T_SEMICOLON = 'T_SEMICOLON';   // ;
     case T_COMMA = 'T_COMMA';       // ,
     case T_EQUALS = 'T_EQUALS';     // =

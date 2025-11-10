@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpScript\Core;
 
+use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
@@ -90,6 +91,7 @@ final class AstTraverser implements AstTraverserInterface
             BinaryOperation::class => $this->traverseBinaryOperation($node),
             UnaryOperation::class => $this->traverseUnaryOperation($node),
             PostfixOperation::class => $this->traversePostfixOperation($node),
+            ArrayAccess::class => $this->traverseArrayAccess($node),
             MemberAccess::class => $this->traverseMemberAccess($node),
             FunctionCall::class => $this->traverseFunctionCall($node),
             Variable::class => $this->traverseVariable($node),
@@ -219,6 +221,14 @@ final class AstTraverser implements AstTraverserInterface
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
         $this->generatedCode .= $operator;
+    }
+
+    private function traverseArrayAccess(ArrayAccess $node): void
+    {
+        $this->doTraverse($node->array);
+        $this->generatedCode .= '[';
+        $this->doTraverse($node->key);
+        $this->generatedCode .= ']';
     }
 
     private function traverseMemberAccess(MemberAccess $node): void

@@ -61,6 +61,8 @@ final readonly class Lexer
             TokenType::T_RIGHT_PARENTHESIS->value => '\)',
             TokenType::T_LEFT_BRACE->value => '\{',
             TokenType::T_RIGHT_BRACE->value => '\}',
+            TokenType::T_LEFT_BRACKET->value => '\[',
+            TokenType::T_RIGHT_BRACKET->value => '\]',
             TokenType::T_SEMICOLON->value => ';',
             TokenType::T_COMMA->value => ',',
             TokenType::T_PLUS->value => '\+',

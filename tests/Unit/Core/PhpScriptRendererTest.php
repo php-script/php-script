@@ -4,14 +4,19 @@ use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
+use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
+use PhpScript\Ast\IfStatement;
 use PhpScript\Ast\Literal;
+use PhpScript\Ast\NoOp;
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
+use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
 use PhpScript\Core\PhpScriptRenderer;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
+use PhpScript\Exceptions\AstTraverserException;
 
 it('can render a simple echo statement', function () {
     // AST for: echo 'hello';
@@ -80,3 +85,127 @@ EOT;
 
     expect(trim($output))->toBe(trim($expected));
 });
+
+it('can render an if statement without an else block', function () {
+    $program = new Program([
+        new IfStatement(new Literal(true), new Program([]), null, new Token(TokenType::T_IF, 'if', 1, 1, 0)),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('if (true) {}');
+});
+
+it('can render a for statement with null parts', function () {
+    $program = new Program([
+        new ForStatement(null, null, null, new Program([]), new Token(TokenType::T_FOR, 'for', 1, 1, 0)),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('for (; ; ) {}');
+});
+
+it('can render a foreach statement with a key', function () {
+    $program = new Program([
+        new ForeachStatement(
+            new Variable('items'),
+            new Variable('item'),
+            new Variable('key'),
+            new Program([]),
+            new Token(TokenType::T_FOREACH, 'foreach', 1, 1, 0)
+        ),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('foreach (items as key => item) {}');
+});
+
+it('can render various binary operators', function () {
+    $operators = [
+        TokenType::T_PLUS->value => '+',
+        TokenType::T_MINUS->value => '-',
+        TokenType::T_MULTIPLY->value => '*',
+        TokenType::T_DIVIDE->value => '/',
+        TokenType::T_CONCAT->value => '~',
+        TokenType::T_COMPARE_EQUALS->value => '==',
+        TokenType::T_COMPARE_UNEQUALS->value => '!=',
+        TokenType::T_GREATER_THAN->value => '>',
+        TokenType::T_LESS_THAN->value => '<',
+    ];
+
+    foreach ($operators as $tokenType => $operator) {
+        $program = new Program([
+            new BinaryOperation(new Literal(1), TokenType::tryFrom($tokenType), new Literal(2)),
+        ]);
+        $renderer = new PhpScriptRenderer;
+        $output = $renderer->traverse($program);
+        expect(trim($output))->toBe("1 {$operator} 2");
+    }
+});
+
+it('can render a unary minus operation', function () {
+    $program = new Program([
+        new UnaryOperation(TokenType::T_MINUS, new Literal(1)),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('-1');
+});
+
+it('can render a postfix decrement operation', function () {
+    $program = new Program([
+        new PostfixOperation(new Variable('i'), TokenType::T_DECREMENT),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('i--');
+});
+
+it('can render an empty statement', function () {
+    $program = new Program([
+        new NoOp,
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe(';');
+});
+
+it('can render a LINEBREAK literal', function () {
+    $program = new Program([
+        new EchoStatement(new Literal(PHP_EOL)),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('echo LINEBREAK;');
+});
+
+it('throws an exception for unknown binary operator', function () {
+    $program = new Program([
+        new BinaryOperation(new Literal(1), TokenType::T_UNKNOWN, new Literal(2)),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $renderer->traverse($program);
+})->throws(AstTraverserException::class);
+
+it('throws an exception for unknown unary operator', function () {
+    $program = new Program([
+        new UnaryOperation(TokenType::T_UNKNOWN, new Literal(1)),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $renderer->traverse($program);
+})->throws(AstTraverserException::class);
+
+it('throws an exception for unknown postfix operator', function () {
+    $program = new Program([
+        new PostfixOperation(new Variable('i'), TokenType::T_UNKNOWN),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $renderer->traverse($program);
+})->throws(AstTraverserException::class);
+
+it('throws an exception for unknown literal type', function () {
+    $program = new Program([
+        new EchoStatement(new Literal([])),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $renderer->traverse($program);
+})->throws(AstTraverserException::class);

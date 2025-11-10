@@ -22,6 +22,7 @@ final class MonarchLanguageDefinitionService
         'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
     ];
 
+    /** @var array<string, bool> */
     private array $reflectionCache = [];
 
     /**
@@ -51,7 +52,7 @@ final class MonarchLanguageDefinitionService
             'keywords' => self::KEYWORDS,
             'allowedFunctions' => array_map(function (string $fqn): string {
                 try {
-                    return (new ReflectionFunction($fqn))->getShortName();
+                    return new ReflectionFunction($fqn)->getShortName();
                 } catch (ReflectionException) {
                     return $fqn;
                 }
@@ -108,6 +109,10 @@ final class MonarchLanguageDefinitionService
         ];
     }
 
+    /**
+     * @return array{globalFunctions: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>, globalVariables: list<array{label: string, kind: 'Variable', detail: mixed, doc: string}>, classes: array<int, array{properties: array<int, array{label: string, kind: 'Prop
+     * erty', detail: string, doc: string}>, methods: array<int, array{label: string, kind: string, detail: string, doc: string, snippet: string}>}>}
+     */
     public function getCompletionItems(): array
     {
         $this->reflectionCache = [];
@@ -128,7 +133,8 @@ final class MonarchLanguageDefinitionService
         // 2. Globale Kontext-Variablen (set)
         foreach ($this->contextVariables as $name => $value) {
             $type = gettype($value);
-            $className = ($type === 'object') ? get_class($value) : $type;
+
+            $className = ($type === 'object') ? get_class((object) $value) : $type;
 
             $model['globalVariables'][] = [
                 'label' => $name,
@@ -138,8 +144,8 @@ final class MonarchLanguageDefinitionService
             ];
 
             // 3. Klassen-Definitionen rekursiv analysieren
-            if ($type === 'object') {
-                $this->reflectClass($className, $model['classes']);
+            if ((string) $type === 'object') {
+                $this->reflectClass((string) $className, $model['classes']);
             }
         }
 
@@ -149,6 +155,9 @@ final class MonarchLanguageDefinitionService
     /**
      * Analysiert eine Klasse und fügt sie (und alle Kind-Klassen)
      * dem 'classes'-Modell hinzu.
+     *
+     * @param  class-string  $className
+     * @param  array<int, array>  $classesModel
      */
     private function reflectClass(string $className, array &$classesModel): void
     {
@@ -182,7 +191,9 @@ final class MonarchLanguageDefinitionService
         // Public Methods
         foreach ($refClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
             if ($method->isConstructor() || $method->isDestructor() || str_starts_with($method->getName(), '__')) {
+                // @codeCoverageIgnoreStart
                 continue;
+                // @codeCoverageIgnoreEnd
             }
             $classDef['methods'][] = $this->formatFunctionSuggestion($method);
 
@@ -195,7 +206,7 @@ final class MonarchLanguageDefinitionService
 
     private function reflectType(?ReflectionType $type, array &$classesModel): void
     {
-        if ($type === null) {
+        if (! $type instanceof \ReflectionType) {
             return;
         }
 
@@ -215,6 +226,8 @@ final class MonarchLanguageDefinitionService
 
     /**
      * Formatiert eine Reflection-Funktion/-Methode in ein Suggestion-Objekt.
+     *
+     * @return array{label: string, kind: string, detail: string, doc: string, snippet: string}
      */
     private function formatFunctionSuggestion(ReflectionFunctionAbstract $ref): array
     {
@@ -245,7 +258,6 @@ final class MonarchLanguageDefinitionService
         return [
             'label' => $label,
             'kind' => $ref instanceof ReflectionMethod ? 'Method' : 'Function',
-            // 'insertText' => $label . '()', // Veraltet, Snippet ist besser
             'detail' => "$label($paramSignature): $returnType",
             'doc' => $this->parseDocComment($ref->getDocComment()),
             'snippet' => $label . '(' . $snippetSignature . ')', // Snippet hinzufügen
@@ -257,7 +269,7 @@ final class MonarchLanguageDefinitionService
      */
     private function parseTypeHint(?ReflectionType $type): string
     {
-        if ($type === null) {
+        if (! $type instanceof \ReflectionType) {
             return 'mixed';
         }
 
@@ -265,10 +277,10 @@ final class MonarchLanguageDefinitionService
         if ($type instanceof ReflectionNamedType) {
             $name = $type->getName();
         } elseif ($type instanceof ReflectionUnionType) {
-            $types = array_map(fn (ReflectionType $t) => $this->parseTypeHint($t), $type->getTypes());
+            $types = array_map($this->parseTypeHint(...), $type->getTypes());
             $name = implode('|', $types);
         } elseif ($type instanceof ReflectionIntersectionType) {
-            $types = array_map(fn (ReflectionType $t) => $this->parseTypeHint($t), $type->getTypes());
+            $types = array_map($this->parseTypeHint(...), $type->getTypes());
             $name = implode('&', $types);
         }
 
@@ -280,19 +292,19 @@ final class MonarchLanguageDefinitionService
      */
     private function parseDocComment(string|false $doc): string
     {
-        if (empty($doc)) {
+        if ($doc === false || ($doc === '' || $doc === '0')) {
             return '';
         }
 
-        if ($doc !== false && array_key_exists($doc, $this->contextDocumentation)) {
+        if (array_key_exists($doc, $this->contextDocumentation)) {
             return $this->contextDocumentation[$doc];
         }
 
         $doc = preg_replace('/[\t ]*(\*\/|\/\*\*|\* ?)/', '', $doc);
-        $lines = explode("\n", $doc);
+        $lines = explode("\n", (string) $doc);
         foreach ($lines as $line) {
             $line = trim($line);
-            if (! empty($line) && ! str_starts_with($line, '@')) {
+            if ($line !== '' && $line !== '0' && ! str_starts_with($line, '@')) {
                 return $line;
             }
         }

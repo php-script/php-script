@@ -29,8 +29,6 @@ class MyTestClass implements MyTestInterface
 
     protected string $protectedProp = 'protected';
 
-    private string $privateProp = 'private';
-
     public string $propWithoutDoc;
 
     /**
@@ -72,8 +70,6 @@ class MyTestClass implements MyTestInterface
     {
         return true;
     }
-
-    public function __construct() {}
 }
 
 function my_test_function(array $items): int
@@ -192,7 +188,7 @@ it('returns the correct completion items when a context variable is set', functi
     expect($completionItems)->toContain('user');
 });
 
-it('reflects object properties and methods for completion', function () {
+it('reflects object properties and methods for completion', function (): void {
     $service = new MonarchLanguageDefinitionService(
         contextVariables: ['myObject' => new MyTestClass],
     );
@@ -217,7 +213,7 @@ it('reflects object properties and methods for completion', function () {
     expect($json)->not()->toContain('privateProp');
 
     // Check public method
-    $publicMethod = current(array_filter($classDef['methods'], fn ($method) => $method['label'] === 'publicMethod'));
+    $publicMethod = current(array_filter($classDef['methods'], fn (array $method): bool => $method['label'] === 'publicMethod'));
     expect($publicMethod)->not()->toBeNull();
     expect($publicMethod['detail'])->toBe('publicMethod(string $param1, bool $param2 = ...): int');
     expect($publicMethod['doc'])->toBe('This is a public method.');
@@ -227,7 +223,7 @@ it('reflects object properties and methods for completion', function () {
     expect($json)->not()->toContain('__construct');
 });
 
-it('recursively reflects return types of methods', function () {
+it('recursively reflects return types of methods', function (): void {
     $service = new MonarchLanguageDefinitionService(
         contextVariables: ['myObject' => new MyTestClass],
     );
@@ -245,7 +241,7 @@ it('recursively reflects return types of methods', function () {
     expect($otherClassDef['properties'][0]['label'])->toBe('otherProp');
 });
 
-it('handles various type hints correctly', function () {
+it('handles various type hints correctly', function (): void {
     $service = new MonarchLanguageDefinitionService(
         contextVariables: ['myObject' => new MyTestClass],
     );
@@ -253,17 +249,17 @@ it('handles various type hints correctly', function () {
     $completionItems = $service->getCompletionItems();
     $classDef = $completionItems['classes'][MyTestClass::class];
 
-    $unionTypeMethod = current(array_filter($classDef['methods'], fn ($method) => $method['label'] === 'methodWithUnionType'));
+    $unionTypeMethod = current(array_filter($classDef['methods'], fn (array $method): bool => $method['label'] === 'methodWithUnionType'));
     expect($unionTypeMethod['detail'])->toBe('methodWithUnionType(string|int $param): void');
 
-    $nullableTypeMethod = current(array_filter($classDef['methods'], fn ($method) => $method['label'] === 'methodWithNullableType'));
+    $nullableTypeMethod = current(array_filter($classDef['methods'], fn (array $method): bool => $method['label'] === 'methodWithNullableType'));
     expect($nullableTypeMethod['detail'])->toBe('methodWithNullableType(?string $param): void');
 
-    $intersectionTypeMethod = current(array_filter($classDef['methods'], fn ($method) => $method['label'] === 'methodWithIntersectionType'));
+    $intersectionTypeMethod = current(array_filter($classDef['methods'], fn (array $method): bool => $method['label'] === 'methodWithIntersectionType'));
     expect($intersectionTypeMethod['detail'])->toBe('methodWithIntersectionType(): Tests\Unit\Monarch\MyTestClass&Tests\Unit\Monarch\MyTestInterface');
 });
 
-it('provides completion for allowed global functions', function () {
+it('provides completion for allowed global functions', function (): void {
     $service = new MonarchLanguageDefinitionService(
         allowedFunctions: [__NAMESPACE__ . '\\my_test_function'],
     );
@@ -279,7 +275,7 @@ it('provides completion for allowed global functions', function () {
     expect($functionDef['snippet'])->toBe('my_test_function(${1:items})');
 });
 
-it('handles non-existent classes gracefully', function () {
+it('handles non-existent classes gracefully', function (): void {
     $service = new MonarchLanguageDefinitionService(
         contextVariables: ['myObject' => new ClassWithBadReturn],
     );
@@ -294,7 +290,7 @@ it('handles non-existent classes gracefully', function () {
     expect(count($completionItems['classes']))->toBe(1);
 });
 
-it('handles methods without a return type', function () {
+it('handles methods without a return type', function (): void {
     $service = new MonarchLanguageDefinitionService(
         contextVariables: ['myObject' => new MyTestClass],
     );
@@ -302,12 +298,12 @@ it('handles methods without a return type', function () {
     $completionItems = $service->getCompletionItems();
     $classDef = $completionItems['classes'][MyTestClass::class];
 
-    $method = current(array_filter($classDef['methods'], fn ($method) => $method['label'] === 'methodWithoutReturnType'));
+    $method = current(array_filter($classDef['methods'], fn (array $method): bool => $method['label'] === 'methodWithoutReturnType'));
 
     expect($method['detail'])->toBe('methodWithoutReturnType(): mixed');
 });
 
-it('handles properties without a doc comment', function () {
+it('handles properties without a doc comment', function (): void {
     $service = new MonarchLanguageDefinitionService(
         contextVariables: ['myObject' => new MyTestClass],
     );
@@ -315,12 +311,12 @@ it('handles properties without a doc comment', function () {
     $completionItems = $service->getCompletionItems();
     $classDef = $completionItems['classes'][MyTestClass::class];
 
-    $prop = current(array_filter($classDef['properties'], fn ($prop) => $prop['label'] === 'propWithoutDoc'));
+    $prop = current(array_filter($classDef['properties'], fn (array $prop): bool => $prop['label'] === 'propWithoutDoc'));
 
     expect($prop['doc'])->toBe('');
 });
 
-it('handles doc comments with only tags', function () {
+it('handles doc comments with only tags', function (): void {
     $service = new MonarchLanguageDefinitionService(
         contextVariables: ['myObject' => new MyTestClass],
     );
@@ -328,7 +324,7 @@ it('handles doc comments with only tags', function () {
     $completionItems = $service->getCompletionItems();
     $classDef = $completionItems['classes'][MyTestClass::class];
 
-    $prop = current(array_filter($classDef['properties'], fn ($prop) => $prop['label'] === 'propWithOnlyTags'));
+    $prop = current(array_filter($classDef['properties'], fn (array $prop): bool => $prop['label'] === 'propWithOnlyTags'));
 
     expect($prop['doc'])->toBe('');
 });

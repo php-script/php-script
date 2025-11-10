@@ -36,6 +36,7 @@ final readonly class Lexer
             // Keywords (have to be before T_IDENTIFIER)
             TokenType::T_IF->value => '\bif\b',
             TokenType::T_ELSE->value => '\belse\b',
+            TokenType::T_FOR->value => '\bfor\b',
             TokenType::T_FOREACH->value => '\bforeach\b',
             TokenType::T_AS->value => '\bas\b',
             TokenType::T_ECHO->value => '\becho\b',

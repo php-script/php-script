@@ -37,6 +37,7 @@ enum TokenType: string
     // Keywords
     case T_IF = 'T_IF';
     case T_ELSE = 'T_ELSE';
+    case T_FOR = 'T_FOR';
     case T_FOREACH = 'T_FOREACH';
     case T_AS = 'T_AS';
     case T_ECHO = 'T_ECHO';

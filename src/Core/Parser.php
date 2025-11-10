@@ -7,6 +7,7 @@ namespace PhpScript\Core;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
+use PhpScript\Ast\ForStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
@@ -14,6 +15,7 @@ use PhpScript\Ast\IfStatement;
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
+use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
@@ -67,6 +69,10 @@ final class Parser implements ParserInterface
             return $this->parseIfStatement($token);
         }
 
+        if ($this->match(TokenType::T_FOR)) {
+            return $this->parseForStatement($token);
+        }
+
         if ($this->match(TokenType::T_FOREACH)) {
             return $this->parseForeachStatement($token);
         }
@@ -80,6 +86,36 @@ final class Parser implements ParserInterface
         $this->match(TokenType::T_SEMICOLON);
 
         return $node;
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseForStatement(Token $token): ForStatement
+    {
+        $this->consume(TokenType::T_LEFT_PARENTHESIS, "Expect '(' after 'for'.");
+
+        $initializer = null;
+        if (! $this->check(TokenType::T_SEMICOLON)) {
+            $initializer = $this->parseExpression();
+        }
+        $this->consume(TokenType::T_SEMICOLON, "Expect ';' after loop initializer.");
+
+        $condition = null;
+        if (! $this->check(TokenType::T_SEMICOLON)) {
+            $condition = $this->parseExpression();
+        }
+        $this->consume(TokenType::T_SEMICOLON, "Expect ';' after loop condition.");
+
+        $increment = null;
+        if (! $this->check(TokenType::T_RIGHT_PARENTHESIS)) {
+            $increment = $this->parseExpression();
+        }
+        $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after for clauses.");
+
+        $body = $this->parseBlock();
+
+        return new ForStatement($initializer, $condition, $increment, $body, $token);
     }
 
     /**
@@ -259,7 +295,24 @@ final class Parser implements ParserInterface
             return new UnaryOperation($operator, $right, $token);
         }
 
-        return $this->parseCall();
+        return $this->parsePostfix();
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parsePostfix(): Node
+    {
+        $node = $this->parseCall();
+
+        if ($this->match(TokenType::T_INCREMENT, TokenType::T_DECREMENT)) {
+            $token = $this->previous();
+            $operator = $this->previous()->type;
+
+            return new PostfixOperation($node, $operator, $token);
+        }
+
+        return $node;
     }
 
     /**

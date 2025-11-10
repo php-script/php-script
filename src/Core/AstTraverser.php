@@ -7,6 +7,7 @@ namespace PhpScript\Core;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
+use PhpScript\Ast\ForStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
@@ -14,6 +15,7 @@ use PhpScript\Ast\IfStatement;
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
+use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
@@ -82,10 +84,12 @@ final class AstTraverser implements AstTraverserInterface
             Program::class => $this->traverseProgram($node),
             EchoStatement::class => $this->traverseEchoStatement($node),
             IfStatement::class => $this->traverseIfStatement($node),
+            ForStatement::class => $this->traverseForStatement($node),
             ForeachStatement::class => $this->traverseForeachStatement($node),
             Assignment::class => $this->traverseAssignment($node),
             BinaryOperation::class => $this->traverseBinaryOperation($node),
             UnaryOperation::class => $this->traverseUnaryOperation($node),
+            PostfixOperation::class => $this->traversePostfixOperation($node),
             MemberAccess::class => $this->traverseMemberAccess($node),
             FunctionCall::class => $this->traverseFunctionCall($node),
             Variable::class => $this->traverseVariable($node),
@@ -124,6 +128,25 @@ final class AstTraverser implements AstTraverserInterface
             $this->doTraverse($node->else);
             $this->generatedCode .= '}';
         }
+    }
+
+    private function traverseForStatement(ForStatement $node): void
+    {
+        $this->generatedCode .= 'for (';
+        if ($node->initializer) {
+            $this->doTraverse($node->initializer);
+        }
+        $this->generatedCode .= '; ';
+        if ($node->condition) {
+            $this->doTraverse($node->condition);
+        }
+        $this->generatedCode .= '; ';
+        if ($node->increment) {
+            $this->doTraverse($node->increment);
+        }
+        $this->generatedCode .= ') {';
+        $this->doTraverse($node->body);
+        $this->generatedCode .= '}';
     }
 
     private function traverseForeachStatement(ForeachStatement $node): void
@@ -182,6 +205,20 @@ final class AstTraverser implements AstTraverserInterface
         };
         $this->generatedCode .= $operator;
         $this->doTraverse($node->right);
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
+    private function traversePostfixOperation(PostfixOperation $node): void
+    {
+        $this->doTraverse($node->left);
+        $operator = match ($node->operator) {
+            TokenType::T_INCREMENT => '++',
+            TokenType::T_DECREMENT => '--',
+            default => throw AstTraverserException::unknownOperator($node->operator->value),
+        };
+        $this->generatedCode .= $operator;
     }
 
     private function traverseMemberAccess(MemberAccess $node): void

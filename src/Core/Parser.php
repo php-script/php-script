@@ -7,6 +7,7 @@ namespace PhpScript\Core;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
+use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\IfStatement;
@@ -66,6 +67,10 @@ final class Parser implements ParserInterface
             return $this->parseIfStatement($token);
         }
 
+        if ($this->match(TokenType::T_FOREACH)) {
+            return $this->parseForeachStatement($token);
+        }
+
         if ($this->match(TokenType::T_SEMICOLON)) {
             return new NoOp($token);
         }
@@ -75,6 +80,28 @@ final class Parser implements ParserInterface
         $this->match(TokenType::T_SEMICOLON);
 
         return $node;
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseForeachStatement(Token $token): ForeachStatement
+    {
+        $this->consume(TokenType::T_LEFT_PARENTHESIS, "Expect '(' after 'foreach'.");
+        $iterable = $this->parseExpression();
+        $this->consume(TokenType::T_AS, "Expect 'as' after iterable.");
+        $valueToken = $this->consume(TokenType::T_IDENTIFIER, 'Expect identifier for value.');
+        $value = new Variable($valueToken->value, $valueToken);
+        $key = null;
+        if ($this->match(TokenType::T_COMMA)) {
+            $key = $value;
+            $valueToken = $this->consume(TokenType::T_IDENTIFIER, 'Expect identifier for value.');
+            $value = new Variable($valueToken->value, $valueToken);
+        }
+        $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after foreach details.");
+        $body = $this->parseBlock();
+
+        return new ForeachStatement($iterable, $value, $key, $body, $token);
     }
 
     /**

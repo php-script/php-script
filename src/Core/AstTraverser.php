@@ -7,6 +7,7 @@ namespace PhpScript\Core;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\EchoStatement;
+use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\IfStatement;
@@ -81,6 +82,7 @@ final class AstTraverser implements AstTraverserInterface
             Program::class => $this->traverseProgram($node),
             EchoStatement::class => $this->traverseEchoStatement($node),
             IfStatement::class => $this->traverseIfStatement($node),
+            ForeachStatement::class => $this->traverseForeachStatement($node),
             Assignment::class => $this->traverseAssignment($node),
             BinaryOperation::class => $this->traverseBinaryOperation($node),
             UnaryOperation::class => $this->traverseUnaryOperation($node),
@@ -122,6 +124,21 @@ final class AstTraverser implements AstTraverserInterface
             $this->doTraverse($node->else);
             $this->generatedCode .= '}';
         }
+    }
+
+    private function traverseForeachStatement(ForeachStatement $node): void
+    {
+        $this->generatedCode .= 'foreach (';
+        $this->doTraverse($node->iterable);
+        $this->generatedCode .= ' as ';
+        if ($node->key) {
+            $this->doTraverse($node->key);
+            $this->generatedCode .= ' => ';
+        }
+        $this->doTraverse($node->value);
+        $this->generatedCode .= ') {';
+        $this->doTraverse($node->body);
+        $this->generatedCode .= '}';
     }
 
     private function traverseAssignment(Assignment $node): void

@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'column' => $e->column,
                 'length' => $e->length,
                 'offset' => $e->offset,
-            ]
+            ],
         ]);
     } catch (Throwable $e) {
         http_response_code(500); // Internal Server Error
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'line' => 0,
                 'column' => 0,
                 'length' => 1,
-            ]
+            ],
         ]);
     }
 

@@ -148,7 +148,7 @@ final class AstTraverser implements AstTraverserInterface
     {
         if ($node->callee instanceof Identifier && ! in_array($node->callee->name, $this->allowedFunctions, true)) {
             $token = $node->callee->getToken();
-            $length = $token ? strlen($token->value) : strlen($node->callee->name);
+            $length = $token instanceof Token ? strlen($token->value) : strlen($node->callee->name);
             throw EngineException::invalidFunctionCall($node->callee->name, (int) $token?->line, (int) $token?->column, (int) $token?->offset, $length);
         }
 

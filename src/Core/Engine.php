@@ -85,7 +85,7 @@ final class Engine
             unlink($tmpFile);
         } catch (ParseException $e) {
             $token = $e->getToken();
-            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset, $token?->length ?? 1, $e);
+            throw new EngineException($e->getMessage(), (int) $token?->line, (int) $token?->column, (int) $token?->offset, $token instanceof Token ? strlen($token->value) : 1, $e);
         } catch (EngineException $e) {
             throw $e;
         } catch (LexerException $e) {

@@ -49,12 +49,18 @@ final class MonarchLanguageDefinitionService
     {
         return [
             'keywords' => self::KEYWORDS,
-            'allowedFunctions' => array_values($this->allowedFunctions),
+            'allowedFunctions' => array_map(function (string $fqn): string {
+                try {
+                    return (new ReflectionFunction($fqn))->getShortName();
+                } catch (ReflectionException) {
+                    return $fqn;
+                }
+            }, $this->allowedFunctions),
             'contextVariables' => array_keys($this->contextVariables),
             'operators' => [
                 '==', '===', '!=', '!==', '=', '.', '+', '-', '*', '/', '>', '<', '~',
             ],
-            'symbols' => '[=><!~?&|+\-*/^%.,;()\{}\[\]]',
+            'symbols' => '[=><!~?&|+\\-*/^%.,;()\\{}\\[\\]]',
             'tokenizer' => [
                 'root' => [
                     [
@@ -69,7 +75,7 @@ final class MonarchLanguageDefinitionService
                         ],
                     ],
                     ['include' => '@whitespace'],
-                    ['[{}()\[\]]', '@brackets'],
+                    ['[{}()\\[\\]]', '@brackets'],
                     ['[<>](?!@symbols)', '@brackets'],
                     [
                         '@symbols',
@@ -144,7 +150,7 @@ final class MonarchLanguageDefinitionService
      * Analysiert eine Klasse und fügt sie (und alle Kind-Klassen)
      * dem 'classes'-Modell hinzu.
      */
-    private function reflectClass(string $className, array &$classesModel)
+    private function reflectClass(string $className, array &$classesModel): void
     {
         if (isset($this->reflectionCache[$className])) {
             return;
@@ -223,7 +229,7 @@ final class MonarchLanguageDefinitionService
         $paramSignature = implode(', ', $params);
         $snippetSignature = implode(', ', $snippetParams);
         $returnType = $this->parseTypeHint($ref->getReturnType());
-        $label = $ref->getName();
+        $label = $ref->getShortName();
 
         return [
             'label' => $label,
@@ -248,9 +254,11 @@ final class MonarchLanguageDefinitionService
         if ($type instanceof ReflectionNamedType) {
             $name = $type->getName();
         } elseif ($type instanceof ReflectionUnionType) {
-            $name = implode('|', $type->getTypes());
+            $types = array_map(fn (ReflectionType $t) => $this->parseTypeHint($t), $type->getTypes());
+            $name = implode('|', $types);
         } elseif ($type instanceof ReflectionIntersectionType) {
-            $name = implode('&', $type->getTypes());
+            $types = array_map(fn (ReflectionType $t) => $this->parseTypeHint($t), $type->getTypes());
+            $name = implode('&', $types);
         }
 
         return ($type->allowsNull() && $name !== 'mixed') ? "?$name" : $name;

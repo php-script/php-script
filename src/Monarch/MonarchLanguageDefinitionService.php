@@ -170,11 +170,11 @@ final class MonarchLanguageDefinitionService
 
         // Public Properties
         foreach ($refClass->getProperties(ReflectionProperty::IS_PUBLIC) as $prop) {
-            $type = $this->parseTypeHint($prop->getType());
+            $this->reflectType($prop->getType(), $classesModel);
             $classDef['properties'][] = [
                 'label' => $prop->getName(),
                 'kind' => 'Property',
-                'detail' => $type,
+                'detail' => $this->parseTypeHint($prop->getType()),
                 'doc' => $this->parseDocComment($prop->getDocComment()),
             ];
         }
@@ -187,19 +187,30 @@ final class MonarchLanguageDefinitionService
             $classDef['methods'][] = $this->formatFunctionSuggestion($method);
 
             // Rückgabetyp ebenfalls rekursiv analysieren
-            $returnType = $method->getReturnType();
-            if ($returnType && ! $returnType->isBuiltin()) {
-                $returnTypeName = $this->parseTypeHint($returnType);
-                $cleanClassName = ltrim($returnTypeName, '?');
-
-                // Verhindern, dass wir versuchen, 'mixed' oder 'string|int' als Klasse zu reflektieren
-                if (! empty($cleanClassName) && $cleanClassName !== 'mixed' && ! str_contains($cleanClassName, '|') && ! str_contains($cleanClassName, '&')) {
-                    $this->reflectClass($cleanClassName, $classesModel);
-                }
-            }
+            $this->reflectType($method->getReturnType(), $classesModel);
         }
 
         $classesModel[$className] = $classDef;
+    }
+
+    private function reflectType(?ReflectionType $type, array &$classesModel): void
+    {
+        if ($type === null) {
+            return;
+        }
+
+        if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
+            foreach ($type->getTypes() as $innerType) {
+                $this->reflectType($innerType, $classesModel);
+            }
+
+            return;
+        }
+
+        if ($type instanceof ReflectionNamedType && ! $type->isBuiltin()) {
+            $typeName = $type->getName();
+            $this->reflectClass($typeName, $classesModel);
+        }
     }
 
     /**

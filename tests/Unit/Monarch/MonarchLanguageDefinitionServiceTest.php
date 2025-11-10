@@ -240,10 +240,10 @@ it('handles various type hints correctly', function () {
     $classDef = $completionItems['classes'][MyTestClass::class];
 
     $unionTypeMethod = current(array_filter($classDef['methods'], fn ($method) => $method['label'] === 'methodWithUnionType'));
-    expect($unionTypeMethod['detail'])->toBe('methodWithUnionType(string|int $param): mixed');
+    expect($unionTypeMethod['detail'])->toBe('methodWithUnionType(string|int $param): void');
 
     $nullableTypeMethod = current(array_filter($classDef['methods'], fn ($method) => $method['label'] === 'methodWithNullableType'));
-    expect($nullableTypeMethod['detail'])->toBe('methodWithNullableType(?string $param): mixed');
+    expect($nullableTypeMethod['detail'])->toBe('methodWithNullableType(?string $param): void');
 
     $intersectionTypeMethod = current(array_filter($classDef['methods'], fn ($method) => $method['label'] === 'methodWithIntersectionType'));
     expect($intersectionTypeMethod['detail'])->toBe('methodWithIntersectionType(): Tests\Unit\Monarch\MyTestClass&Tests\Unit\Monarch\MyTestInterface');

@@ -104,7 +104,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="editor" class="block text-xl font-bold mb-2">PHP Script</label>
                 <div id="editor" style="height: 400px;" class="border-gray-300"></div>
                 <div id="messages" class="text-red-400"></div>
-                <button type="button" id="run-button" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Run</button>
+                <div class="flex items-center mt-4 gap-4">
+                    <button type="button" id="run-button" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Run</button>
+                    <label class="flex items-center gap-1">
+                        <input type="checkbox" id="apply-linted-code" class="size-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        Use the linted code from engine
+                    </label>
+                </div>
             </form>
         </div>
         <div>
@@ -297,6 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const code = editor.getValue();
         const outputContainer = document.getElementById('output-container');
         const runButton = document.getElementById('run-button');
+        const applyLintedCode = document.getElementById('apply-linted-code');
 
         // Button-Zustand
         runButton.disabled = true;
@@ -320,8 +327,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (result.success) {
                 outputContainer.innerHTML = result.output.replace(/\n/g, '<br>');
-                editor.getModel().setValue(result.linted);
                 outputContainer.classList.remove('text-red-400');
+                if (applyLintedCode.checked) {
+                    editor.getModel().setValue(result.linted);
+                }
             } else {
                 // Das ist der Fehlerfall vom Backend
                 outputContainer.textContent = result.error.message;

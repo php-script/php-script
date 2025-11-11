@@ -231,6 +231,8 @@ Used for comparing values.
 -   **Greater than:** `>`
 -   **Less than:** `<`
 
+Comparison with loose or strictly definition will be transferred **always** to strictly comparison on the php side. So there is no difference in PHP Script.
+
 ```javascript
 isEqual = (10 == '10');   // true
 isStrictlyEqual = (10 === '10'); // false
@@ -362,6 +364,7 @@ user.hasPermission('admin'); // Calling a method on an object
 - Playground
   - use `make playground` and open http://localhost:8080/playground.php in your browser
   - with a Monaco prepared editor
+  - using PhpScriptRenderer as linter
 - Monarch language definition for the keywords and dynamic code suggestion for provided context
   - Monaco-based editors can learn the language and provide code completion (Monaco, vscode)
 

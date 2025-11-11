@@ -55,7 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $output = $engine->execute($code);
-        echo json_encode(['success' => true, 'output' => $output]);
+        $linted = $engine->linter($code)->linted();
+        echo json_encode(['success' => true, 'output' => $output, 'linted' => $linted]);
     } catch (EngineException $e) {
         http_response_code(400);
         echo json_encode([
@@ -96,19 +97,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="bg-gray-100 text-gray-800">
 <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">PHP Playground</h1>
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold">PHP Script Playground</h1>
+        <div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 1024 1024"><path d="M271.5 190c-21.4 4.3-41.1 22.2-47.8 43.5l-2.2 7v266c0 291.2-.4 270.4 6.1 284 5.9 12.5 16.4 22.9 29.6 29.6 12.3 6.2 1.2 5.9 198.8 5.9 196.8 0 180.7.4 197.5-4.7 1.3-.4-2.4-2.1-11.5-5.2-23.7-8.2-40.4-17.7-48.6-27.5l-3.8-4.6H434.2c-151.7 0-155.4 0-159.1-1.9-5-2.6-9.8-8.2-11.1-13-.7-2.7-.9-84.7-.8-263.8l.3-260 3-4.8c2-3.2 4.5-5.6 7.4-7.2l4.4-2.3H577v35.9c0 32.4.2 36.5 1.9 42 4.7 15.2 16.7 26.6 33 31.5 4.6 1.3 11.3 1.6 42.3 1.6H691v75h41v-43.3c-.1-42.1-.1-43.4-2.3-49.8-4.7-13.7-6.2-15.4-62.7-72-48.1-48.1-54.2-53.9-60-56.7-13.5-6.6-2.6-6.2-175-6.1-86.1.1-158.3.5-160.5.9z"/><path d="M498.1 341.2c-1.9 1.2-4.2 3.4-5.2 4.8s-16.6 40.3-34.6 86.5c-30 76.9-32.7 84.5-32.8 90.1 0 5.1.4 6.6 2.7 9.6 3.8 5 8.8 7.1 15.4 6.6 7.6-.7 11.4-3.9 15.3-13.2 12.2-29.3 65.1-167.5 65.1-170-.1-4.6-3.3-11-7.1-13.7-5-3.5-14.2-3.9-18.8-.7zM558.3 368.9c-9.9 2.5-15.7 12.1-13.9 22.8.6 3.3 3.6 6.6 23.7 26.4l23.1 22.6-21.6 21.3c-23.6 23.3-26.2 26.9-25.3 34.6.6 5.8 4.7 11.8 9.7 14.4 4.6 2.4 12.9 2.7 16.8.6 1.5-.8 16.5-15.3 33.4-32.3 26.5-26.7 30.7-31.3 31.3-34.6 1.7-8.9 1.7-8.8-30.8-41.5-16.6-16.7-31.5-31.2-33.2-32.2-3.7-2.3-9-3.1-13.2-2.1zM383.4 370.3c-1.2.7-16.4 15.1-33.7 32.2-27.6 27.1-31.6 31.5-32.2 34.7-1.7 9-1.7 8.9 30.3 41.1 29.1 29.2 34.4 33.8 40.9 35.2 7.2 1.5 16-3.5 19.4-11 4.6-10.1 3-12.9-23.4-39.2L362.5 441l23.2-23.2c19.8-19.9 23.2-23.8 23.8-27.1 2.2-11.7-6.3-21.7-18.5-21.6-3 0-6.5.5-7.6 1.2zM708.5 466.1c-18.2 2.6-38.5 12-53.3 24.7-12.2 10.5-22.9 27.3-27.4 42.8-2 6.9-2.3 10.1-2.3 25.4 0 16.6.2 17.9 2.8 25.5 10.6 30.1 29.7 45.6 79.2 64 26.2 9.8 39.1 16.2 45.9 22.9 12.4 12.1 14.8 28.9 6.4 44.9-13.6 25.6-55.3 29.9-103.6 10.6-10.1-4-13.4-4.9-18.5-4.9-21.4 0-31 25.5-15.5 41.1 6.4 6.4 31.7 16.4 52.9 21.1 9.1 1.9 13.3 2.2 33.4 2.2 20.1.1 24.2-.2 32.1-2.1 32.2-7.6 56-25.8 68-51.9 10.9-23.5 9.7-57.4-2.8-78.1-13.6-22.6-32.6-35.3-79.3-52.8-20.8-7.8-33.5-14-39.7-19.5-15.2-13.3-14.6-39.3 1.1-55 5.6-5.6 11.5-8.8 22.1-12.1 14-4.4 38.1-2.6 61.1 4.6 6.1 1.9 12.5 3.5 14.2 3.5 20.2 0 30.7-27.3 16-41.2-5.7-5.4-28.9-12.5-49.9-15.3-12.3-1.6-33.1-1.8-42.9-.4zM329 594.2c-4.9 1.4-9.4 5-11.4 9.1-2 4.3-2.1 12.9-.2 16.6 2.2 4.1 8.1 8.9 11.8 9.6 1.8.3 56.2.4 120.9.3l117.6-.3 3.6-2.8c10.3-7.9 10-23.5-.6-30.5l-4.1-2.7-117-.2c-76-.1-118.3.2-120.6.9zM328.7 672c-7.5 2.3-12.7 9.3-12.7 17.3 0 8.2 3.3 13.5 10.5 16.8 3.8 1.8 8.7 1.9 96.3 1.9 75.3 0 92.9-.2 95.5-1.4 5.7-2.3 11.7-11.1 11.7-17.1 0-6.2-5.3-13.8-11.5-16.6-3.8-1.8-8.8-1.9-95.5-1.8-50.3 0-92.8.5-94.3.9z"/></svg>
+        </div>
+    </div>
     <div class="grid grid-cols-2 gap-4">
         <div>
             <form method="post" id="playground-form">
                 <label for="editor" class="block text-xl font-bold mb-2">PHP Script</label>
                 <div id="editor" style="height: 400px;" class="border-gray-300"></div>
                 <div id="messages" class="text-red-400"></div>
-                <button type="button" id="run-button" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Run</button>
+                <div class="flex items-center mt-4 gap-4">
+                    <button type="button" id="run-button" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Run</button>
+                    <label class="flex items-center gap-1">
+                        <input type="checkbox" id="apply-linted-code" class="size-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        Use the linted code from engine
+                    </label>
+                </div>
             </form>
         </div>
         <div>
             <h2 class="text-xl font-bold mb-2">Result</h2>
-            <div class="bg-white p-4 border border-gray-300 rounded-md h-full" id="output-container"></div>
+            <div class="bg-white p-4 border border-gray-300 rounded-md h-[400px]" id="output-container"></div>
         </div>
     </div>
 </div>
@@ -296,6 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const code = editor.getValue();
         const outputContainer = document.getElementById('output-container');
         const runButton = document.getElementById('run-button');
+        const applyLintedCode = document.getElementById('apply-linted-code');
 
         // Button-Zustand
         runButton.disabled = true;
@@ -320,6 +333,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (result.success) {
                 outputContainer.innerHTML = result.output.replace(/\n/g, '<br>');
                 outputContainer.classList.remove('text-red-400');
+                if (applyLintedCode.checked) {
+                    editor.getModel().setValue(result.linted);
+                }
             } else {
                 // Das ist der Fehlerfall vom Backend
                 outputContainer.textContent = result.error.message;

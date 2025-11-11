@@ -19,7 +19,7 @@ it('engine resolves numbers', function (): void {
 it('engine resolves strings', function (): void {
     $engine = new Engine;
     $engine->set('s', 'hello');
-    $result = $engine->execute("echo s ~ ' world';");
+    $result = $engine->execute("echo s + ' world';");
 
     expect($result)->toBe('hello world');
 });
@@ -82,7 +82,7 @@ it('handles object property access', function (): void {
 
 it('handles string concatenation', function (): void {
     $engine = new Engine;
-    $result = $engine->execute("echo 'hello' ~ ' world';");
+    $result = $engine->execute("echo 'hello' + ' world';");
 
     expect($result)->toBe('hello world');
 });
@@ -124,7 +124,7 @@ it('throws exception with correct line number on runtime error in multi-line scr
 
 it('handles the LINEBREAK constant', function (): void {
     $engine = new Engine;
-    $result = $engine->execute("echo 'hello' ~ LINEBREAK ~ 'world';");
+    $result = $engine->execute("echo 'hello' + LINEBREAK + 'world';");
 
     expect($result)->toBe('hello' . PHP_EOL . 'world');
 });
@@ -154,9 +154,9 @@ it('handles lexer exceptions', function (): void {
     $script = <<<'SCRIPT'
         b=1
         a=2
-        echo a+b ~ LINEBREAK;
+        echo a+b + LINEBREAK;
         $b = 4;
-        echo "Hello " ~ '!';
+        echo "Hello " + '!';
     SCRIPT;
 
     try {

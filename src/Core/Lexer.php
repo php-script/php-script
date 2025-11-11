@@ -71,7 +71,6 @@ final readonly class Lexer
             TokenType::T_DIVIDE->value => '\/',
             TokenType::T_GREATER_THAN->value => '>',
             TokenType::T_LESS_THAN->value => '<',
-            TokenType::T_CONCAT->value => '~',
         ];
     }
 

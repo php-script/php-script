@@ -121,7 +121,7 @@ final class Engine
             }
 
             // @codeCoverageIgnoreStart
-            throw EngineException::runtimeError($e->getMessage(), 0, 0, 0, 1, $e);
+            throw EngineException::runtimeError($e->getMessage(), 1, 0, 0, 1, $e);
             // @codeCoverageIgnoreEnd
         } finally {
             restore_error_handler();

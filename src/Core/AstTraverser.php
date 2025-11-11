@@ -178,19 +178,36 @@ final class AstTraverser implements AstTraverserInterface
      */
     private function traverseBinaryOperation(BinaryOperation $node): void
     {
+        if ($node->operator === TokenType::T_PLUS) {
+            $this->generatedCode .= '((is_numeric(';
+            $this->doTraverse($node->left);
+            $this->generatedCode .= ') && is_numeric(';
+            $this->doTraverse($node->right);
+            $this->generatedCode .= ')) ? (';
+            $this->doTraverse($node->left);
+            $this->generatedCode .= ' + ';
+            $this->doTraverse($node->right);
+            $this->generatedCode .= ') : (';
+            $this->doTraverse($node->left);
+            $this->generatedCode .= ' . ';
+            $this->doTraverse($node->right);
+            $this->generatedCode .= '))';
+
+            return;
+        }
+
         $this->doTraverse($node->left);
         $operator = match ($node->operator) {
-            TokenType::T_PLUS => '+',
             TokenType::T_MINUS => '-',
             TokenType::T_MULTIPLY => '*',
             TokenType::T_DIVIDE => '/',
-            TokenType::T_CONCAT => '.',
             TokenType::T_COMPARE_EQUALS => '===',
             TokenType::T_COMPARE_UNEQUALS => '!==',
             TokenType::T_GREATER_THAN => '>',
             TokenType::T_LESS_THAN => '<',
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
+
         $this->generatedCode .= ' ' . $operator . ' ';
         $this->doTraverse($node->right);
     }

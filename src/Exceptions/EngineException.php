@@ -11,7 +11,7 @@ class EngineException extends RuntimeException
 {
     public function __construct(
         string $message,
-        public int $line = 0,
+        public int $line = 1,
         public readonly int $column = 0,
         public readonly int $offset = 0,
         public readonly int $length = 1,

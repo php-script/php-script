@@ -40,7 +40,7 @@ it('can render a more complex script', function (): void {
     // AST for:
     // u = users_list;
     // for (i = 0; i < 2; i++) {
-    //     echo u[i] ~ LINEBREAK;
+    //     echo u[i] + LINEBREAK;
     // }
     $program = new Program([
         new Assignment(
@@ -68,7 +68,7 @@ it('can render a more complex script', function (): void {
                             new Variable('u', new Token(TokenType::T_IDENTIFIER, 'u', 3, 10, 48)),
                             new Variable('i', new Token(TokenType::T_IDENTIFIER, 'i', 3, 12, 50))
                         ),
-                        TokenType::T_CONCAT,
+                        TokenType::T_PLUS,
                         new Literal(PHP_EOL, new Token(TokenType::T_LINEBREAK, 'LINEBREAK', 3, 17, 55))
                     )
                 ),
@@ -85,7 +85,7 @@ it('can render a more complex script', function (): void {
     $expected = "
 u = users_list;
 for (i = 0; i < 2; i++) {
-    echo u[i] ~ LINEBREAK;
+    echo u[i] + LINEBREAK;
 {$spacing}
 }
 ";
@@ -165,7 +165,6 @@ it('can render various binary operators', function (): void {
         TokenType::T_MINUS->value => '-',
         TokenType::T_MULTIPLY->value => '*',
         TokenType::T_DIVIDE->value => '/',
-        TokenType::T_CONCAT->value => '~',
         TokenType::T_COMPARE_EQUALS->value => '==',
         TokenType::T_COMPARE_UNEQUALS->value => '!=',
         TokenType::T_GREATER_THAN->value => '>',

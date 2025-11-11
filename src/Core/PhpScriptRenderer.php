@@ -148,7 +148,6 @@ final class PhpScriptRenderer implements AstTraverserInterface
             TokenType::T_MINUS => '-',
             TokenType::T_MULTIPLY => '*',
             TokenType::T_DIVIDE => '/',
-            TokenType::T_CONCAT => '~',
             TokenType::T_COMPARE_EQUALS => '==',
             TokenType::T_COMPARE_UNEQUALS => '!=',
             TokenType::T_GREATER_THAN => '>',

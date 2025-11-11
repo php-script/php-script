@@ -81,16 +81,16 @@ Now, you can write a script that interacts with the exposed data and functions.
 
 ```javascript
 // This is a line comment
-echo 'Hello ' ~ user.name // String concatenation and object property access
+echo 'Hello ' + user.name // String concatenation and object property access
 
 // Calling a method
 totalLogins = user.logins.count();
-echo 'Logins: ' ~ totalLogins;
+echo 'Logins: ' + totalLogins;
 
 // Working with variables
 var1 = 10;
 var2 = var1 * 2 + totalLogins;
-echo 'Sum: ' ~ var2;
+echo 'Sum: ' + var2;
 
 // Conditional statements
 if (var2 > 50) {
@@ -100,7 +100,7 @@ if (var2 > 50) {
 // Looping through an array
 echo 'Users list:';
 foreach (users_list as u) {
-    echo '- ' ~ u;
+    echo '- ' + u;
 }
 
 // Calling a method with an argument
@@ -109,7 +109,7 @@ if (user.hasPermission('admin')) {
 }
 
 // Accessing a global variable
-echo 'App Version: ' ~ app_version;
+echo 'App Version: ' + app_version;
 ```
 
 ### 3. Executing the Script
@@ -191,16 +191,16 @@ PHP Script supports the following literal types:
     ```
 -   **LINEBREAK:** A special keyword representing a new line character.
     ```javascript
-    echo 'Line 1' ~ LINEBREAK ~ 'Line 2';
+    echo 'Line 1' + LINEBREAK + 'Line 2';
     ```
 
 ### 2. Operators
 
-#### Arithmetic Operators
+#### Arithmetic and Concatenation Operators
 
-Standard arithmetic operations are supported.
+Standard arithmetic operations are supported. The `+` operator is used for both addition and string concatenation.
 
--   **Addition:** `+`
+-   **Addition for numeric values / Concatenation for string values:** `+`
 -   **Subtraction:** `-`
 -   **Multiplication:** `*`
 -   **Division:** `/`
@@ -210,24 +210,17 @@ result = 10 + 5;    // 15
 result = 20 - 7;    // 13
 result = 4 * 6;     // 24
 result = 100 / 10;  // 10
-```
-
-#### Concatenation Operator
-
-The `~` operator is used for string concatenation.
-
-```javascript
-greeting = 'Hello' ~ ' ' ~ 'World!'; // "Hello World!"
+greeting = 'Hello' + ' ' + 'World!'; // "Hello World!"
 ```
 
 #### Comparison Operators
 
 Used for comparing values.
 
--   **Equal to:** `==` (loose comparison)
--   **Strictly equal to:** `===` (strict comparison, checks value and type)
--   **Not equal to:** `!=` (loose comparison)
--   **Strictly not equal to:** `!==` (strict comparison)
+-   **Equal to:** `==`
+-   **Strictly equal to:** `===`
+-   **Not equal to:** `!=`
+-   **Strictly not equal to:** `!==`
 -   **Greater than:** `>`
 -   **Less than:** `<`
 
@@ -294,12 +287,12 @@ Executes a block of code a specified number of times. It consists of an initiali
 ```javascript
 // Standard for loop
 for (i = 0; i < 5; i++) {
-    echo 'Iteration: ' ~ i ~ LINEBREAK;
+    echo 'Iteration: ' + i + LINEBREAK;
 }
 
 // For loop with optional parts
 for (; count < 10;) { // No initializer, no increment
-    echo 'Count: ' ~ count ~ LINEBREAK;
+    echo 'Count: ' + count + LINEBREAK;
     count++;
 }
 
@@ -315,12 +308,12 @@ Iterates over elements of an array or iterable object.
 ```javascript
 // Foreach loop over values
 foreach (users_list as u) {
-    echo '- ' ~ u ~ LINEBREAK;
+    echo '- ' + u + LINEBREAK;
 }
 
 // Foreach loop over key-value pairs (key is optional)
 foreach (users_map as key, value) {
-    echo key ~ ': ' ~ value ~ LINEBREAK;
+    echo key + ': ' + value + LINEBREAK;
 }
 ```
 

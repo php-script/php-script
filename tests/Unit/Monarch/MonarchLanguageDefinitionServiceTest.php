@@ -88,7 +88,7 @@ it('returns the correct definition', function (): void {
         'allowedFunctions' => [],
         'contextVariables' => [],
         'operators' => [
-            '==', '===', '!=', '!==', '=', '.', '+', '-', '*', '/', '>', '<', '~',
+            '==', '===', '!=', '!==', '=', '.', '+', '-', '*', '/', '>', '<',
         ],
         'symbols' => '[=><!~?&|+\\-*/^%.,;()\\{}\\[\\]]',
         'tokenizer' => [

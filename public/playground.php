@@ -294,7 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             roundedSelection: true,
             scrollBeyondLastLine: false,
             minimap: {
-                enabled: true,
+                enabled: false,
             },
             snippetSuggestions: 'inline',
         });

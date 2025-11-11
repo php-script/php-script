@@ -6,13 +6,13 @@ use PhpScript\Core\Engine;
 
 it('should handle NBSP char', function (): void {
     $phpScript = <<<'PHPSCRIPT'
-echo 'USER: ' ~ currentUser ~ LINEBREAK
+echo 'USER: ' + currentUser + LINEBREAK
 
-echo 'BEFORE: ' ~ task.assignee ~ LINEBREAK
+echo 'BEFORE: ' + task.assignee + LINEBREAK
 
 task.assignee = currentUser
 
-echo 'AFTER: ' ~ task.assignee ~ LINEBREAK
+echo 'AFTER: ' + task.assignee + LINEBREAK
 PHPSCRIPT;
 
     $task = new stdClass;

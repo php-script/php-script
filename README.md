@@ -231,6 +231,8 @@ Used for comparing values.
 -   **Greater than:** `>`
 -   **Less than:** `<`
 
+Comparison with loose or strictly definition will be transferred **always** to strictly comparison on the php side. So there is no difference in PHP Script.
+
 ```javascript
 isEqual = (10 == '10');   // true
 isStrictlyEqual = (10 === '10'); // false

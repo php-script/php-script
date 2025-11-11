@@ -9,8 +9,8 @@ use PhpScript\Core\Parser;
 use PhpScript\Core\PhpScriptRenderer;
 use Throwable;
 
-class LinterService {
-
+class LinterService
+{
     private string $linted = '';
 
     public function __construct(

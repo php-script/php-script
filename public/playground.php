@@ -55,7 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $output = $engine->execute($code);
-        echo json_encode(['success' => true, 'output' => $output]);
+        $linted = $engine->linter($code)->linted();
+        echo json_encode(['success' => true, 'output' => $output, 'linted' => $linted]);
     } catch (EngineException $e) {
         http_response_code(400);
         echo json_encode([
@@ -319,6 +320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (result.success) {
                 outputContainer.innerHTML = result.output.replace(/\n/g, '<br>');
+                editor.getModel().setValue(result.linted);
                 outputContainer.classList.remove('text-red-400');
             } else {
                 // Das ist der Fehlerfall vom Backend

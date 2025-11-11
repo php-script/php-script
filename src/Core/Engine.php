@@ -8,6 +8,7 @@ use ErrorException;
 use PhpScript\Exceptions\EngineException;
 use PhpScript\Exceptions\LexerException;
 use PhpScript\Exceptions\ParseException;
+use PhpScript\Linter\LinterService;
 use PhpScript\Monarch\MonarchLanguageDefinitionService;
 use Throwable;
 
@@ -128,6 +129,12 @@ final class Engine
         }
 
         return ob_get_clean();
+    }
+
+    public function linter(string $script): LinterService
+    {
+        return new LinterService($this->lexer, $this->parser)
+            ->withScript($script);
     }
 
     public function monarchLanguageDefinition(): MonarchLanguageDefinitionService

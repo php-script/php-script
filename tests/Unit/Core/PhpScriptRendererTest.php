@@ -80,11 +80,15 @@ it('can render a more complex script', function (): void {
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
 
-    $expected = <<<'EOT'
-u = users_list
-for (i = 0; i < 2; i++) {echo u[i] ~ LINEBREAK;
+    $spacing = '    ';
+
+    $expected = "
+u = users_list;
+for (i = 0; i < 2; i++) {
+    echo u[i] ~ LINEBREAK;
+{$spacing}
 }
-EOT;
+";
 
     expect(trim($output))->toBe(trim($expected));
 });
@@ -95,7 +99,7 @@ it('can render an if statement without an else block', function (): void {
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
-    expect(trim($output))->toBe('if (true) {}');
+    expect(trim($output))->toBe('if (true) {' . "\n    \n" . '}');
 });
 
 it('can render an if statement with an else block', function (): void {
@@ -104,7 +108,7 @@ it('can render an if statement with an else block', function (): void {
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
-    expect(trim($output))->toBe('if (true) {} else {}');
+    expect(trim($output))->toBe('if (true) {' . "\n    \n" . '} else {' . "\n    \n" . '}');
 });
 
 it('can render a for statement with partial null parts', function (): void {
@@ -113,7 +117,7 @@ it('can render a for statement with partial null parts', function (): void {
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
-    expect(trim($output))->toBe('for (i = 0; ; ) {}');
+    expect(trim($output))->toBe('for (i = 0; ; ) {' . "\n    \n" . '}');
 });
 
 it('can render a for statement with only a condition', function (): void {
@@ -122,7 +126,7 @@ it('can render a for statement with only a condition', function (): void {
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
-    expect(trim($output))->toBe('for (; i < 10; ) {}');
+    expect(trim($output))->toBe('for (; i < 10; ) {' . "\n    \n" . '}');
 });
 
 it('can render a foreach statement without a key', function (): void {
@@ -137,7 +141,7 @@ it('can render a foreach statement without a key', function (): void {
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
-    expect(trim($output))->toBe('foreach (items as item) {}');
+    expect(trim($output))->toBe('foreach (items as item) {' . "\n    \n" . '}');
 });
 
 it('can render a foreach statement with a key', function (): void {
@@ -152,7 +156,7 @@ it('can render a foreach statement with a key', function (): void {
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
-    expect(trim($output))->toBe('foreach (items as i => item) {}');
+    expect(trim($output))->toBe('foreach (items as i => item) {' . "\n    \n" . '}');
 });
 
 it('can render various binary operators', function (): void {
@@ -202,7 +206,7 @@ it('can render an empty statement', function (): void {
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
-    expect(trim($output))->toBe(';');
+    expect(trim($output))->toBe('');
 });
 
 it('can render a LINEBREAK literal', function (): void {

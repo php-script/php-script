@@ -28,6 +28,8 @@ final class PhpScriptRenderer implements AstTraverserInterface
 {
     private string $generatedCode = '';
 
+    private int $indentLevel = 0;
+
     public function traverse(Node $node): string
     {
         $this->generatedCode = '';
@@ -65,7 +67,7 @@ final class PhpScriptRenderer implements AstTraverserInterface
     {
         foreach ($node->statements as $statement) {
             $this->doTraverse($statement);
-            $this->generatedCode .= "\n";
+            $this->generatedCode .= "\n" . $this->lineIndent();
         }
     }
 
@@ -80,14 +82,16 @@ final class PhpScriptRenderer implements AstTraverserInterface
     {
         $this->generatedCode .= 'if (';
         $this->doTraverse($node->condition);
-        $this->generatedCode .= ') {';
+        $this->generatedCode .= ') {' . "\n" . $this->lineIndent(1);
         $this->doTraverse($node->then);
-        $this->generatedCode .= '}';
+        $this->generatedCode .= "\n" . $this->lineIndent(-1) . '}';
 
         if ($node->else instanceof Node) {
-            $this->generatedCode .= ' else {';
+            $this->generatedCode .= ' else {' . "\n" . $this->lineIndent(1);
             $this->doTraverse($node->else);
-            $this->generatedCode .= '}';
+            $this->generatedCode .= "\n" . $this->lineIndent(-1) . '}' . "\n" . $this->lineIndent();
+        } else {
+            $this->generatedCode .= "\n" . $this->lineIndent();
         }
     }
 
@@ -96,8 +100,11 @@ final class PhpScriptRenderer implements AstTraverserInterface
         $this->generatedCode .= 'for (';
         if ($node->initializer instanceof Node) {
             $this->doTraverse($node->initializer);
+            $this->generatedCode .= ' ';
+        } else {
+            $this->generatedCode .= '; ';
         }
-        $this->generatedCode .= '; ';
+
         if ($node->condition instanceof Node) {
             $this->doTraverse($node->condition);
         }
@@ -105,9 +112,9 @@ final class PhpScriptRenderer implements AstTraverserInterface
         if ($node->increment instanceof Node) {
             $this->doTraverse($node->increment);
         }
-        $this->generatedCode .= ') {';
+        $this->generatedCode .= ') {' . "\n" . $this->lineIndent(1);
         $this->doTraverse($node->body);
-        $this->generatedCode .= '}';
+        $this->generatedCode .= "\n" . $this->lineIndent(-1) . '}' . "\n" . $this->lineIndent();
     }
 
     private function traverseForeachStatement(ForeachStatement $node): void
@@ -120,9 +127,9 @@ final class PhpScriptRenderer implements AstTraverserInterface
             $this->generatedCode .= ' => ';
         }
         $this->doTraverse($node->value);
-        $this->generatedCode .= ') {';
+        $this->generatedCode .= ') {' . "\n" . $this->lineIndent(1);
         $this->doTraverse($node->body);
-        $this->generatedCode .= '}';
+        $this->generatedCode .= "\n" . $this->lineIndent(-1) . '}' . "\n" . $this->lineIndent();
     }
 
     private function traverseAssignment(Assignment $node): void
@@ -130,6 +137,7 @@ final class PhpScriptRenderer implements AstTraverserInterface
         $this->doTraverse($node->variable);
         $this->generatedCode .= ' = ';
         $this->doTraverse($node->expression);
+        $this->generatedCode .= ';';
     }
 
     private function traverseBinaryOperation(BinaryOperation $node): void
@@ -246,8 +254,12 @@ final class PhpScriptRenderer implements AstTraverserInterface
         throw AstTraverserException::unknownLiteralType(gettype($value));
     }
 
-    private function traverseNoOp(): void
+    private function traverseNoOp(): void {}
+
+    private function lineIndent(int $increment = 0): string
     {
-        $this->generatedCode .= ';';
+        $this->indentLevel += $increment;
+
+        return str_repeat(' ', $this->indentLevel * 4);
     }
 }

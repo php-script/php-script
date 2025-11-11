@@ -81,7 +81,7 @@ it('parses an empty statement', function (): void {
 });
 
 it('parses various binary operators', function (): void {
-    $operators = ['+', '-', '*', '/', '~', '==', '!=', '>', '<'];
+    $operators = ['+', '-', '*', '/', '==', '!=', '>', '<'];
     foreach ($operators as $op) {
         $program = parse("1 {$op} 2;");
         $statement = $program->statements[0];

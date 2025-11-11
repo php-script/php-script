@@ -220,26 +220,9 @@ final class Parser implements ParserInterface
      */
     private function parseComparison(): Node
     {
-        $node = $this->parseConcat();
-
-        while ($this->match(TokenType::T_COMPARE_EQUALS, TokenType::T_COMPARE_UNEQUALS, TokenType::T_GREATER_THAN, TokenType::T_LESS_THAN)) {
-            $token = $this->previous();
-            $operator = $this->previous()->type;
-            $right = $this->parseConcat();
-            $node = new BinaryOperation($node, $operator, $right, $token);
-        }
-
-        return $node;
-    }
-
-    /**
-     * @throws \PhpScript\Exceptions\ParseException
-     */
-    private function parseConcat(): Node
-    {
         $node = $this->parseAdditive();
 
-        while ($this->match(TokenType::T_CONCAT)) {
+        while ($this->match(TokenType::T_COMPARE_EQUALS, TokenType::T_COMPARE_UNEQUALS, TokenType::T_GREATER_THAN, TokenType::T_LESS_THAN)) {
             $token = $this->previous();
             $operator = $this->previous()->type;
             $right = $this->parseAdditive();

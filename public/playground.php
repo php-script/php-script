@@ -158,25 +158,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 range: range
             };
 
-            // **********************************************************
-            // * HIER IST DIE ÄNDERUNG FÜR SNIPPETS
-            // **********************************************************
             if (item.snippet) {
-                // Wir haben ein Snippet!
                 suggestion.insertText = item.snippet;
-                // WICHTIG: Sagen Sie Monaco, dass dies ein Snippet ist
                 suggestion.insertTextRules = monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet;
             } else {
-                // Fallback auf normalen Text
                 suggestion.insertText = item.insertText || item.label;
                 suggestion.insertTextRules = monaco.languages.CompletionItemInsertTextRule.KeepWhitespace;
             }
-            // **********************************************************
 
             return suggestion;
         }
 
-        //const completionItems = <?php // echo $engine->monarchLanguageDefinition()->getCompletionItems();?>//;
         monaco.languages.registerCompletionItemProvider('php-script', {
             triggerCharacters: ['.'],
 
@@ -184,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 const triggerKind = context.triggerKind;
                 const triggerChar = context.triggerCharacter;
 
-                // --- Fall 1: Benutzer hat explizit '.' getippt ---
+                // --- 1: user hits '.' ---
                 if (triggerKind === monaco.languages.CompletionTriggerKind.TriggerCharacter && triggerChar === '.') {
 
                     const lineContent = model.getLineContent(position.lineNumber);
@@ -201,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     const chain = chainStr.split('.');
 
-                    // Kette auflösen
+                    // solve chain
                     let currentClassName = null;
                     const startVarName = chain[0];
                     const variable = suggestionModel.globalVariables.find(v => v.label === startVarName);
@@ -222,7 +214,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         } else {
                             const method = classDef.methods.find(m => m.label === propName);
                             if (method && method.detail) {
-                                // Versuchen, den Rückgabetyp aus "detail" zu parsen
                                 const returnTypeMatch = method.detail.match(/:\s*(\w+)$/);
                                 if (returnTypeMatch && suggestionModel.classes[returnTypeMatch[1]]) {
                                     currentClassName = returnTypeMatch[1];
@@ -235,7 +226,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
 
-                    // Vorschläge generieren
                     const finalClassDef = suggestionModel.classes[currentClassName];
                     if (finalClassDef) {
                         const replacementRange = {
@@ -255,7 +245,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     return { suggestions: [] };
                 }
 
-                // --- Fall 2: Standard-Vorschläge (Globale Vars, Funktionen, Keywords) ---
+                // --- 2: suggestions (local and global vars, functions, keywords) ---
                 if (triggerKind === monaco.languages.CompletionTriggerKind.Invoke ||
                     triggerKind === monaco.languages.CompletionTriggerKind.TriggerForIncompleteCompletions) {
 
@@ -266,6 +256,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         startColumn: word.startColumn,
                         endColumn: word.endColumn
                     };
+
+                    // Find local variables
+                    const code = model.getValue();
+                    const localVars = [];
+                    const regex = /(?:^|[^.\w])([a-zA-Z_]\w*)\s*=/g;
+                    let match;
+                    while ((match = regex.exec(code)) !== null) {
+                        const varName = match[1];
+                        if (!localVars.some(v => v.label === varName)) {
+                            localVars.push(createSuggestion({
+                                label: varName,
+                                kind: 'Variable',
+                                detail: 'Local Variable'
+                            }, replacementRange));
+                        }
+                    }
 
                     const globalVars = suggestionModel.globalVariables.map(v => createSuggestion(v, replacementRange));
                     const globalFuncs = suggestionModel.globalFunctions.map(f => createSuggestion(f, replacementRange));
@@ -279,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace
                     }));
 
-                    return { suggestions: [...globalVars, ...globalFuncs, ...staticKeywords] };
+                    return { suggestions: [...localVars, ...globalVars, ...globalFuncs, ...staticKeywords] };
                 }
 
                 return { suggestions: [] };
@@ -310,12 +316,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const runButton = document.getElementById('run-button');
         const applyLintedCode = document.getElementById('apply-linted-code');
 
-        // Button-Zustand
+        // Button
         runButton.disabled = true;
         runButton.textContent = 'Executing...';
-        outputContainer.textContent = ''; // Ausgabe löschen
+        outputContainer.textContent = '';
 
-        // Alte Fehlermarkierungen löschen
         setErrorMarkers(editor.getModel(), null);
 
         try {
@@ -337,7 +342,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     editor.getModel().setValue(result.linted);
                 }
             } else {
-                // Das ist der Fehlerfall vom Backend
                 outputContainer.textContent = result.error.message;
                 outputContainer.classList.add('text-red-400');
 
@@ -354,7 +358,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /**
-     * Setzt oder löscht Fehlermarkierungen im Monaco Editor.
+     * set or delete error mark
      * @param {object} model - Das Fehlerobjekt vom Backend oder null zum Löschen.
      * @param {object|null} error - Das Fehlerobjekt vom Backend oder null zum Löschen.
      * @param {string} error.message - Die Fehlermeldung.

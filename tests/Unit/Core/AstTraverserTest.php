@@ -258,11 +258,9 @@ it('can traverse a foreach statement with a key', function (): void {
 
 it('can traverse all binary operators', function (): void {
     $operators = [
-        TokenType::T_PLUS->value => '+',
         TokenType::T_MINUS->value => '-',
         TokenType::T_MULTIPLY->value => '*',
         TokenType::T_DIVIDE->value => '/',
-        TokenType::T_CONCAT->value => '.',
         TokenType::T_COMPARE_EQUALS->value => '===',
         TokenType::T_COMPARE_UNEQUALS->value => '!==',
         TokenType::T_GREATER_THAN->value => '>',
@@ -278,6 +276,16 @@ it('can traverse all binary operators', function (): void {
         $expected = "1 {$operator} 2;\n";
         expect($output)->toBe($expected);
     }
+});
+
+it('can traverse plus operator', function (): void {
+    $program = new Program([
+        new BinaryOperation(new Literal(1), TokenType::T_PLUS, new Literal(2)),
+    ]);
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+    $expected = "((is_numeric(1) && is_numeric(2)) ? (1 + 2) : (1 . 2));\n";
+    expect($output)->toBe($expected);
 });
 
 it('can traverse a unary minus operation', function (): void {

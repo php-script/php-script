@@ -11,7 +11,6 @@ enum TokenType: string
     case T_NUMBER = 'T_NUMBER';       // Numbers (1, 10, 3.14)
     case T_STRING = 'T_STRING';       // Strings ("Hello")
     case T_DOT = 'T_DOT';         // . (object access)
-    case T_CONCAT = 'T_CONCAT';     // ~ (String-concatenation)
     case T_LEFT_PARENTHESIS = 'T_LEFT_PARENTHESIS';     // (
     case T_RIGHT_PARENTHESIS = 'T_RIGHT_PARENTHESIS';     // )
     case T_LEFT_BRACE = 'T_LEFT_BRACE';     // {

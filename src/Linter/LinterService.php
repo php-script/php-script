@@ -25,9 +25,9 @@ class LinterService {
             $tokens = $this->lexer->tokenize($script);
             $ast = $this->parser->parse($tokens);
 
-            $this->linted = $this->renderer->traverse($ast);
+            $this->linted = rtrim($this->renderer->traverse($ast));
         } catch (Throwable) {
-            $this->linted = $script;
+            $this->linted = rtrim($script);
         }
 
         return $this;

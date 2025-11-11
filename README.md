@@ -362,6 +362,7 @@ user.hasPermission('admin'); // Calling a method on an object
 - Playground
   - use `make playground` and open http://localhost:8080/playground.php in your browser
   - with a Monaco prepared editor
+  - using PhpScriptRenderer as linter
 - Monarch language definition for the keywords and dynamic code suggestion for provided context
   - Monaco-based editors can learn the language and provide code completion (Monaco, vscode)
 

@@ -267,12 +267,18 @@ final class MonarchLanguageDefinitionService
         $returnType = $this->parseTypeHint($ref->getReturnType());
         $label = $ref->getShortName();
 
+        $isMethod = $ref instanceof ReflectionMethod;
+
         return [
             'label' => $label,
-            'kind' => $ref instanceof ReflectionMethod ? 'Method' : 'Function',
-            'detail' => "$label($paramSignature): $returnType",
+            'kind' => $isMethod ? 'Method' : 'Function',
+            'detail' => $isMethod
+                ? sprintf('%s(): %s', $label, $returnType)        // bei Methoden nur Signatur nach Reflection
+                : sprintf('%s(%s): %s', $label, $paramSignature, $returnType),
             'doc' => $this->parseDocComment($ref->getDocComment()),
-            'snippet' => $label . '(' . $snippetSignature . ')', // Snippet hinzufügen
+            'snippet' => $isMethod
+                ? $label . '()'                                  // Methoden ohne Parameter-Snippet
+                : $label . '(' . $snippetSignature . ')',
         ];
     }
 

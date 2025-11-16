@@ -2,8 +2,6 @@ title: PHP Script - The documentation for PHP Script language
 description: The PHP Script guide.
 theme: just-the-docs
 
-logo: "../art/php-script-logo.png"
-
 url: https://php-script.github.io/php-script
 
 defaults:

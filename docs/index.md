@@ -1,5 +1,5 @@
 ---
-title: The documentation for PHP Script language
+title: The basics
 nav_order: 1
 layout: home
 ---

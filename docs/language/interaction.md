@@ -36,9 +36,12 @@ secondUser = users_list[1];
 
 ## Function Calls
 
-Call functions or methods with arguments.
+Call functions or methods with arguments. Be careful what functions do you provide by the 
+[whitelist](/php/functions.html).
 
 ```javascript
-echo 'Hello World!'; // Calling a global function (if exposed)
+echo 'Hello World!'; // echo is provided as script functionality
 user.hasPermission('admin'); // Calling a method on an object
+
+echo strtoupper('foo') // Calling a global function (if exposed)
 ```

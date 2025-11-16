@@ -12,7 +12,7 @@ need for a separate Node.js service.
 
 ## Features
 
-- **Easy to Use:** The [syntax](./language/index.md) is inspired by JavaScript, making it familiar to a wide range of developers.
+- **Easy to Use:** The [syntax](./language/) is inspired by JavaScript, making it familiar to a wide range of developers.
 - **Secure:** The engine provides a sandboxed environment, giving you full control over the exposed functions and data.
 - **Flexible:** You can expose any `PHP` function or variable to the script, allowing for powerful customizations.
 - **Lightweight:** The package is designed to be lightweight and has minimal dependencies.

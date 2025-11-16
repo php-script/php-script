@@ -30,6 +30,26 @@ final class PhpScriptRenderer implements AstTraverserInterface
 
     private int $indentLevel = 0;
 
+    /**
+     * @param  string[]  $allowedFunctions
+     *
+     * @codeCoverageIgnore
+     */
+    public function setAllowedFunctions(array $allowedFunctions): void
+    {
+        // do nothing
+    }
+
+    /**
+     * @return \PhpScript\Core\Token[]
+     *
+     * @codeCoverageIgnore
+     */
+    public function getSourceMap(): array
+    {
+        return [];
+    }
+
     public function traverse(Node $node): string
     {
         $this->generatedCode = '';

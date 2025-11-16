@@ -7,7 +7,7 @@ namespace PhpScript\Contracts;
 interface LexerInterface
 {
     /**
-     * @return array|\PhpScript\Core\Token[]
+     * @return list<\PhpScript\Core\Token>
      */
     public function tokenize(string $script): array;
 }

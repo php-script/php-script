@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace PhpScript\Core;
 
+use PhpScript\Contracts\LexerInterface;
 use PhpScript\Exceptions\LexerException;
 
-final readonly class Lexer
+final readonly class Lexer implements LexerInterface
 {
     /**
      * An associative array defining token patterns for a lexical analyzer or tokenizer.

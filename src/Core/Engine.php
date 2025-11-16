@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace PhpScript\Core;
 
 use ErrorException;
+use PhpScript\Contracts\AstTraverserInterface;
+use PhpScript\Contracts\LexerInterface;
+use PhpScript\Contracts\ParserInterface;
 use PhpScript\Exceptions\EngineException;
 use PhpScript\Exceptions\LexerException;
 use PhpScript\Exceptions\ParseException;
@@ -28,9 +31,9 @@ final class Engine
     private int $executionTimeLimit = 0; // Default to no time limit
 
     public function __construct(
-        private readonly Lexer $lexer = new Lexer,
-        private readonly Parser $parser = new Parser,
-        private readonly AstTraverser $astTraverser = new AstTraverser,
+        private readonly LexerInterface $lexer = new Lexer,
+        private readonly ParserInterface $parser = new Parser,
+        private readonly AstTraverserInterface $astTraverser = new AstTraverser,
     ) {}
 
     public function allow(string ...$functionNames): self

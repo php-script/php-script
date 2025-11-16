@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace PhpScript\Linter;
 
+use PhpScript\Contracts\AstTraverserInterface;
+use PhpScript\Contracts\LexerInterface;
+use PhpScript\Contracts\ParserInterface;
 use PhpScript\Core\Lexer;
 use PhpScript\Core\Parser;
 use PhpScript\Core\PhpScriptRenderer;
@@ -14,9 +17,9 @@ class LinterService
     private string $linted = '';
 
     public function __construct(
-        private readonly Lexer $lexer = new Lexer,
-        private readonly Parser $parser = new Parser,
-        private readonly PhpScriptRenderer $renderer = new PhpScriptRenderer,
+        private readonly LexerInterface $lexer = new Lexer,
+        private readonly ParserInterface $parser = new Parser,
+        private readonly AstTraverserInterface $renderer = new PhpScriptRenderer,
     ) {}
 
     public function withScript(string $script): self

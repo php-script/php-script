@@ -1,6 +1,7 @@
 ---
 title: PHP Script Language Reference
 nav_order: 2
+layout: default
 ---
 
 # PHP Script Language Reference

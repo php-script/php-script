@@ -2,6 +2,7 @@
 title: Object and Array Interaction
 parent: PHP Script Language Reference
 nav_order: 4
+layout: default
 ---
 
 # Object and Array Interaction

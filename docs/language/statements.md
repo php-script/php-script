@@ -2,6 +2,7 @@
 title: Basic Statements and Expressions
 parent: PHP Script Language Reference
 nav_order: 1
+layout: default
 ---
 
 # Basic Statements and Expressions

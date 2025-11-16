@@ -2,6 +2,7 @@
 title: Control Flow
 parent: PHP Script Language Reference
 nav_order: 3
+layout: default
 ---
 
 # Control Flow

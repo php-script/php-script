@@ -6,6 +6,13 @@ logo: "../art/php-script-logo.png"
 
 url: https://php-script.github.io/php-script
 
+defaults:
+  - scope:
+      path: docs
+      type: pages
+    values:
+      layout: default
+
 # Aux Links
 aux_links:
   Repository: https://github.com/php-script/php-script

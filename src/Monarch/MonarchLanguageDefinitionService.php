@@ -255,8 +255,7 @@ final class MonarchLanguageDefinitionService
             $snippetParam = '${' . ($paramIndex++) . ':' . $param->getName() . '}';
 
             if ($param->isDefaultValueAvailable()) {
-                $paramStr .= ' = ...'; // Standardwert andeuten
-                // Optional: Snippet für optionale Parameter anders behandeln (hier nicht implementiert)
+                $paramStr .= ' = ...';
             }
             $params[] = $paramStr;
             $snippetParams[] = $snippetParam;

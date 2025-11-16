@@ -13,7 +13,8 @@ defaults:
 
 # Aux Links
 aux_links:
-  Repository: https://github.com/php-script/php-script
+  "📦": https://github.com/php-script/php-script
+  "✏️": https://github.com/php-script/php-script-editor
 aux_links_new_tab: true
 
 # Search

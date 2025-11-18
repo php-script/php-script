@@ -7,6 +7,8 @@ Auto-generated from project constitution. Last updated: 2025-11-18
 **PHP Script** is a JavaScript-inspired scripting language that runs entirely in PHP, enabling end-users to customize and extend PHP-powered backends without requiring a separate Node.js service. It provides a secure, sandboxed execution environment with full control over exposed functions and data.
 
 ## Active Technologies
+- PHP 8.4+ + None (PHP-native, following Zero External Dependencies principle) (001-break-continue)
+- N/A (language feature, no data persistence) (001-break-continue)
 
 ### Core Stack
 - **Language**: PHP 8.4+
@@ -314,23 +316,15 @@ The project provides comprehensive Monaco Editor integration via `MonarchLanguag
 - Full working example of Monaco integration
 
 ## Recent Changes
+- 001-break-continue: Added PHP 8.4+ + None (PHP-native, following Zero External Dependencies principle)
 
 ### Integration: Speckit Framework (2025-11-18)
 - Added 9 slash commands for structured feature development workflow
 - Created `.specify/` directory structure with scripts, templates, and memory
-- Established project constitution in `.specify/memory/constitution.md`
-- Integrated workflow: specify → plan → tasks → implement → analyze
 
 ### Feature: Control Flow Snippets (Recent)
-- Added code completion snippets for `for`, `foreach`, `if`, `ifelse`
-- Enhanced MonarchLanguageDefinitionService with snippet support
-- Improved developer experience in Monaco Editor
 
 ### Documentation: Comprehensive Guides (Recent)
-- Added editor integration guide for PHP with Monaco details
-- Created context handling documentation
-- Updated navigation for linting, error handling, and injection pages
-- Added injection documentation with custom Lexer/Parser/AstTraverser details
 
 ## Testing Strategy
 

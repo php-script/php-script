@@ -147,6 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'Variable': monaco.languages.CompletionItemKind.Variable,
             'Property': monaco.languages.CompletionItemKind.Property,
             'Keyword': monaco.languages.CompletionItemKind.Keyword,
+            'Snippet': monaco.languages.CompletionItemKind.Snippet,
         };
 
         function createSuggestion(item, range) {
@@ -276,16 +277,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     const globalVars = suggestionModel.globalVariables.map(v => createSuggestion(v, replacementRange));
                     const globalFuncs = suggestionModel.globalFunctions.map(f => createSuggestion(f, replacementRange));
 
-                    const staticKeywords = phpScriptLanguageDef.keywords.map(k => ({
-                        label: k,
-                        kind: kinds.Keyword,
-                        insertText: k,
+                    const controlFlows = suggestionModel.controlFlows.map(c => ({
+                        label: c.label,
+                        kind: kinds[c.kind] || monaco.languages.CompletionItemKind.Snippet,
+                        insertText: c.snippet,
                         range: replacementRange,
-                        detail: 'Keyword',
-                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace
+                        detail: c.detail || '',
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        documentation: c.doc || '',
                     }));
 
-                    return { suggestions: [...localVars, ...globalVars, ...globalFuncs, ...staticKeywords] };
+                    const staticKeywords = phpScriptLanguageDef.keywords
+                        .filter(k => !['if', 'foreach'].includes(k))
+                        .map(k => ({
+                            label: k,
+                            kind: kinds.Keyword,
+                            insertText: k,
+                            range: replacementRange,
+                            detail: 'Keyword',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace
+                        }));
+
+                    return { suggestions: [...localVars, ...globalVars, ...globalFuncs, ...staticKeywords, ...controlFlows] };
                 }
 
                 return { suggestions: [] };

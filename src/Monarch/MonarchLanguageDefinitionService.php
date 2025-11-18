@@ -116,7 +116,8 @@ final class MonarchLanguageDefinitionService
      *     classes: array<string, array{
      *         properties: list<array{label: string, kind: 'Property', detail: string, doc: string}>,
      *         methods: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>
-     *     }>
+     *     }>,
+     *     controlFlows: list<array{label: string, kind: 'Snippet', detail: string, doc: string, snippet: string}>
      * }
      */
     public function getCompletionItems(): array
@@ -126,6 +127,7 @@ final class MonarchLanguageDefinitionService
             'globalFunctions' => [],
             'globalVariables' => [],
             'classes' => [],
+            'controlFlows' => [],
         ];
 
         // 1. Erlaubte globale Funktionen (Whitelist)
@@ -155,6 +157,65 @@ final class MonarchLanguageDefinitionService
                 'doc' => $this->parseDocComment($name),
             ];
         }
+
+        // 3. Control Flow: for, foreach, if, ifelse
+        $model['controlFlows'][] = [
+            'label' => 'for',
+            'kind' => 'Snippet',
+            'snippet' => implode("\n", [
+                'for (${1:i} = ${2:0}; ${1} < ${3:count}(${4}); ${1}++) {',
+                '    $0',
+                '}',
+            ]),
+            'doc' => 'For-Loop',
+            'detail' => 'for (int $i = 0; $i < count($items); $i++) {',
+        ];
+        $model['controlFlows'][] = [
+            'label' => 'foreach',
+            'kind' => 'Snippet',
+            'snippet' => implode("\n", [
+                'foreach (${1:items} as ${2:item}) {',
+                '    $0',
+                '}',
+            ]),
+            'doc' => 'Foreach-Loop',
+            'detail' => 'foreach ($items as $item) {',
+        ];
+        $model['controlFlows'][] = [
+            'label' => 'foreach (key, value)',
+            'kind' => 'Snippet',
+            'snippet' => implode("\n", [
+                'foreach (${1:map} as ${2:key}, ${3:value}) {',
+                '    $0',
+                '}',
+            ]),
+            'doc' => 'Foreach-Loop for Key/Value Pairs',
+            'detail' => 'foreach ($map as $key => $value) {',
+        ];
+        $model['controlFlows'][] = [
+            'label' => 'if',
+            'kind' => 'Snippet',
+            'snippet' => implode("\n", [
+                'if (${1:condition}) {',
+                '    $0',
+                '}',
+            ]),
+            'doc' => 'If-Condition',
+            'detail' => 'if ($condition) {',
+        ];
+        $model['controlFlows'][] = [
+            'label' => 'ifelse',
+            'kind' => 'Snippet',
+            'snippet' => implode("\n", [
+                'if (${1:condition}) {',
+                '    $2',
+                '} else {',
+                '    $0',
+                '}',
+            ]),
+            'doc' => 'If-Else-Condition',
+            'detail' => 'if ($condition) { ... } else { ... }',
+        ];
 
         return $model;
     }

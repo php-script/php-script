@@ -19,7 +19,7 @@ final class MonarchLanguageDefinitionService
 {
     /** @var string[] */
     private const array KEYWORDS = [
-        'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
+        'if', 'else', 'for', 'foreach', 'as', 'echo', 'return', 'break', 'continue', 'true', 'false', 'null', 'LINEBREAK',
     ];
 
     /** @var array<string, bool> */
@@ -215,6 +215,34 @@ final class MonarchLanguageDefinitionService
             ]),
             'doc' => 'If-Else-Condition',
             'detail' => 'if ($condition) { ... } else { ... }',
+        ];
+        $model['controlFlows'][] = [
+            'label' => 'break',
+            'kind' => 'Snippet',
+            'snippet' => 'break;',
+            'doc' => 'Break from loop',
+            'detail' => 'break;',
+        ];
+        $model['controlFlows'][] = [
+            'label' => 'break 2',
+            'kind' => 'Snippet',
+            'snippet' => 'break ${1:2};',
+            'doc' => 'Break from nested loops',
+            'detail' => 'break N;',
+        ];
+        $model['controlFlows'][] = [
+            'label' => 'continue',
+            'kind' => 'Snippet',
+            'snippet' => 'continue;',
+            'doc' => 'Continue to next loop iteration',
+            'detail' => 'continue;',
+        ];
+        $model['controlFlows'][] = [
+            'label' => 'continue 2',
+            'kind' => 'Snippet',
+            'snippet' => 'continue ${1:2};',
+            'doc' => 'Continue outer loop from nested loops',
+            'detail' => 'continue N;',
         ];
 
         return $model;

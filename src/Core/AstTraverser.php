@@ -8,6 +8,7 @@ use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\BreakStatement;
+use PhpScript\Ast\ContinueStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -91,6 +92,13 @@ final class AstTraverser implements AstTraverserInterface
         return $this->generatedCode;
     }
 
+    public function visitContinueStatement(ContinueStatement $node): string
+    {
+        $this->traverseContinueStatement($node);
+
+        return $this->generatedCode;
+    }
+
     /**
      * @throws \PhpScript\Exceptions\AstTraverserException
      * @throws \PhpScript\Exceptions\EngineException
@@ -109,6 +117,7 @@ final class AstTraverser implements AstTraverserInterface
             ForStatement::class => $this->traverseForStatement($node),
             ForeachStatement::class => $this->traverseForeachStatement($node),
             BreakStatement::class => $this->traverseBreakStatement($node),
+            ContinueStatement::class => $this->traverseContinueStatement($node),
             Assignment::class => $this->traverseAssignment($node),
             BinaryOperation::class => $this->traverseBinaryOperation($node),
             UnaryOperation::class => $this->traverseUnaryOperation($node),
@@ -222,6 +231,38 @@ final class AstTraverser implements AstTraverserInterface
         }
 
         $this->generatedCode .= $node->level === 1 ? 'break' : "break {$node->level}";
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\EngineException
+     */
+    private function traverseContinueStatement(ContinueStatement $node): void
+    {
+        if ($this->loopDepth === 0) {
+            $token = $node->getToken();
+            $length = $token instanceof Token ? strlen($token->value) : 8;
+            throw EngineException::runtimeError(
+                "'continue' can only be used inside a loop",
+                (int) $token?->line,
+                (int) $token?->column,
+                (int) $token?->offset,
+                $length
+            );
+        }
+
+        if ($node->level > $this->loopDepth) {
+            $token = $node->getToken();
+            $length = $token instanceof Token ? strlen($token->value) : 8;
+            throw EngineException::runtimeError(
+                "Cannot continue {$node->level} level(s) (only {$this->loopDepth} loop(s) available)",
+                (int) $token?->line,
+                (int) $token?->column,
+                (int) $token?->offset,
+                $length
+            );
+        }
+
+        $this->generatedCode .= $node->level === 1 ? 'continue' : "continue {$node->level}";
     }
 
     private function traverseAssignment(Assignment $node): void

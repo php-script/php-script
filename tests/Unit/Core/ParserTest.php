@@ -178,3 +178,36 @@ it('throws exception for break with non-numeric argument', function (): void {
 it('throws exception for break with float argument', function (): void {
     parse('break 2.5;');
 })->throws(ParseException::class, 'Break level must be a positive integer (got 2.5)');
+
+it('parses continue statement without level', function (): void {
+    $program = parse('continue;');
+    $statement = $program->statements[0];
+    expect($statement)->toBeInstanceOf(\PhpScript\Ast\ContinueStatement::class);
+    expect($statement->level)->toBe(1);
+});
+
+it('parses continue statement with explicit levels', function (): void {
+    $program = parse('continue 1; continue 2; continue 3;');
+    expect($program->statements[0])->toBeInstanceOf(\PhpScript\Ast\ContinueStatement::class);
+    expect($program->statements[0]->level)->toBe(1);
+    expect($program->statements[1])->toBeInstanceOf(\PhpScript\Ast\ContinueStatement::class);
+    expect($program->statements[1]->level)->toBe(2);
+    expect($program->statements[2])->toBeInstanceOf(\PhpScript\Ast\ContinueStatement::class);
+    expect($program->statements[2]->level)->toBe(3);
+});
+
+it('throws exception for continue with zero level', function (): void {
+    parse('continue 0;');
+})->throws(ParseException::class, 'Continue level must be a positive integer (got 0)');
+
+it('throws exception for continue with negative level', function (): void {
+    parse('continue -1;');
+})->throws(ParseException::class, 'Unexpected token: T_MINUS');
+
+it('throws exception for continue with non-numeric argument', function (): void {
+    parse('continue foo;');
+})->throws(ParseException::class, 'Unexpected token: T_IDENTIFIER');
+
+it('throws exception for continue with float argument', function (): void {
+    parse('continue 2.5;');
+})->throws(ParseException::class, 'Continue level must be a positive integer (got 2.5)');

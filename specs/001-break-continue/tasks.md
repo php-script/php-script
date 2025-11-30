@@ -61,53 +61,53 @@ Single project structure at repository root:
 
 ### AST Node & Tests for User Story 1
 
-- [ ] T013 [P] [US1] Create BreakStatement AST node class in src/Ast/BreakStatement.php with level property (default: 1)
-- [ ] T014 [P] [US1] Write test for BreakStatement constructor with default level in tests/Ast/BreakStatementTest.php
-- [ ] T015 [P] [US1] Write test for BreakStatement constructor with explicit level in tests/Ast/BreakStatementTest.php
-- [ ] T016 [P] [US1] Write test for BreakStatement getLevel() method in tests/Ast/BreakStatementTest.php
-- [ ] T017 [P] [US1] Write test for BreakStatement accept() method in tests/Ast/BreakStatementTest.php
+- [X] T013 [P] [US1] Create BreakStatement AST node class in src/Ast/BreakStatement.php with level property (default: 1)
+- [X] T014 [P] [US1] Write test for BreakStatement constructor with default level in tests/Ast/BreakStatementTest.php
+- [X] T015 [P] [US1] Write test for BreakStatement constructor with explicit level in tests/Ast/BreakStatementTest.php
+- [X] T016 [P] [US1] Write test for BreakStatement getLevel() method in tests/Ast/BreakStatementTest.php
+- [X] T017 [P] [US1] Write test for BreakStatement accept() method in tests/Ast/BreakStatementTest.php
 
 ### Parser Implementation for User Story 1
 
-- [ ] T018 [US1] Add parseBreakStatement() method to src/Core/Parser.php to handle break keyword and optional level
-- [ ] T019 [US1] Add TokenType::T_BREAK case to parseStatement() match in src/Core/Parser.php
-- [ ] T020 [US1] Add parse-time validation for break level (reject 0, negative, non-integer) in parseBreakStatement()
-- [ ] T021 [P] [US1] Write test for parsing 'break' without level in tests/Core/ParserTest.php
-- [ ] T022 [P] [US1] Write test for parsing 'break 1', 'break 2', 'break 3' in tests/Core/ParserTest.php
-- [ ] T023 [P] [US1] Write test for parse error on 'break 0' in tests/Core/ParserTest.php
-- [ ] T024 [P] [US1] Write test for parse error on 'break -1' in tests/Core/ParserTest.php
-- [ ] T025 [P] [US1] Write test for parse error on 'break foo' (non-numeric) in tests/Core/ParserTest.php
-- [ ] T026 [P] [US1] Write test for parse error on 'break 2.5' (float not allowed) in tests/Core/ParserTest.php
+- [X] T018 [US1] Add parseBreakStatement() method to src/Core/Parser.php to handle break keyword and optional level
+- [X] T019 [US1] Add TokenType::T_BREAK case to parseStatement() match in src/Core/Parser.php
+- [X] T020 [US1] Add parse-time validation for break level (reject 0, negative, non-integer) in parseBreakStatement()
+- [X] T021 [P] [US1] Write test for parsing 'break' without level in tests/Core/ParserTest.php
+- [X] T022 [P] [US1] Write test for parsing 'break 1', 'break 2', 'break 3' in tests/Core/ParserTest.php
+- [X] T023 [P] [US1] Write test for parse error on 'break 0' in tests/Core/ParserTest.php
+- [X] T024 [P] [US1] Write test for parse error on 'break -1' in tests/Core/ParserTest.php
+- [X] T025 [P] [US1] Write test for parse error on 'break foo' (non-numeric) in tests/Core/ParserTest.php
+- [X] T026 [P] [US1] Write test for parse error on 'break 2.5' (float not allowed) in tests/Core/ParserTest.php
 
 ### AstTraverser Implementation for User Story 1
 
-- [ ] T027 [US1] Add visitBreakStatement() method to src/Core/AstTraverser.php to validate level and generate PHP break code
-- [ ] T028 [US1] Modify visitForStatement() to call enterLoop() before and exitLoop() after loop body in src/Core/AstTraverser.php
-- [ ] T029 [US1] Modify visitForeachStatement() to call enterLoop() before and exitLoop() after loop body in src/Core/AstTraverser.php
-- [ ] T030 [US1] Modify visitWhileStatement() to call enterLoop() before and exitLoop() after loop body in src/Core/AstTraverser.php (if while loops exist)
-- [ ] T031 [P] [US1] Write test for break execution in for loop in tests/Core/AstTraverserTest.php
-- [ ] T032 [P] [US1] Write test for break execution in foreach loop in tests/Core/AstTraverserTest.php
-- [ ] T033 [P] [US1] Write test for break execution in while loop in tests/Core/AstTraverserTest.php (if applicable)
-- [ ] T034 [P] [US1] Write test for error when break used outside loop context in tests/Core/AstTraverserTest.php
-- [ ] T035 [P] [US1] Write test for error when break level exceeds available loops in tests/Core/AstTraverserTest.php
-- [ ] T036 [P] [US1] Write test that break in function call doesn't affect outer loop in tests/Core/AstTraverserTest.php
+- [X] T027 [US1] Add visitBreakStatement() method to src/Core/AstTraverser.php to validate level and generate PHP break code
+- [X] T028 [US1] Modify visitForStatement() to call enterLoop() before and exitLoop() after loop body in src/Core/AstTraverser.php
+- [X] T029 [US1] Modify visitForeachStatement() to call enterLoop() before and exitLoop() after loop body in src/Core/AstTraverser.php
+- [X] T030 [US1] Modify visitWhileStatement() to call enterLoop() before and exitLoop() after loop body in src/Core/AstTraverser.php (if while loops exist)
+- [X] T031 [P] [US1] Write test for break execution in for loop in tests/Core/AstTraverserTest.php
+- [X] T032 [P] [US1] Write test for break execution in foreach loop in tests/Core/AstTraverserTest.php
+- [X] T033 [P] [US1] Write test for break execution in while loop in tests/Core/AstTraverserTest.php (if applicable)
+- [X] T034 [P] [US1] Write test for error when break used outside loop context in tests/Core/AstTraverserTest.php
+- [X] T035 [P] [US1] Write test for error when break level exceeds available loops in tests/Core/AstTraverserTest.php
+- [X] T036 [P] [US1] Write test that break in function call doesn't affect outer loop in tests/Core/AstTraverserTest.php
 
 ### PhpScriptRenderer Implementation for User Story 1
 
-- [ ] T037 [US1] Add visitBreakStatement() method to src/Core/PhpScriptRenderer.php to render break back to source code
-- [ ] T038 [P] [US1] Write test for rendering 'break' statement in tests/Core/PhpScriptRendererTest.php
-- [ ] T039 [P] [US1] Write test for rendering 'break 2' statement in tests/Core/PhpScriptRendererTest.php
-- [ ] T040 [P] [US1] Write round-trip test (code → AST → code produces same output) for break in tests/Core/PhpScriptRendererTest.php
+- [X] T037 [US1] Add visitBreakStatement() method to src/Core/PhpScriptRenderer.php to render break back to source code
+- [X] T038 [P] [US1] Write test for rendering 'break' statement in tests/Core/PhpScriptRendererTest.php
+- [X] T039 [P] [US1] Write test for rendering 'break 2' statement in tests/Core/PhpScriptRendererTest.php
+- [X] T040 [P] [US1] Write round-trip test (code → AST → code produces same output) for break in tests/Core/PhpScriptRendererTest.php
 
 ### Quality Assurance for User Story 1
 
-- [ ] T041 [US1] Run composer lint to fix code style for all User Story 1 changes
-- [ ] T042 [US1] Run composer refactor to apply automated refactorings
-- [ ] T043 [US1] Run composer lint again to re-check style after refactoring
-- [ ] T044 [US1] Run composer test to verify all tests pass with 100% coverage for break functionality
-- [ ] T045 [US1] Verify zero PHPStan errors for break implementation
-- [ ] T046 [US1] Verify zero linting errors for break implementation
-- [ ] T047 [US1] Verify zero Rector violations for break implementation
+- [X] T041 [US1] Run composer lint to fix code style for all User Story 1 changes
+- [X] T042 [US1] Run composer refactor to apply automated refactorings
+- [X] T043 [US1] Run composer lint again to re-check style after refactoring
+- [X] T044 [US1] Run composer test to verify all tests pass with 100% coverage for break functionality
+- [X] T045 [US1] Verify zero PHPStan errors for break implementation
+- [X] T046 [US1] Verify zero linting errors for break implementation
+- [X] T047 [US1] Verify zero Rector violations for break implementation
 
 **Checkpoint**: User Story 1 (break keyword) is fully functional and independently testable. All acceptance scenarios pass:
 - ✅ For loop with break terminates at correct iteration
@@ -126,50 +126,50 @@ Single project structure at repository root:
 
 ### AST Node & Tests for User Story 2
 
-- [ ] T048 [P] [US2] Create ContinueStatement AST node class in src/Ast/ContinueStatement.php with level property (default: 1)
-- [ ] T049 [P] [US2] Write test for ContinueStatement constructor with default level in tests/Ast/ContinueStatementTest.php
-- [ ] T050 [P] [US2] Write test for ContinueStatement constructor with explicit level in tests/Ast/ContinueStatementTest.php
-- [ ] T051 [P] [US2] Write test for ContinueStatement getLevel() method in tests/Ast/ContinueStatementTest.php
-- [ ] T052 [P] [US2] Write test for ContinueStatement accept() method in tests/Ast/ContinueStatementTest.php
+- [X] T048 [P] [US2] Create ContinueStatement AST node class in src/Ast/ContinueStatement.php with level property (default: 1)
+- [X] T049 [P] [US2] Write test for ContinueStatement constructor with default level in tests/Ast/ContinueStatementTest.php
+- [X] T050 [P] [US2] Write test for ContinueStatement constructor with explicit level in tests/Ast/ContinueStatementTest.php
+- [X] T051 [P] [US2] Write test for ContinueStatement getLevel() method in tests/Ast/ContinueStatementTest.php
+- [X] T052 [P] [US2] Write test for ContinueStatement accept() method in tests/Ast/ContinueStatementTest.php
 
 ### Parser Implementation for User Story 2
 
-- [ ] T053 [US2] Add parseContinueStatement() method to src/Core/Parser.php to handle continue keyword and optional level
-- [ ] T054 [US2] Add TokenType::T_CONTINUE case to parseStatement() match in src/Core/Parser.php
-- [ ] T055 [US2] Add parse-time validation for continue level (reject 0, negative, non-integer) in parseContinueStatement()
-- [ ] T056 [P] [US2] Write test for parsing 'continue' without level in tests/Core/ParserTest.php
-- [ ] T057 [P] [US2] Write test for parsing 'continue 1', 'continue 2', 'continue 3' in tests/Core/ParserTest.php
-- [ ] T058 [P] [US2] Write test for parse error on 'continue 0' in tests/Core/ParserTest.php
-- [ ] T059 [P] [US2] Write test for parse error on 'continue -1' in tests/Core/ParserTest.php
-- [ ] T060 [P] [US2] Write test for parse error on 'continue foo' (non-numeric) in tests/Core/ParserTest.php
-- [ ] T061 [P] [US2] Write test for parse error on 'continue 2.5' (float not allowed) in tests/Core/ParserTest.php
+- [X] T053 [US2] Add parseContinueStatement() method to src/Core/Parser.php to handle continue keyword and optional level
+- [X] T054 [US2] Add TokenType::T_CONTINUE case to parseStatement() match in src/Core/Parser.php
+- [X] T055 [US2] Add parse-time validation for continue level (reject 0, negative, non-integer) in parseContinueStatement()
+- [X] T056 [P] [US2] Write test for parsing 'continue' without level in tests/Core/ParserTest.php
+- [X] T057 [P] [US2] Write test for parsing 'continue 1', 'continue 2', 'continue 3' in tests/Core/ParserTest.php
+- [X] T058 [P] [US2] Write test for parse error on 'continue 0' in tests/Core/ParserTest.php
+- [X] T059 [P] [US2] Write test for parse error on 'continue -1' in tests/Core/ParserTest.php
+- [X] T060 [P] [US2] Write test for parse error on 'continue foo' (non-numeric) in tests/Core/ParserTest.php
+- [X] T061 [P] [US2] Write test for parse error on 'continue 2.5' (float not allowed) in tests/Core/ParserTest.php
 
 ### AstTraverser Implementation for User Story 2
 
-- [ ] T062 [US2] Add visitContinueStatement() method to src/Core/AstTraverser.php to validate level and generate PHP continue code
-- [ ] T063 [P] [US2] Write test for continue execution in for loop in tests/Core/AstTraverserTest.php
-- [ ] T064 [P] [US2] Write test for continue execution in foreach loop in tests/Core/AstTraverserTest.php
-- [ ] T065 [P] [US2] Write test for continue execution in while loop in tests/Core/AstTraverserTest.php (if applicable)
-- [ ] T066 [P] [US2] Write test for error when continue used outside loop context in tests/Core/AstTraverserTest.php
-- [ ] T067 [P] [US2] Write test for error when continue level exceeds available loops in tests/Core/AstTraverserTest.php
-- [ ] T068 [P] [US2] Write test that continue in function call doesn't affect outer loop in tests/Core/AstTraverserTest.php
+- [X] T062 [US2] Add visitContinueStatement() method to src/Core/AstTraverser.php to validate level and generate PHP continue code
+- [X] T063 [P] [US2] Write test for continue execution in for loop in tests/Core/AstTraverserTest.php
+- [X] T064 [P] [US2] Write test for continue execution in foreach loop in tests/Core/AstTraverserTest.php
+- [X] T065 [P] [US2] Write test for continue execution in while loop in tests/Core/AstTraverserTest.php (if applicable)
+- [X] T066 [P] [US2] Write test for error when continue used outside loop context in tests/Core/AstTraverserTest.php
+- [X] T067 [P] [US2] Write test for error when continue level exceeds available loops in tests/Core/AstTraverserTest.php
+- [X] T068 [P] [US2] Write test that continue in function call doesn't affect outer loop in tests/Core/AstTraverserTest.php
 
 ### PhpScriptRenderer Implementation for User Story 2
 
-- [ ] T069 [US2] Add visitContinueStatement() method to src/Core/PhpScriptRenderer.php to render continue back to source code
-- [ ] T070 [P] [US2] Write test for rendering 'continue' statement in tests/Core/PhpScriptRendererTest.php
-- [ ] T071 [P] [US2] Write test for rendering 'continue 3' statement in tests/Core/PhpScriptRendererTest.php
-- [ ] T072 [P] [US2] Write round-trip test (code → AST → code produces same output) for continue in tests/Core/PhpScriptRendererTest.php
+- [X] T069 [US2] Add visitContinueStatement() method to src/Core/PhpScriptRenderer.php to render continue back to source code
+- [X] T070 [P] [US2] Write test for rendering 'continue' statement in tests/Core/PhpScriptRendererTest.php
+- [X] T071 [P] [US2] Write test for rendering 'continue 3' statement in tests/Core/PhpScriptRendererTest.php
+- [X] T072 [P] [US2] Write round-trip test (code → AST → code produces same output) for continue in tests/Core/PhpScriptRendererTest.php
 
 ### Quality Assurance for User Story 2
 
-- [ ] T073 [US2] Run composer lint to fix code style for all User Story 2 changes
-- [ ] T074 [US2] Run composer refactor to apply automated refactorings
-- [ ] T075 [US2] Run composer lint again to re-check style after refactoring
-- [ ] T076 [US2] Run composer test to verify all tests pass with 100% coverage for continue functionality
-- [ ] T077 [US2] Verify zero PHPStan errors for continue implementation
-- [ ] T078 [US2] Verify zero linting errors for continue implementation
-- [ ] T079 [US2] Verify zero Rector violations for continue implementation
+- [X] T073 [US2] Run composer lint to fix code style for all User Story 2 changes
+- [X] T074 [US2] Run composer refactor to apply automated refactorings
+- [X] T075 [US2] Run composer lint again to re-check style after refactoring
+- [X] T076 [US2] Run composer test to verify all tests pass with 100% coverage for continue functionality
+- [X] T077 [US2] Verify zero PHPStan errors for continue implementation
+- [X] T078 [US2] Verify zero linting errors for continue implementation
+- [X] T079 [US2] Verify zero Rector violations for continue implementation
 
 **Checkpoint**: User Story 2 (continue keyword) is fully functional and independently testable. All acceptance scenarios pass:
 - ✅ For loop with continue skips even numbers, processes odd numbers
@@ -188,19 +188,19 @@ Single project structure at repository root:
 
 ### Integration Tests for User Story 3
 
-- [ ] T080 [P] [US3] Write test for `break 2` exiting two nested for loops in tests/Core/AstTraverserTest.php
-- [ ] T081 [P] [US3] Write test for `continue 2` continuing outer loop from nested foreach in tests/Core/AstTraverserTest.php
-- [ ] T082 [P] [US3] Write test for `break 3` exiting three-level nested loops in tests/Core/AstTraverserTest.php
-- [ ] T083 [P] [US3] Write test for mixed loop types (for inside foreach) with level parameters in tests/Core/AstTraverserTest.php
-- [ ] T084 [P] [US3] Write test verifying break/continue level validation with various nesting depths in tests/Core/AstTraverserTest.php
+- [X] T080 [P] [US3] Write test for `break 2` exiting two nested for loops in tests/Core/AstTraverserTest.php
+- [X] T081 [P] [US3] Write test for `continue 2` continuing outer loop from nested foreach in tests/Core/AstTraverserTest.php
+- [X] T082 [P] [US3] Write test for `break 3` exiting three-level nested loops in tests/Core/AstTraverserTest.php
+- [X] T083 [P] [US3] Write test for mixed loop types (for inside foreach) with level parameters in tests/Core/AstTraverserTest.php
+- [X] T084 [P] [US3] Write test verifying break/continue level validation with various nesting depths in tests/Core/AstTraverserTest.php
 
 ### Quality Assurance for User Story 3
 
-- [ ] T085 [US3] Run composer test to verify nested loop control tests pass with 100% coverage
-- [ ] T086 [US3] Verify all edge cases from spec are covered by tests
-- [ ] T087 [US3] Verify zero PHPStan errors for complete break/continue implementation
-- [ ] T088 [US3] Verify zero linting errors for complete implementation
-- [ ] T089 [US3] Verify zero Rector violations for complete implementation
+- [X] T085 [US3] Run composer test to verify nested loop control tests pass with 100% coverage
+- [X] T086 [US3] Verify all edge cases from spec are covered by tests
+- [X] T087 [US3] Verify zero PHPStan errors for complete break/continue implementation
+- [X] T088 [US3] Verify zero linting errors for complete implementation
+- [X] T089 [US3] Verify zero Rector violations for complete implementation
 
 **Checkpoint**: User Story 3 (nested loop control) is fully functional and independently testable. All acceptance scenarios pass:
 - ✅ `break 2` in nested loops exits both loops correctly
@@ -214,18 +214,18 @@ Single project structure at repository root:
 
 **Purpose**: Add break/continue keywords to Monaco Editor for syntax highlighting and code completion
 
-- [ ] T090 [P] Add 'break' to KEYWORDS array in src/Monarch/MonarchLanguageDefinitionService.php
-- [ ] T091 [P] Add 'continue' to KEYWORDS array in src/Monarch/MonarchLanguageDefinitionService.php
-- [ ] T092 [P] Add code completion snippet for 'break' in src/Monarch/MonarchLanguageDefinitionService.php
-- [ ] T093 [P] Add code completion snippet for 'continue' in src/Monarch/MonarchLanguageDefinitionService.php
-- [ ] T094 [P] Add code completion snippet for 'break 2' (nested variant) in src/Monarch/MonarchLanguageDefinitionService.php
-- [ ] T095 [P] Add code completion snippet for 'continue 2' (nested variant) in src/Monarch/MonarchLanguageDefinitionService.php
-- [ ] T096 [P] Write test verifying 'break' is in keywords list in tests/Monarch/MonarchLanguageDefinitionServiceTest.php
-- [ ] T097 [P] Write test verifying 'continue' is in keywords list in tests/Monarch/MonarchLanguageDefinitionServiceTest.php
-- [ ] T098 [P] Write test verifying break/continue snippets are included in tests/Monarch/MonarchLanguageDefinitionServiceTest.php
-- [ ] T099 [P] Write test verifying snippets have correct format in tests/Monarch/MonarchLanguageDefinitionServiceTest.php
-- [ ] T100 Run composer lint to fix code style for Monaco changes
-- [ ] T101 Run composer test to verify Monaco tests pass with 100% coverage
+- [X] T090 [P] Add 'break' to KEYWORDS array in src/Monarch/MonarchLanguageDefinitionService.php
+- [X] T091 [P] Add 'continue' to KEYWORDS array in src/Monarch/MonarchLanguageDefinitionService.php
+- [X] T092 [P] Add code completion snippet for 'break' in src/Monarch/MonarchLanguageDefinitionService.php
+- [X] T093 [P] Add code completion snippet for 'continue' in src/Monarch/MonarchLanguageDefinitionService.php
+- [X] T094 [P] Add code completion snippet for 'break 2' (nested variant) in src/Monarch/MonarchLanguageDefinitionService.php
+- [X] T095 [P] Add code completion snippet for 'continue 2' (nested variant) in src/Monarch/MonarchLanguageDefinitionService.php
+- [X] T096 [P] Write test verifying 'break' is in keywords list in tests/Monarch/MonarchLanguageDefinitionServiceTest.php
+- [X] T097 [P] Write test verifying 'continue' is in keywords list in tests/Monarch/MonarchLanguageDefinitionServiceTest.php
+- [X] T098 [P] Write test verifying break/continue snippets are included in tests/Monarch/MonarchLanguageDefinitionServiceTest.php
+- [X] T099 [P] Write test verifying snippets have correct format in tests/Monarch/MonarchLanguageDefinitionServiceTest.php
+- [X] T100 Run composer lint to fix code style for Monaco changes
+- [X] T101 Run composer test to verify Monaco tests pass with 100% coverage
 
 **Checkpoint**: Monaco Editor integration complete:
 - ✅ Break and continue highlighted as keywords
@@ -280,12 +280,12 @@ Single project structure at repository root:
 
 **Purpose**: Final verification that all quality gates pass and feature is production-ready
 
-- [ ] T118 Run full test suite: composer test (verify all 5 quality checks pass)
-- [ ] T119 Verify 100% test coverage maintained across all files (composer test:unit with coverage report)
-- [ ] T120 Verify 100% type coverage maintained across all files (composer test:type-coverage)
-- [ ] T121 Verify zero PHPStan errors at maximum level (composer test:types)
-- [ ] T122 Verify zero linting errors PSR-12 compliance (composer test:lint)
-- [ ] T123 Verify zero Rector violations (composer test:refactor)
+- [X] T118 Run full test suite: composer test (verify all 5 quality checks pass)
+- [X] T119 Verify 100% test coverage maintained across all files (composer test:unit with coverage report)
+- [X] T120 Verify 100% type coverage maintained across all files (composer test:type-coverage)
+- [X] T121 Verify zero PHPStan errors at maximum level (composer test:types)
+- [X] T122 Verify zero linting errors PSR-12 compliance (composer test:lint)
+- [X] T123 Verify zero Rector violations (composer test:refactor)
 - [ ] T124 Run regression tests: verify all existing loop tests still pass
 - [ ] T125 Verify backward compatibility: existing scripts without break/continue still work
 - [ ] T126 Test all acceptance scenarios from spec.md manually in playground

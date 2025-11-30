@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpScript\Contracts;
 
 use PhpScript\Ast\BreakStatement;
+use PhpScript\Ast\ContinueStatement;
 
 interface AstTraverserInterface
 {
@@ -21,4 +22,6 @@ interface AstTraverserInterface
     public function getSourceMap(): array;
 
     public function visitBreakStatement(BreakStatement $node): string;
+
+    public function visitContinueStatement(ContinueStatement $node): string;
 }

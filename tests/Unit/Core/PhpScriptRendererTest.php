@@ -331,3 +331,49 @@ it('can round-trip a break statement with level', function (): void {
 
     expect(trim($output))->toBe($code);
 });
+
+it('can render a continue statement without level', function (): void {
+    $program = new Program([
+        new \PhpScript\Ast\ContinueStatement(level: 1),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('continue;');
+});
+
+it('can render a continue statement with level', function (): void {
+    $program = new Program([
+        new \PhpScript\Ast\ContinueStatement(level: 2),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('continue 2;');
+});
+
+it('can round-trip a continue statement', function (): void {
+    // Test that code → AST → code produces the same code
+    $lexer = new \PhpScript\Core\Lexer;
+    $parser = new \PhpScript\Core\Parser;
+    $renderer = new PhpScriptRenderer;
+
+    $code = 'continue;';
+    $tokens = $lexer->tokenize($code);
+    $ast = $parser->parse($tokens);
+    $output = $renderer->traverse($ast);
+
+    expect(trim($output))->toBe($code);
+});
+
+it('can round-trip a continue statement with level', function (): void {
+    // Test that code → AST → code produces the same code
+    $lexer = new \PhpScript\Core\Lexer;
+    $parser = new \PhpScript\Core\Parser;
+    $renderer = new PhpScriptRenderer;
+
+    $code = 'continue 3;';
+    $tokens = $lexer->tokenize($code);
+    $ast = $parser->parse($tokens);
+    $output = $renderer->traverse($ast);
+
+    expect(trim($output))->toBe($code);
+});

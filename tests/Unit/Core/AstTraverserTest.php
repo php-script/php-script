@@ -559,3 +559,102 @@ it('can call visitBreakStatement directly via visitor pattern', function (): voi
 
     expect($output)->toContain('break');
 });
+
+it('can traverse continue statement in for loop', function (): void {
+    // AST for: for (i = 0; i < 10; i++) { continue; }
+    $program = new Program([
+        new ForStatement(
+            new Assignment(new Variable('i'), new Literal(0)),
+            new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
+            new PostfixOperation(new Variable('i'), TokenType::T_INCREMENT),
+            new Program([
+                new \PhpScript\Ast\ContinueStatement(level: 1, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "for (\$i = 0; \$i < 10; \$i++) {continue;\n};\n";
+    expect($output)->toBe($expected);
+});
+
+it('can traverse continue statement in foreach loop', function (): void {
+    // AST for: foreach (items as item) { continue; }
+    $program = new Program([
+        new ForeachStatement(
+            new Variable('items'),
+            new Variable('item'),
+            null,
+            new Program([
+                new \PhpScript\Ast\ContinueStatement(level: 1, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+            ]),
+            new Token(TokenType::T_FOREACH, 'foreach', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "foreach (\$items as \$item) {continue;\n};\n";
+    expect($output)->toBe($expected);
+});
+
+it('throws error when continue used outside loop', function (): void {
+    // AST for: continue;
+    $program = new Program([
+        new \PhpScript\Ast\ContinueStatement(level: 1, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+    ]);
+
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+})->throws(EngineException::class, "'continue' can only be used inside a loop");
+
+it('throws error when continue level exceeds available loops', function (): void {
+    // AST for: for (i = 0; i < 10; i++) { continue 2; }
+    $program = new Program([
+        new ForStatement(
+            new Assignment(new Variable('i'), new Literal(0)),
+            new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
+            new PostfixOperation(new Variable('i'), TokenType::T_INCREMENT),
+            new Program([
+                new \PhpScript\Ast\ContinueStatement(level: 2, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+})->throws(EngineException::class, 'Cannot continue 2 level(s) (only 1 loop(s) available)');
+
+it('can traverse continue 2 in nested loops', function (): void {
+    // AST for: for (i = 0; i < 10; i++) { for (j = 0; j < 10; j++) { continue 2; } }
+    $program = new Program([
+        new ForStatement(
+            new Assignment(new Variable('i'), new Literal(0)),
+            new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
+            new PostfixOperation(new Variable('i'), TokenType::T_INCREMENT),
+            new Program([
+                new ForStatement(
+                    new Assignment(new Variable('j'), new Literal(0)),
+                    new BinaryOperation(new Variable('j'), TokenType::T_LESS_THAN, new Literal(10)),
+                    new PostfixOperation(new Variable('j'), TokenType::T_INCREMENT),
+                    new Program([
+                        new \PhpScript\Ast\ContinueStatement(level: 2, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+                    ]),
+                    new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+                ),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "for (\$i = 0; \$i < 10; \$i++) {for (\$j = 0; \$j < 10; \$j++) {continue 2;\n};\n};\n";
+    expect($output)->toBe($expected);
+});

@@ -83,7 +83,7 @@ it('returns the correct definition', function (): void {
 
     expect($definition)->toBe([
         'keywords' => [
-            'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
+            'if', 'else', 'for', 'foreach', 'as', 'echo', 'return', 'break', 'continue', 'true', 'false', 'null', 'LINEBREAK',
         ],
         'allowedFunctions' => [],
         'contextVariables' => [],

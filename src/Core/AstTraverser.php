@@ -27,7 +27,7 @@ use PhpScript\Contracts\Node;
 use PhpScript\Exceptions\AstTraverserException;
 use PhpScript\Exceptions\EngineException;
 
-final class AstTraverser implements AstTraverserInterface
+class AstTraverser implements AstTraverserInterface
 {
     private string $generatedCode = '';
 

@@ -40,3 +40,25 @@ it('accept method calls visitor visitContinueStatement', function (): void {
 
     expect($result)->toContain('continue 2');
 });
+
+it('accept method calls AstTraverser visitContinueStatement without loop context', function (): void {
+    $continueStatement = new ContinueStatement(level: 1);
+    $traverser = new \PhpScript\Core\AstTraverser;
+
+    // Calling accept outside a loop should throw an exception
+    // This tests the visitContinueStatement method in AstTraverser
+    expect(fn (): string => $continueStatement->accept($traverser))
+        ->toThrow(\PhpScript\Exceptions\EngineException::class, "'continue' can only be used inside a loop");
+});
+
+it('accept method returns code when called on AstTraverser in loop context', function (): void {
+    $continueStatement = new ContinueStatement(level: 2);
+
+    // Use test helper to set loop depth
+    $traverser = new \Tests\Support\TestAstTraverser;
+    $traverser->setLoopDepthForTesting(2);
+
+    $result = $continueStatement->accept($traverser);
+
+    expect($result)->toContain('continue 2');
+});

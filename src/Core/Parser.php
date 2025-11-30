@@ -217,7 +217,7 @@ final class Parser implements ParserInterface
             $levelToken = $this->advance();
             $levelValue = $levelToken->value;
 
-            if (! is_numeric($levelValue) || str_contains((string) $levelValue, '.')) {
+            if (! is_numeric($levelValue) || str_contains($levelValue, '.')) {
                 throw new ParseException(
                     'Break level must be a positive integer (got ' . $levelValue . ')',
                     $levelToken
@@ -255,7 +255,7 @@ final class Parser implements ParserInterface
             $levelToken = $this->advance();
             $levelValue = $levelToken->value;
 
-            if (! is_numeric($levelValue) || str_contains((string) $levelValue, '.')) {
+            if (! is_numeric($levelValue) || str_contains($levelValue, '.')) {
                 throw new ParseException(
                     'Continue level must be a positive integer (got ' . $levelValue . ')',
                     $levelToken

@@ -40,3 +40,25 @@ it('accept method calls visitor visitBreakStatement', function (): void {
 
     expect($result)->toContain('break 2');
 });
+
+it('accept method calls AstTraverser visitBreakStatement without loop context', function (): void {
+    $breakStatement = new BreakStatement(level: 1);
+    $traverser = new \PhpScript\Core\AstTraverser;
+
+    // Calling accept outside a loop should throw an exception
+    // This tests the visitBreakStatement method in AstTraverser
+    expect(fn (): string => $breakStatement->accept($traverser))
+        ->toThrow(\PhpScript\Exceptions\EngineException::class, "'break' can only be used inside a loop");
+});
+
+it('accept method returns code when called on AstTraverser in loop context', function (): void {
+    $breakStatement = new BreakStatement(level: 2);
+
+    // Use test helper to set loop depth
+    $traverser = new \Tests\Support\TestAstTraverser;
+    $traverser->setLoopDepthForTesting(2);
+
+    $result = $breakStatement->accept($traverser);
+
+    expect($result)->toContain('break 2');
+});

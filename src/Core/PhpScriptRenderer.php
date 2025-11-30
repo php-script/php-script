@@ -7,6 +7,7 @@ namespace PhpScript\Core;
 use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
+use PhpScript\Ast\BreakStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -66,6 +67,7 @@ final class PhpScriptRenderer implements AstTraverserInterface
             IfStatement::class => $this->traverseIfStatement($node),
             ForStatement::class => $this->traverseForStatement($node),
             ForeachStatement::class => $this->traverseForeachStatement($node),
+            BreakStatement::class => $this->traverseBreakStatement($node),
             Assignment::class => $this->traverseAssignment($node),
             BinaryOperation::class => $this->traverseBinaryOperation($node),
             UnaryOperation::class => $this->traverseUnaryOperation($node),
@@ -150,6 +152,18 @@ final class PhpScriptRenderer implements AstTraverserInterface
         $this->generatedCode .= ') {' . "\n" . $this->lineIndent(1);
         $this->doTraverse($node->body);
         $this->generatedCode .= "\n" . $this->lineIndent(-1) . '}' . "\n" . $this->lineIndent();
+    }
+
+    public function visitBreakStatement(BreakStatement $node): string
+    {
+        $this->traverseBreakStatement($node);
+
+        return $this->generatedCode;
+    }
+
+    private function traverseBreakStatement(BreakStatement $node): void
+    {
+        $this->generatedCode .= $node->level === 1 ? 'break;' : "break {$node->level};";
     }
 
     private function traverseAssignment(Assignment $node): void

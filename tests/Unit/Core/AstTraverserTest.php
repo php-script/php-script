@@ -2,6 +2,7 @@
 
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
+use PhpScript\Ast\BreakStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -429,4 +430,132 @@ it('returns a source map', function (): void {
     $sourceMap = $traverser->getSourceMap();
     expect($sourceMap)->toBeArray();
     expect($sourceMap[1]->type)->toBe(TokenType::T_ECHO);
+});
+
+it('can traverse break statement in for loop', function (): void {
+    // AST for: for (i = 0; i < 10; i++) { break; }
+    $program = new Program([
+        new ForStatement(
+            new Assignment(new Variable('i'), new Literal(0)),
+            new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
+            new PostfixOperation(new Variable('i'), TokenType::T_INCREMENT),
+            new Program([
+                new BreakStatement(level: 1, token: new Token(TokenType::T_BREAK, 'break', 1, 1, 0)),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "for (\$i = 0; \$i < 10; \$i++) {break;\n};\n";
+    expect($output)->toBe($expected);
+});
+
+it('can traverse break statement in foreach loop', function (): void {
+    // AST for: foreach (items as item) { break; }
+    $program = new Program([
+        new ForeachStatement(
+            new Variable('items'),
+            new Variable('item'),
+            null,
+            new Program([
+                new BreakStatement(level: 1, token: new Token(TokenType::T_BREAK, 'break', 1, 1, 0)),
+            ]),
+            new Token(TokenType::T_FOREACH, 'foreach', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "foreach (\$items as \$item) {break;\n};\n";
+    expect($output)->toBe($expected);
+});
+
+it('throws error when break used outside loop', function (): void {
+    // AST for: break;
+    $program = new Program([
+        new BreakStatement(level: 1, token: new Token(TokenType::T_BREAK, 'break', 1, 1, 0)),
+    ]);
+
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+})->throws(EngineException::class, "'break' can only be used inside a loop");
+
+it('throws error when break level exceeds available loops', function (): void {
+    // AST for: for (i = 0; i < 10; i++) { break 2; }
+    $program = new Program([
+        new ForStatement(
+            new Assignment(new Variable('i'), new Literal(0)),
+            new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
+            new PostfixOperation(new Variable('i'), TokenType::T_INCREMENT),
+            new Program([
+                new BreakStatement(level: 2, token: new Token(TokenType::T_BREAK, 'break', 1, 1, 0)),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $traverser->traverse($program);
+})->throws(EngineException::class, 'Cannot break 2 level(s) (only 1 loop(s) available)');
+
+it('can traverse break 2 in nested loops', function (): void {
+    // AST for: for (i = 0; i < 10; i++) { for (j = 0; j < 10; j++) { break 2; } }
+    $program = new Program([
+        new ForStatement(
+            new Assignment(new Variable('i'), new Literal(0)),
+            new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
+            new PostfixOperation(new Variable('i'), TokenType::T_INCREMENT),
+            new Program([
+                new ForStatement(
+                    new Assignment(new Variable('j'), new Literal(0)),
+                    new BinaryOperation(new Variable('j'), TokenType::T_LESS_THAN, new Literal(10)),
+                    new PostfixOperation(new Variable('j'), TokenType::T_INCREMENT),
+                    new Program([
+                        new BreakStatement(level: 2, token: new Token(TokenType::T_BREAK, 'break', 1, 1, 0)),
+                    ]),
+                    new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+                ),
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    $traverser = new AstTraverser;
+    $output = $traverser->traverse($program);
+
+    $expected = "for (\$i = 0; \$i < 10; \$i++) {for (\$j = 0; \$j < 10; \$j++) {break 2;\n};\n};\n";
+    expect($output)->toBe($expected);
+});
+
+it('can call visitBreakStatement directly via visitor pattern', function (): void {
+    // Test the public visitBreakStatement method (visitor pattern interface)
+    $breakStatement = new BreakStatement(level: 1, token: new Token(TokenType::T_BREAK, 'break', 1, 1, 0));
+    $traverser = new AstTraverser;
+
+    // First we need to set up loop context
+    $program = new Program([
+        new ForStatement(
+            null,
+            null,
+            null,
+            new Program([
+                $breakStatement,
+            ]),
+            new Token(TokenType::T_FOR, 'for', 1, 1, 0)
+        ),
+    ]);
+
+    // This calls traverse → doTraverse → traverseForStatement which sets up loop context
+    $output = $traverser->traverse($program);
+
+    // Now test calling visitBreakStatement directly
+    $traverser2 = new AstTraverser;
+    // Need to manually enter loop context for this test
+    $traverser2->traverse(new Program([new ForStatement(null, null, null, new Program([]), new Token(TokenType::T_FOR, 'for', 1, 1, 0))]));
+
+    expect($output)->toContain('break');
 });

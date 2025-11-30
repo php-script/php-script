@@ -7,6 +7,7 @@ namespace PhpScript\Core;
 use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
+use PhpScript\Ast\BreakStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -36,6 +37,8 @@ final class AstTraverser implements AstTraverserInterface
 
     private int $currentLine = 1;
 
+    private int $loopDepth = 0;
+
     /**
      * @var string[]
      */
@@ -57,9 +60,20 @@ final class AstTraverser implements AstTraverserInterface
         $this->generatedCode = '';
         $this->sourceMap = [];
         $this->currentLine = 1;
+        $this->loopDepth = 0;
         $this->doTraverse($node);
 
         return $this->generatedCode;
+    }
+
+    private function enterLoop(): void
+    {
+        $this->loopDepth++;
+    }
+
+    private function exitLoop(): void
+    {
+        $this->loopDepth--;
     }
 
     /**
@@ -68,6 +82,13 @@ final class AstTraverser implements AstTraverserInterface
     public function getSourceMap(): array
     {
         return $this->sourceMap;
+    }
+
+    public function visitBreakStatement(BreakStatement $node): string
+    {
+        $this->traverseBreakStatement($node);
+
+        return $this->generatedCode;
     }
 
     /**
@@ -87,6 +108,7 @@ final class AstTraverser implements AstTraverserInterface
             IfStatement::class => $this->traverseIfStatement($node),
             ForStatement::class => $this->traverseForStatement($node),
             ForeachStatement::class => $this->traverseForeachStatement($node),
+            BreakStatement::class => $this->traverseBreakStatement($node),
             Assignment::class => $this->traverseAssignment($node),
             BinaryOperation::class => $this->traverseBinaryOperation($node),
             UnaryOperation::class => $this->traverseUnaryOperation($node),
@@ -147,7 +169,9 @@ final class AstTraverser implements AstTraverserInterface
             $this->doTraverse($node->increment);
         }
         $this->generatedCode .= ') {';
+        $this->enterLoop();
         $this->doTraverse($node->body);
+        $this->exitLoop();
         $this->generatedCode .= '}';
     }
 
@@ -162,8 +186,42 @@ final class AstTraverser implements AstTraverserInterface
         }
         $this->doTraverse($node->value);
         $this->generatedCode .= ') {';
+        $this->enterLoop();
         $this->doTraverse($node->body);
+        $this->exitLoop();
         $this->generatedCode .= '}';
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\EngineException
+     */
+    private function traverseBreakStatement(BreakStatement $node): void
+    {
+        if ($this->loopDepth === 0) {
+            $token = $node->getToken();
+            $length = $token instanceof Token ? strlen($token->value) : 5;
+            throw EngineException::runtimeError(
+                "'break' can only be used inside a loop",
+                (int) $token?->line,
+                (int) $token?->column,
+                (int) $token?->offset,
+                $length
+            );
+        }
+
+        if ($node->level > $this->loopDepth) {
+            $token = $node->getToken();
+            $length = $token instanceof Token ? strlen($token->value) : 5;
+            throw EngineException::runtimeError(
+                "Cannot break {$node->level} level(s) (only {$this->loopDepth} loop(s) available)",
+                (int) $token?->line,
+                (int) $token?->column,
+                (int) $token?->offset,
+                $length
+            );
+        }
+
+        $this->generatedCode .= $node->level === 1 ? 'break' : "break {$node->level}";
     }
 
     private function traverseAssignment(Assignment $node): void

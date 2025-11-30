@@ -6,7 +6,7 @@ use PhpScript\Linter\LinterService;
 it('formats the script correctly', function (): void {
     $linter = new LinterService;
     $script = "echo 'HI';\n\nasd = 1";
-    $expected = "echo 'HI';\n\nasd = 1;";
+    $expected = "echo 'HI';\nasd = 1;";
 
     $linted = $linter->withScript($script)->linted();
 

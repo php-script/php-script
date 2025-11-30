@@ -36,18 +36,18 @@ Single project structure at repository root:
 
 **⚠️ CRITICAL**: These changes are required before any user story work can begin
 
-- [ ] T001 Add T_BREAK and T_CONTINUE token type enum cases to src/Core/TokenType.php
-- [ ] T002 [P] Add 'break' keyword mapping to TokenType::T_BREAK in src/Core/Lexer.php KEYWORDS array
-- [ ] T003 [P] Add 'continue' keyword mapping to TokenType::T_CONTINUE in src/Core/Lexer.php KEYWORDS array
-- [ ] T004 Add $loopDepth property (private int $loopDepth = 0) to src/Core/AstTraverser.php
-- [ ] T005 [P] Add enterLoop() method to increment $loopDepth in src/Core/AstTraverser.php
-- [ ] T006 [P] Add exitLoop() method to decrement $loopDepth in src/Core/AstTraverser.php
-- [ ] T007 Write test for 'break' keyword tokenization in tests/Core/LexerTest.php
-- [ ] T008 Write test for 'continue' keyword tokenization in tests/Core/LexerTest.php
-- [ ] T009 Write test that 'breakpoint' identifier is not tokenized as 'break' in tests/Core/LexerTest.php
-- [ ] T010 Write test that 'continuous' identifier is not tokenized as 'continue' in tests/Core/LexerTest.php
-- [ ] T011 Run composer lint to fix code style for Lexer changes
-- [ ] T012 Run composer test to verify lexer tests pass with 100% coverage
+- [X] T001 Add T_BREAK and T_CONTINUE token type enum cases to src/Core/TokenType.php
+- [X] T002 [P] Add 'break' keyword mapping to TokenType::T_BREAK in src/Core/Lexer.php KEYWORDS array
+- [X] T003 [P] Add 'continue' keyword mapping to TokenType::T_CONTINUE in src/Core/Lexer.php KEYWORDS array
+- [X] T004 Add $loopDepth property (private int $loopDepth = 0) to src/Core/AstTraverser.php
+- [X] T005 [P] Add enterLoop() method to increment $loopDepth in src/Core/AstTraverser.php
+- [X] T006 [P] Add exitLoop() method to decrement $loopDepth in src/Core/AstTraverser.php
+- [X] T007 Write test for 'break' keyword tokenization in tests/Core/LexerTest.php
+- [X] T008 Write test for 'continue' keyword tokenization in tests/Core/LexerTest.php
+- [X] T009 Write test that 'breakpoint' identifier is not tokenized as 'break' in tests/Core/LexerTest.php
+- [X] T010 Write test that 'continuous' identifier is not tokenized as 'continue' in tests/Core/LexerTest.php
+- [X] T011 Run composer lint to fix code style for Lexer changes
+- [X] T012 Run composer test to verify lexer tests pass with 100% coverage
 
 **Checkpoint**: Foundation ready - token types and loop tracking infrastructure in place. User story implementation can now begin.
 

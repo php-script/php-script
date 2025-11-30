@@ -3,6 +3,7 @@
 use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
+use PhpScript\Ast\BreakStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -284,3 +285,49 @@ it('throws an exception for unknown literal type', function (): void {
     $renderer = new PhpScriptRenderer;
     $renderer->traverse($program);
 })->throws(AstTraverserException::class);
+
+it('can render a break statement without level', function (): void {
+    $program = new Program([
+        new BreakStatement(level: 1),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('break;');
+});
+
+it('can render a break statement with level', function (): void {
+    $program = new Program([
+        new BreakStatement(level: 2),
+    ]);
+    $renderer = new PhpScriptRenderer;
+    $output = $renderer->traverse($program);
+    expect(trim($output))->toBe('break 2;');
+});
+
+it('can round-trip a break statement', function (): void {
+    // Test that code → AST → code produces the same code
+    $lexer = new \PhpScript\Core\Lexer;
+    $parser = new \PhpScript\Core\Parser;
+    $renderer = new PhpScriptRenderer;
+
+    $code = 'break;';
+    $tokens = $lexer->tokenize($code);
+    $ast = $parser->parse($tokens);
+    $output = $renderer->traverse($ast);
+
+    expect(trim($output))->toBe($code);
+});
+
+it('can round-trip a break statement with level', function (): void {
+    // Test that code → AST → code produces the same code
+    $lexer = new \PhpScript\Core\Lexer;
+    $parser = new \PhpScript\Core\Parser;
+    $renderer = new PhpScriptRenderer;
+
+    $code = 'break 3;';
+    $tokens = $lexer->tokenize($code);
+    $ast = $parser->parse($tokens);
+    $output = $renderer->traverse($ast);
+
+    expect(trim($output))->toBe($code);
+});

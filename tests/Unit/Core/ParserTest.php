@@ -3,6 +3,7 @@
 use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
+use PhpScript\Ast\BreakStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -144,3 +145,36 @@ it('throws exception for missing right parenthesis in function call', function (
 it('throws exception for missing right parenthesis after expression', function (): void {
     parse('(1 + 2');
 })->throws(ParseException::class, "Expect ')' after expression.");
+
+it('parses break statement without level', function (): void {
+    $program = parse('break;');
+    $statement = $program->statements[0];
+    expect($statement)->toBeInstanceOf(BreakStatement::class);
+    expect($statement->level)->toBe(1);
+});
+
+it('parses break statement with explicit levels', function (): void {
+    $program = parse('break 1; break 2; break 3;');
+    expect($program->statements[0])->toBeInstanceOf(BreakStatement::class);
+    expect($program->statements[0]->level)->toBe(1);
+    expect($program->statements[1])->toBeInstanceOf(BreakStatement::class);
+    expect($program->statements[1]->level)->toBe(2);
+    expect($program->statements[2])->toBeInstanceOf(BreakStatement::class);
+    expect($program->statements[2]->level)->toBe(3);
+});
+
+it('throws exception for break with zero level', function (): void {
+    parse('break 0;');
+})->throws(ParseException::class, 'Break level must be a positive integer (got 0)');
+
+it('throws exception for break with negative level', function (): void {
+    parse('break -1;');
+})->throws(ParseException::class, 'Unexpected token: T_MINUS');
+
+it('throws exception for break with non-numeric argument', function (): void {
+    parse('break foo;');
+})->throws(ParseException::class, 'Unexpected token: T_IDENTIFIER');
+
+it('throws exception for break with float argument', function (): void {
+    parse('break 2.5;');
+})->throws(ParseException::class, 'Break level must be a positive integer (got 2.5)');

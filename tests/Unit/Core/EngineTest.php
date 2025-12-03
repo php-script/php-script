@@ -165,3 +165,33 @@ it('handles lexer exceptions', function (): void {
         expect($e->getMessage())->toBe('Unknown character or syntax error `$b = 4;⏎  …` at line 4, column 5.');
     }
 });
+
+it('executes break statement in loop', function (): void {
+    $engine = new Engine;
+    $script = <<<'SCRIPT'
+        for (i = 0; i < 10; i++) {
+            if (i == 5) {
+                break;
+            }
+            echo i;
+        }
+    SCRIPT;
+
+    $result = $engine->execute($script);
+    expect($result)->toBe('01234');
+});
+
+it('executes continue statement in loop', function (): void {
+    $engine = new Engine;
+    $script = <<<'SCRIPT'
+        for (i = 0; i < 5; i++) {
+            if (i == 2) {
+                continue;
+            }
+            echo i;
+        }
+    SCRIPT;
+
+    $result = $engine->execute($script);
+    expect($result)->toBe('0134');
+});

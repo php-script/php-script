@@ -64,3 +64,52 @@ PHP Script supports the following literal types:
     ```javascript
     echo 'Line 1' + LINEBREAK + 'Line 2';
     ```
+
+## Loop Control Statements
+
+### Break Statement
+
+The `break` statement terminates the current loop immediately. It accepts an optional numeric level to exit multiple nested loops.
+
+```javascript
+// Exit a single loop
+for (i = 0; i < 10; i++) {
+    if (i == 5) {
+        break; // Exit the loop
+    }
+}
+
+// Exit multiple nested loops
+for (i = 0; i < 10; i++) {
+    for (j = 0; j < 10; j++) {
+        break 2; // Exit both loops
+    }
+}
+```
+
+See [Control Flow](control-flow.html#break-statement) for detailed examples and usage patterns.
+
+### Continue Statement
+
+The `continue` statement skips the rest of the current loop iteration and continues with the next iteration. It accepts an optional numeric level to continue an outer loop.
+
+```javascript
+// Skip to next iteration
+for (i = 0; i < 10; i++) {
+    if (i % 2 == 0) {
+        continue; // Skip even numbers
+    }
+    echo i;
+}
+
+// Continue outer loop
+for (i = 0; i < 10; i++) {
+    for (j = 0; j < 10; j++) {
+        if (j == 5) {
+            continue 2; // Continue outer loop
+        }
+    }
+}
+```
+
+See [Control Flow](control-flow.html#continue-statement) for detailed examples and usage patterns.

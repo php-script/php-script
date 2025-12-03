@@ -83,7 +83,7 @@ it('returns the correct definition', function (): void {
 
     expect($definition)->toBe([
         'keywords' => [
-            'if', 'else', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
+            'if', 'else', 'for', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
         ],
         'allowedFunctions' => [],
         'contextVariables' => [],
@@ -327,4 +327,40 @@ it('handles doc comments with only tags', function (): void {
     $prop = current(array_filter($classDef['properties'], fn (array $prop): bool => $prop['label'] === 'propWithOnlyTags'));
 
     expect($prop['doc'])->toBe('');
+});
+
+it('separates loop control statements into loopControls category', function (): void {
+    $service = new MonarchLanguageDefinitionService;
+    $completionItems = $service->getCompletionItems();
+
+    // Verify loopControls category exists
+    expect($completionItems)->toHaveKey('loopControls');
+    expect($completionItems['loopControls'])->toBeArray();
+
+    // Verify break and continue are in loopControls
+    $loopControlLabels = array_map(fn (array $item): string => $item['label'], $completionItems['loopControls']);
+    expect($loopControlLabels)->toContain('break 2');
+    expect($loopControlLabels)->toContain('continue 2');
+
+    // Verify break and continue are NOT in controlFlows
+    $controlFlowLabels = array_map(fn (array $item): string => $item['label'], $completionItems['controlFlows']);
+    expect($controlFlowLabels)->not()->toContain('break');
+    expect($controlFlowLabels)->not()->toContain('break 2');
+    expect($controlFlowLabels)->not()->toContain('continue');
+    expect($controlFlowLabels)->not()->toContain('continue 2');
+
+    // Verify controlFlows still contains other items
+    expect($controlFlowLabels)->toContain('for');
+    expect($controlFlowLabels)->toContain('foreach');
+    expect($controlFlowLabels)->toContain('if');
+    expect($controlFlowLabels)->toContain('ifelse');
+});
+
+it('provides loop keywords separately for dynamic registration', function (): void {
+    $service = new MonarchLanguageDefinitionService;
+    $completionItems = $service->getCompletionItems();
+
+    // Verify loopKeywords exists and contains break and continue
+    expect($completionItems)->toHaveKey('loopKeywords');
+    expect($completionItems['loopKeywords'])->toBe(['break', 'continue']);
 });

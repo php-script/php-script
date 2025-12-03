@@ -7,6 +7,8 @@ namespace PhpScript\Core;
 use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
+use PhpScript\Ast\BreakStatement;
+use PhpScript\Ast\ContinueStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -63,7 +65,10 @@ final class Parser implements ParserInterface
     {
         $token = $this->peek();
         if ($this->match(TokenType::T_ECHO)) {
-            return $this->parseEchoStatement($token);
+            $node = $this->parseEchoStatement($token);
+            $this->match(TokenType::T_SEMICOLON);
+
+            return $node;
         }
 
         if ($this->match(TokenType::T_IF)) {
@@ -76,6 +81,20 @@ final class Parser implements ParserInterface
 
         if ($this->match(TokenType::T_FOREACH)) {
             return $this->parseForeachStatement($token);
+        }
+
+        if ($this->match(TokenType::T_BREAK)) {
+            $node = $this->parseBreakStatement($token);
+            $this->match(TokenType::T_SEMICOLON);
+
+            return $node;
+        }
+
+        if ($this->match(TokenType::T_CONTINUE)) {
+            $node = $this->parseContinueStatement($token);
+            $this->match(TokenType::T_SEMICOLON);
+
+            return $node;
         }
 
         if ($this->match(TokenType::T_SEMICOLON)) {
@@ -185,6 +204,82 @@ final class Parser implements ParserInterface
         $expression = $this->parseExpression();
 
         return new EchoStatement($expression, $token);
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseBreakStatement(Token $token): BreakStatement
+    {
+        $level = 1;
+
+        if ($this->check(TokenType::T_NUMBER)) {
+            $levelToken = $this->advance();
+            $levelValue = $levelToken->value;
+
+            if (! is_numeric($levelValue) || str_contains($levelValue, '.')) {
+                throw new ParseException(
+                    'Break level must be a positive integer (got ' . $levelValue . ')',
+                    $levelToken
+                );
+            }
+
+            $level = (int) $levelValue;
+
+            if ($level < 1) {
+                throw new ParseException(
+                    'Break level must be a positive integer (got ' . $level . ')',
+                    $levelToken
+                );
+            }
+        } elseif (! $this->check(TokenType::T_SEMICOLON)) {
+            // If next token is not a number and not a semicolon, it's an error
+            $unexpectedToken = $this->peek();
+            throw new ParseException(
+                'Unexpected token: ' . $unexpectedToken->type->value,
+                $unexpectedToken
+            );
+        }
+
+        return new BreakStatement($level, $token);
+    }
+
+    /**
+     * @throws \PhpScript\Exceptions\ParseException
+     */
+    private function parseContinueStatement(Token $token): ContinueStatement
+    {
+        $level = 1;
+
+        if ($this->check(TokenType::T_NUMBER)) {
+            $levelToken = $this->advance();
+            $levelValue = $levelToken->value;
+
+            if (! is_numeric($levelValue) || str_contains($levelValue, '.')) {
+                throw new ParseException(
+                    'Continue level must be a positive integer (got ' . $levelValue . ')',
+                    $levelToken
+                );
+            }
+
+            $level = (int) $levelValue;
+
+            if ($level < 1) {
+                throw new ParseException(
+                    'Continue level must be a positive integer (got ' . $level . ')',
+                    $levelToken
+                );
+            }
+        } elseif (! $this->check(TokenType::T_SEMICOLON)) {
+            // If next token is not a number and not a semicolon, it's an error
+            $unexpectedToken = $this->peek();
+            throw new ParseException(
+                'Unexpected token: ' . $unexpectedToken->type->value,
+                $unexpectedToken
+            );
+        }
+
+        return new ContinueStatement($level, $token);
     }
 
     /**

@@ -66,3 +66,39 @@ it('handles non-breaking spaces', function (): void {
 
     expect($tokens)->toEqual($expectedTokens);
 });
+
+it('tokenizes break keyword', function (): void {
+    $lexer = new Lexer;
+    $tokens = $lexer->tokenize('break');
+
+    expect($tokens)->toHaveCount(1);
+    expect($tokens[0]->type)->toBe(TokenType::T_BREAK);
+    expect($tokens[0]->value)->toBe('break');
+});
+
+it('tokenizes continue keyword', function (): void {
+    $lexer = new Lexer;
+    $tokens = $lexer->tokenize('continue');
+
+    expect($tokens)->toHaveCount(1);
+    expect($tokens[0]->type)->toBe(TokenType::T_CONTINUE);
+    expect($tokens[0]->value)->toBe('continue');
+});
+
+it('does not tokenize breakpoint as break keyword', function (): void {
+    $lexer = new Lexer;
+    $tokens = $lexer->tokenize('breakpoint');
+
+    expect($tokens)->toHaveCount(1);
+    expect($tokens[0]->type)->toBe(TokenType::T_IDENTIFIER);
+    expect($tokens[0]->value)->toBe('breakpoint');
+});
+
+it('does not tokenize continuous as continue keyword', function (): void {
+    $lexer = new Lexer;
+    $tokens = $lexer->tokenize('continuous');
+
+    expect($tokens)->toHaveCount(1);
+    expect($tokens[0]->type)->toBe(TokenType::T_IDENTIFIER);
+    expect($tokens[0]->value)->toBe('continuous');
+});

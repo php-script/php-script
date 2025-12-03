@@ -178,6 +178,22 @@ Please take a look into the language reference [online](https://php-script.githu
 7. call `composer test` until no errors
 8. commit and push your changes and open a PR
 
+## SDD - Spec-Driven-Development
+
+The spec-driven development is supported. All base files are generated.
+
+The flow:
+
+- /constitution - already DONE
+- for each new feature:
+  - /specify
+    - optional: /clarify
+  - /plan
+  - /tasks
+  - /implement
+- optional: at any time /analyze to check your specs
+- 
+
 ## Local development
 
 🧹 Keep a modern codebase with **Pint**:

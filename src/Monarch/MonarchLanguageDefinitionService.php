@@ -19,7 +19,17 @@ final class MonarchLanguageDefinitionService
 {
     /** @var string[] */
     private const array KEYWORDS = [
-        'if', 'else', 'for', 'foreach', 'as', 'echo', 'return', 'break', 'continue', 'true', 'false', 'null', 'LINEBREAK',
+        'if', 'else', 'for', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
+    ];
+
+    /**
+     * Loop control keywords that should only be suggested inside loops.
+     * These are provided separately in the loopControls completion category.
+     *
+     * @var string[]
+     */
+    private const array LOOP_KEYWORDS = [
+        'break', 'continue',
     ];
 
     /** @var array<string, bool> */
@@ -117,7 +127,9 @@ final class MonarchLanguageDefinitionService
      *         properties: list<array{label: string, kind: 'Property', detail: string, doc: string}>,
      *         methods: list<array{label: string, kind: string, detail: string, doc: string, snippet: string}>
      *     }>,
-     *     controlFlows: list<array{label: string, kind: 'Snippet', detail: string, doc: string, snippet: string}>
+     *     controlFlows: list<array{label: string, kind: 'Snippet', detail: string, doc: string, snippet: string}>,
+     *     loopControls: list<array{label: string, kind: 'Snippet', detail: string, doc: string, snippet: string}>,
+     *     loopKeywords: list<string>
      * }
      */
     public function getCompletionItems(): array
@@ -128,6 +140,8 @@ final class MonarchLanguageDefinitionService
             'globalVariables' => [],
             'classes' => [],
             'controlFlows' => [],
+            'loopControls' => [],
+            'loopKeywords' => self::LOOP_KEYWORDS,
         ];
 
         // 1. Erlaubte globale Funktionen (Whitelist)
@@ -216,28 +230,16 @@ final class MonarchLanguageDefinitionService
             'doc' => 'If-Else-Condition',
             'detail' => 'if ($condition) { ... } else { ... }',
         ];
-        $model['controlFlows'][] = [
-            'label' => 'break',
-            'kind' => 'Snippet',
-            'snippet' => 'break;',
-            'doc' => 'Break from loop',
-            'detail' => 'break;',
-        ];
-        $model['controlFlows'][] = [
+
+        // 4. Loop Controls: break, continue (only show inside loops)
+        $model['loopControls'][] = [
             'label' => 'break 2',
             'kind' => 'Snippet',
             'snippet' => 'break ${1:2};',
             'doc' => 'Break from nested loops',
             'detail' => 'break N;',
         ];
-        $model['controlFlows'][] = [
-            'label' => 'continue',
-            'kind' => 'Snippet',
-            'snippet' => 'continue;',
-            'doc' => 'Continue to next loop iteration',
-            'detail' => 'continue;',
-        ];
-        $model['controlFlows'][] = [
+        $model['loopControls'][] = [
             'label' => 'continue 2',
             'kind' => 'Snippet',
             'snippet' => 'continue ${1:2};',

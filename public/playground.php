@@ -170,6 +170,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             return suggestion;
         }
 
+        /**
+         * Check if the cursor is inside a for or foreach loop
+         * by tracking brace depth and loop keywords
+         */
+        function isInsideLoop(model, position) {
+            const code = model.getValueInRange({
+                startLineNumber: 1,
+                startColumn: 1,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column
+            });
+
+            let braceDepth = 0;
+            let loopDepth = 0;
+            const tokens = code.split(/(\bfor\b|\bforeach\b|\{|\})/);
+
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                if (token === 'for' || token === 'foreach') {
+                    // When we see a loop keyword, we track that we might be entering a loop
+                    // But we need to wait for the opening brace
+                    const remainingText = tokens.slice(i).join('');
+                    const nextBrace = remainingText.indexOf('{');
+                    if (nextBrace !== -1) {
+                        loopDepth++;
+                    }
+                } else if (token === '{') {
+                    braceDepth++;
+                } else if (token === '}') {
+                    braceDepth--;
+                    if (loopDepth > 0 && braceDepth < loopDepth) {
+                        loopDepth--;
+                    }
+                }
+            }
+
+            return loopDepth > 0;
+        }
+
         monaco.languages.registerCompletionItemProvider('php-script', {
             triggerCharacters: ['.'],
 
@@ -298,7 +337,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace
                         }));
 
-                    return { suggestions: [...localVars, ...globalVars, ...globalFuncs, ...staticKeywords, ...controlFlows] };
+                    // Check if we're inside a loop (for or foreach)
+                    const isInLoop = isInsideLoop(model, position);
+                    let loopSuggestions = [];
+
+                    if (isInLoop) {
+                        // Add loop control snippets
+                        loopSuggestions = suggestionModel.loopControls.map(c => ({
+                            label: c.label,
+                            kind: kinds[c.kind] || monaco.languages.CompletionItemKind.Snippet,
+                            insertText: c.snippet,
+                            range: replacementRange,
+                            detail: c.detail || '',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                            documentation: c.doc || '',
+                        }));
+
+                        // Add loop keywords (break, continue) to keyword suggestions
+                        const loopKeywords = suggestionModel.loopKeywords.map(k => ({
+                            label: k,
+                            kind: kinds.Keyword,
+                            insertText: k,
+                            range: replacementRange,
+                            detail: 'Loop Control Keyword',
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.KeepWhitespace
+                        }));
+
+                        loopSuggestions.push(...loopKeywords);
+                    }
+
+                    return { suggestions: [...localVars, ...globalVars, ...globalFuncs, ...staticKeywords, ...controlFlows, ...loopSuggestions] };
                 }
 
                 return { suggestions: [] };

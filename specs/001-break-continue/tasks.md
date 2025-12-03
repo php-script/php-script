@@ -240,31 +240,31 @@ Single project structure at repository root:
 
 ### Primary Documentation
 
-- [ ] T102 [P] Update docs/language/control-flow.md to add "Loop Control" section after existing loop documentation
-- [ ] T103 [P] Add break keyword documentation with examples to docs/language/control-flow.md
-- [ ] T104 [P] Add continue keyword documentation with examples to docs/language/control-flow.md
-- [ ] T105 [P] Add nested loop control (level parameters) documentation to docs/language/control-flow.md
-- [ ] T106 [P] Add before/after examples showing break/continue vs. flag variables to docs/language/control-flow.md
-- [ ] T107 [P] Add error scenario examples (break outside loop, invalid level) to docs/language/control-flow.md
-- [ ] T108 [P] Remove note about break not being supported (if exists on line 54) from docs/language/control-flow.md
+- [X] T102 [P] Update docs/language/control-flow.md to add "Loop Control" section after existing loop documentation
+- [X] T103 [P] Add break keyword documentation with examples to docs/language/control-flow.md
+- [X] T104 [P] Add continue keyword documentation with examples to docs/language/control-flow.md
+- [X] T105 [P] Add nested loop control (level parameters) documentation to docs/language/control-flow.md
+- [X] T106 [P] Add before/after examples showing break/continue vs. flag variables to docs/language/control-flow.md
+- [X] T107 [P] Add error scenario examples (break outside loop, invalid level) to docs/language/control-flow.md
+- [X] T108 [P] Remove note about break not being supported (if exists on line 54) from docs/language/control-flow.md
 
 ### Statement Reference
 
-- [ ] T109 [P] Add 'break' to statement list in docs/language/statements.md with description
-- [ ] T110 [P] Add 'continue' to statement list in docs/language/statements.md with description
-- [ ] T111 [P] Add link from statements.md to control-flow.md for detailed break/continue examples
+- [X] T109 [P] Add 'break' to statement list in docs/language/statements.md with description
+- [X] T110 [P] Add 'continue' to statement list in docs/language/statements.md with description
+- [X] T111 [P] Add link from statements.md to control-flow.md for detailed break/continue examples
 
 ### Index and Navigation
 
-- [ ] T112 [P] Update language features list in docs/language/index.md to include break/continue
-- [ ] T113 [P] Verify navigation links are correct in docs/language/index.md
+- [X] T112 [P] Update language features list in docs/language/index.md to include break/continue
+- [X] T113 [P] Verify navigation links are correct in docs/language/index.md
 
 ### Editor Integration Documentation
 
-- [ ] T114 [P] Document new Monaco Editor snippets in docs/php/editor.md
-- [ ] T115 [P] Show how code completion suggests break/continue in loops in docs/php/editor.md
-- [ ] T116 [P] Document linting behavior for invalid break/continue usage in docs/php/editor.md
-- [ ] T117 [P] Add break/continue examples to docs/php/editor.md (if examples section exists)
+- [X] T114 [P] Document new Monaco Editor snippets in docs/php/editor.md
+- [X] T115 [P] Show how code completion suggests break/continue in loops in docs/php/editor.md
+- [X] T116 [P] Document linting behavior for invalid break/continue usage in docs/php/editor.md
+- [X] T117 [P] Add break/continue examples to docs/php/editor.md (if examples section exists)
 
 **Checkpoint**: Documentation complete and published-ready:
 - ✅ docs/language/control-flow.md has comprehensive break/continue section
@@ -286,13 +286,13 @@ Single project structure at repository root:
 - [X] T121 Verify zero PHPStan errors at maximum level (composer test:types)
 - [X] T122 Verify zero linting errors PSR-12 compliance (composer test:lint)
 - [X] T123 Verify zero Rector violations (composer test:refactor)
-- [ ] T124 Run regression tests: verify all existing loop tests still pass
-- [ ] T125 Verify backward compatibility: existing scripts without break/continue still work
-- [ ] T126 Test all acceptance scenarios from spec.md manually in playground
-- [ ] T127 Verify all edge cases from spec.md are handled with clear error messages
-- [ ] T128 Review quickstart.md examples and verify they all work correctly
-- [ ] T129 Final code review: check for code smells, unnecessary complexity, or missing documentation
-- [ ] T130 Verify CLAUDE.md agent context file is up to date with feature information
+- [X] T124 Run regression tests: verify all existing loop tests still pass
+- [X] T125 Verify backward compatibility: existing scripts without break/continue still work
+- [X] T126 Test all acceptance scenarios from spec.md manually in playground
+- [X] T127 Verify all edge cases from spec.md are handled with clear error messages
+- [X] T128 Review quickstart.md examples and verify they all work correctly
+- [X] T129 Final code review: check for code smells, unnecessary complexity, or missing documentation
+- [X] T130 Verify CLAUDE.md agent context file is up to date with feature information
 
 **Checkpoint**: Feature complete and ready for PR:
 - ✅ All 3 user stories fully functional

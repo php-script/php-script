@@ -6,7 +6,6 @@ namespace Tests\Unit\Core;
 
 use PhpScript\Core\Engine;
 use PhpScript\Exceptions\EngineException;
-use Throwable;
 
 it('engine resolves numbers', function (): void {
     $engine = new Engine;
@@ -130,24 +129,15 @@ it('handles the LINEBREAK constant', function (): void {
 });
 
 /** @runInSeparateProcess */
-it('throws an exception when an infinite loop exceeds the execution time limit', function (): void {
+it('throws an exception when an infinite loop exceeds the execution time limit', function () {
     $engine = new Engine;
-    $engine->setExecutionTimeLimit(1); // Set a 1-second time limit
+    $engine->setExecutionTimeLimit(1);
 
-    $script = <<<'SCRIPT'
-        i = 0;
-        for (;;) {
-            i++;
-        }
-    SCRIPT;
+    $script = 'for (;;) {}';
 
-    try {
-        $engine->execute($script);
-        $this->fail('Expected EngineException not thrown.');
-    } catch (Throwable $e) {
-        expect($e->getMessage())->toContain('Maximum execution time of 1 second exceeded');
-    }
-})->skip('skipped because throws internal Fatal error: Maximum execution time of 1 second exceeded in');
+    expect(fn () => $engine->execute($script))
+        ->toThrow(EngineException::class, 'Maximum execution time of 1 second(s) exceeded');
+});
 
 it('handles lexer exceptions', function (): void {
     $engine = new Engine;

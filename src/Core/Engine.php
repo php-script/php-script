@@ -60,9 +60,6 @@ final class Engine
         return $this;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function setExecutionTimeLimit(int $seconds): self
     {
         $this->executionTimeLimit = $seconds;
@@ -75,6 +72,15 @@ final class Engine
      */
     public function execute(string $script): mixed
     {
+        $usePcntl = $this->executionTimeLimit > 0 && extension_loaded('pcntl') && function_exists('pcntl_signal');
+
+        if ($usePcntl) {
+            pcntl_async_signals(true);
+            pcntl_signal(SIGALRM, function (): never {
+                throw new EngineException(sprintf('Maximum execution time of %d second(s) exceeded', $this->executionTimeLimit));
+            });
+        }
+
         $previousErrorReporting = error_reporting(-1);
         set_error_handler(
             function (int $severity, string $message, ?string $file, ?int $line): never {
@@ -98,9 +104,17 @@ final class Engine
             file_put_contents($tmpFile, "<?php\ndeclare(strict_types=1);\n" . $phpCode);
 
             // Set the execution time limit before including the file
-            set_time_limit($this->executionTimeLimit);
+            if ($usePcntl) {
+                pcntl_alarm($this->executionTimeLimit);
+            } else {
+                set_time_limit($this->executionTimeLimit);
+            }
 
             include $tmpFile;
+
+            if ($usePcntl) {
+                pcntl_alarm(0); // Cancel alarm
+            }
 
             unlink($tmpFile);
         } catch (ParseException $e) {
@@ -127,6 +141,10 @@ final class Engine
             throw EngineException::runtimeError($e->getMessage(), 1, 0, 0, 1, $e);
             // @codeCoverageIgnoreEnd
         } finally {
+            if ($usePcntl) {
+                pcntl_signal(SIGALRM, SIG_DFL); // Restore default handler
+            }
+
             restore_error_handler();
             error_reporting($previousErrorReporting);
         }

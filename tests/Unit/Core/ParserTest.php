@@ -4,6 +4,7 @@ use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\BreakStatement;
+use PhpScript\Ast\ContinueStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -182,17 +183,17 @@ it('throws exception for break with float argument', function (): void {
 it('parses continue statement without level', function (): void {
     $program = parse('continue;');
     $statement = $program->statements[0];
-    expect($statement)->toBeInstanceOf(\PhpScript\Ast\ContinueStatement::class);
+    expect($statement)->toBeInstanceOf(ContinueStatement::class);
     expect($statement->level)->toBe(1);
 });
 
 it('parses continue statement with explicit levels', function (): void {
     $program = parse('continue 1; continue 2; continue 3;');
-    expect($program->statements[0])->toBeInstanceOf(\PhpScript\Ast\ContinueStatement::class);
+    expect($program->statements[0])->toBeInstanceOf(ContinueStatement::class);
     expect($program->statements[0]->level)->toBe(1);
-    expect($program->statements[1])->toBeInstanceOf(\PhpScript\Ast\ContinueStatement::class);
+    expect($program->statements[1])->toBeInstanceOf(ContinueStatement::class);
     expect($program->statements[1]->level)->toBe(2);
-    expect($program->statements[2])->toBeInstanceOf(\PhpScript\Ast\ContinueStatement::class);
+    expect($program->statements[2])->toBeInstanceOf(ContinueStatement::class);
     expect($program->statements[2]->level)->toBe(3);
 });
 

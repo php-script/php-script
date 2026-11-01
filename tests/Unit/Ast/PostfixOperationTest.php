@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Variable;
 use PhpScript\Core\Token;

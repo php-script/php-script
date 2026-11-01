@@ -4,6 +4,7 @@ use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\BreakStatement;
+use PhpScript\Ast\ContinueStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -20,6 +21,8 @@ use PhpScript\Ast\Program;
 use PhpScript\Ast\ReturnStatement;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
+use PhpScript\Core\Lexer;
+use PhpScript\Core\Parser;
 use PhpScript\Core\PhpScriptRenderer;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
@@ -309,8 +312,8 @@ it('can render a break statement with level', function (): void {
 
 it('can round-trip a break statement', function (): void {
     // Test that code → AST → code produces the same code
-    $lexer = new \PhpScript\Core\Lexer;
-    $parser = new \PhpScript\Core\Parser;
+    $lexer = new Lexer;
+    $parser = new Parser;
     $renderer = new PhpScriptRenderer;
 
     $code = 'break;';
@@ -323,8 +326,8 @@ it('can round-trip a break statement', function (): void {
 
 it('can round-trip a break statement with level', function (): void {
     // Test that code → AST → code produces the same code
-    $lexer = new \PhpScript\Core\Lexer;
-    $parser = new \PhpScript\Core\Parser;
+    $lexer = new Lexer;
+    $parser = new Parser;
     $renderer = new PhpScriptRenderer;
 
     $code = 'break 3;';
@@ -337,7 +340,7 @@ it('can round-trip a break statement with level', function (): void {
 
 it('can render a continue statement without level', function (): void {
     $program = new Program([
-        new \PhpScript\Ast\ContinueStatement(level: 1),
+        new ContinueStatement(level: 1),
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
@@ -346,7 +349,7 @@ it('can render a continue statement without level', function (): void {
 
 it('can render a continue statement with level', function (): void {
     $program = new Program([
-        new \PhpScript\Ast\ContinueStatement(level: 2),
+        new ContinueStatement(level: 2),
     ]);
     $renderer = new PhpScriptRenderer;
     $output = $renderer->traverse($program);
@@ -355,8 +358,8 @@ it('can render a continue statement with level', function (): void {
 
 it('can round-trip a continue statement', function (): void {
     // Test that code → AST → code produces the same code
-    $lexer = new \PhpScript\Core\Lexer;
-    $parser = new \PhpScript\Core\Parser;
+    $lexer = new Lexer;
+    $parser = new Parser;
     $renderer = new PhpScriptRenderer;
 
     $code = 'continue;';
@@ -369,8 +372,8 @@ it('can round-trip a continue statement', function (): void {
 
 it('can round-trip a continue statement with level', function (): void {
     // Test that code → AST → code produces the same code
-    $lexer = new \PhpScript\Core\Lexer;
-    $parser = new \PhpScript\Core\Parser;
+    $lexer = new Lexer;
+    $parser = new Parser;
     $renderer = new PhpScriptRenderer;
 
     $code = 'continue 3;';

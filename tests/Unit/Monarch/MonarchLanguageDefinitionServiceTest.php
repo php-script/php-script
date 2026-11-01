@@ -6,6 +6,7 @@ namespace Tests\Unit\Monarch;
 
 use PhpScript\Core\Engine;
 use PhpScript\Monarch\MonarchLanguageDefinitionService;
+use Some\Non\Existent\ClassName;
 
 class MyOtherTestClass
 {
@@ -19,7 +20,7 @@ interface MyTestInterface
 
 class ClassWithBadReturn
 {
-    public function getBadClass(): \Some\Non\Existent\ClassName {}
+    public function getBadClass(): ClassName {}
 }
 
 class MyTestClass implements MyTestInterface

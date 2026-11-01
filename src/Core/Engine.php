@@ -458,7 +458,7 @@ final class Engine
     }
 
     /**
-     * @throws \PhpScript\Exceptions\EngineException
+     * @throws EngineException
      */
     private function createTemporaryFile(): string
     {

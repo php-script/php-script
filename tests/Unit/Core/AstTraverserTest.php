@@ -1,8 +1,10 @@
 <?php
 
+use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Assignment;
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\BreakStatement;
+use PhpScript\Ast\ContinueStatement;
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\ForeachStatement;
 use PhpScript\Ast\ForStatement;
@@ -11,6 +13,7 @@ use PhpScript\Ast\Identifier;
 use PhpScript\Ast\IfStatement;
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\MemberAccess;
+use PhpScript\Ast\NoOp;
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
 use PhpScript\Ast\UnaryOperation;
@@ -344,7 +347,7 @@ it('can traverse a simple identifier', function (): void {
 it('can traverse an array access statement', function (): void {
     // AST for: if (true) { echo 'true'; } else { echo 'false'; }
     $program = new Program([
-        new \PhpScript\Ast\ArrayAccess(
+        new ArrayAccess(
             new Variable('a'),
             new Literal(1),
             new Token(TokenType::T_LEFT_BRACKET, '[', 1, 1, 0)
@@ -570,7 +573,7 @@ it('can call visitContinueStatement directly via visitor pattern', function (): 
     // Test the public visitContinueStatement method (visitor pattern interface)
     // This method is part of the visitor pattern but not used in doTraverse
     // We test it to achieve 100% coverage and verify the interface
-    $continueStatement = new \PhpScript\Ast\ContinueStatement(level: 2, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0));
+    $continueStatement = new ContinueStatement(level: 2, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0));
 
     // We need a traverser with proper loop context set
     // The simplest way is to call traverse on a for loop that sets context
@@ -609,7 +612,7 @@ it('can traverse continue statement in for loop', function (): void {
             new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
             new PostfixOperation(new Variable('i'), TokenType::T_INCREMENT),
             new Program([
-                new \PhpScript\Ast\ContinueStatement(level: 1, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+                new ContinueStatement(level: 1, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
             ]),
             new Token(TokenType::T_FOR, 'for', 1, 1, 0)
         ),
@@ -630,7 +633,7 @@ it('can traverse continue statement in foreach loop', function (): void {
             new Variable('item'),
             null,
             new Program([
-                new \PhpScript\Ast\ContinueStatement(level: 1, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+                new ContinueStatement(level: 1, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
             ]),
             new Token(TokenType::T_FOREACH, 'foreach', 1, 1, 0)
         ),
@@ -646,7 +649,7 @@ it('can traverse continue statement in foreach loop', function (): void {
 it('throws error when continue used outside loop', function (): void {
     // AST for: continue;
     $program = new Program([
-        new \PhpScript\Ast\ContinueStatement(level: 1, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+        new ContinueStatement(level: 1, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
     ]);
 
     $traverser = new AstTraverser;
@@ -661,7 +664,7 @@ it('throws error when continue level exceeds available loops', function (): void
             new BinaryOperation(new Variable('i'), TokenType::T_LESS_THAN, new Literal(10)),
             new PostfixOperation(new Variable('i'), TokenType::T_INCREMENT),
             new Program([
-                new \PhpScript\Ast\ContinueStatement(level: 2, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+                new ContinueStatement(level: 2, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
             ]),
             new Token(TokenType::T_FOR, 'for', 1, 1, 0)
         ),
@@ -684,7 +687,7 @@ it('can traverse continue 2 in nested loops', function (): void {
                     new BinaryOperation(new Variable('j'), TokenType::T_LESS_THAN, new Literal(10)),
                     new PostfixOperation(new Variable('j'), TokenType::T_INCREMENT),
                     new Program([
-                        new \PhpScript\Ast\ContinueStatement(level: 2, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
+                        new ContinueStatement(level: 2, token: new Token(TokenType::T_CONTINUE, 'continue', 1, 1, 0)),
                     ]),
                     new Token(TokenType::T_FOR, 'for', 1, 1, 0)
                 ),
@@ -703,7 +706,7 @@ it('can traverse continue 2 in nested loops', function (): void {
 it('can traverse a NoOp statement', function (): void {
     // AST for a program containing a NoOp node
     $program = new Program([
-        new \PhpScript\Ast\NoOp,
+        new NoOp,
     ]);
 
     $traverser = new AstTraverser;

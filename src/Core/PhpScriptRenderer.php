@@ -54,7 +54,7 @@ final class PhpScriptRenderer implements AstTraverserInterface
     }
 
     /**
-     * @return \PhpScript\Core\Token[]
+     * @return Token[]
      *
      * @codeCoverageIgnore
      */

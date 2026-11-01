@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PhpScript\Runtime;
 
+use PhpScript\Exceptions\BudgetExceededException;
+
 /**
  * Runs compiled script code in an isolated function scope: no `$this`, no engine
  * internals, only the context variables. Superglobals are blocked at compile time.
@@ -15,7 +17,7 @@ final class Sandbox
      *
      * @param  array<string, mixed>  $__ps_context
      *
-     * @throws \PhpScript\Exceptions\BudgetExceededException
+     * @throws BudgetExceededException
      */
     public static function run(string $__ps_file, array $__ps_context, ExecutionBudget $__ps_budget, CallGuard $__ps_guard): mixed
     {

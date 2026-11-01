@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PhpScript\Ast\Literal;
 
 it('should return correct array representation for a string', function (): void {

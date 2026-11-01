@@ -6,6 +6,7 @@ namespace PhpScript\Contracts;
 
 use PhpScript\Ast\BreakStatement;
 use PhpScript\Ast\ContinueStatement;
+use PhpScript\Core\Token;
 
 interface AstTraverserInterface
 {
@@ -22,7 +23,7 @@ interface AstTraverserInterface
     public function traverse(Node $node): string;
 
     /**
-     * @return \PhpScript\Core\Token[]
+     * @return Token[]
      */
     public function getSourceMap(): array;
 

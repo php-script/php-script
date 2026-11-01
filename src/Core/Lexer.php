@@ -90,7 +90,7 @@ final readonly class Lexer implements LexerInterface
     /**
      * Tokenizes the given script string into an array of tokens based on predefined patterns.
      *
-     * @return list<\PhpScript\Core\Token>
+     * @return list<Token>
      *
      * @throws LexerException If an unknown character or syntax error is encountered during tokenization.
      */

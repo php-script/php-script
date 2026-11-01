@@ -59,7 +59,7 @@ class AstTraverser implements AstTraverserInterface
     private bool $budgetTracking = false;
 
     /**
-     * @var \PhpScript\Core\Token[]
+     * @var Token[]
      */
     private array $sourceMap = [];
 
@@ -110,7 +110,7 @@ class AstTraverser implements AstTraverserInterface
     }
 
     /**
-     * @return \PhpScript\Core\Token[]
+     * @return Token[]
      */
     public function getSourceMap(): array
     {
@@ -132,13 +132,13 @@ class AstTraverser implements AstTraverserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\AstTraverserException
-     * @throws \PhpScript\Exceptions\EngineException
+     * @throws AstTraverserException
+     * @throws EngineException
      */
     private function doTraverse(Node $node): void
     {
         $token = $node->getToken();
-        if ($token && ! isset($this->sourceMap[$this->currentLine])) {
+        if ($token instanceof Token && ! isset($this->sourceMap[$this->currentLine])) {
             $this->sourceMap[$this->currentLine] = $token;
         }
 
@@ -293,7 +293,7 @@ class AstTraverser implements AstTraverserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\EngineException
+     * @throws EngineException
      */
     private function traverseBreakStatement(BreakStatement $node): void
     {
@@ -325,7 +325,7 @@ class AstTraverser implements AstTraverserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\EngineException
+     * @throws EngineException
      */
     private function traverseContinueStatement(ContinueStatement $node): void
     {
@@ -360,7 +360,7 @@ class AstTraverser implements AstTraverserInterface
      * `x = …` stays a plain PHP assignment. Writes into lists, maps and objects go
      * through Runtime::assign(), which checks every key on the way.
      *
-     * @throws \PhpScript\Exceptions\EngineException
+     * @throws EngineException
      */
     private function traverseAssignment(Assignment $node): void
     {
@@ -382,7 +382,7 @@ class AstTraverser implements AstTraverserInterface
     /**
      * Emits `$root, [[kind, key], …]` for a write target like `a.b[c]`.
      *
-     * @throws \PhpScript\Exceptions\EngineException
+     * @throws EngineException
      */
     private function traversePath(Node $target): void
     {
@@ -417,7 +417,7 @@ class AstTraverser implements AstTraverserInterface
      * Every operation is wrapped in parentheses, so the PHP code keeps the
      * precedence of the parsed tree.
      *
-     * @throws \PhpScript\Exceptions\AstTraverserException
+     * @throws AstTraverserException
      */
     private function traverseBinaryOperation(BinaryOperation $node): void
     {
@@ -474,7 +474,7 @@ class AstTraverser implements AstTraverserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\AstTraverserException
+     * @throws AstTraverserException
      */
     private function traverseUnaryOperation(UnaryOperation $node): void
     {
@@ -489,7 +489,7 @@ class AstTraverser implements AstTraverserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\AstTraverserException
+     * @throws AstTraverserException
      */
     private function traversePostfixOperation(PostfixOperation $node): void
     {
@@ -527,7 +527,7 @@ class AstTraverser implements AstTraverserInterface
      * Arguments that PHP may call (callable parameters) are checked at runtime by
      * the CallGuard, methods are called through it.
      *
-     * @throws \PhpScript\Exceptions\EngineException
+     * @throws EngineException
      */
     private function traverseFunctionCall(FunctionCall $node): void
     {
@@ -588,7 +588,7 @@ class AstTraverser implements AstTraverserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\EngineException
+     * @throws EngineException
      */
     private function traverseVariable(Variable $node): void
     {
@@ -605,7 +605,7 @@ class AstTraverser implements AstTraverserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\AstTraverserException
+     * @throws AstTraverserException
      */
     private function traverseLiteral(Literal $node): void
     {

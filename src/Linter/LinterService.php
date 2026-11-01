@@ -252,7 +252,7 @@ class LinterService
 
         $nested = $node instanceof ForStatement || $node instanceof ForeachStatement;
 
-        return array_any($this->children($node), fn (\PhpScript\Contracts\Node $child): bool => $this->canExit($child, $nested ? $depth + 1 : $depth));
+        return array_any($this->children($node), fn (Node $child): bool => $this->canExit($child, $nested ? $depth + 1 : $depth));
     }
 
     /**

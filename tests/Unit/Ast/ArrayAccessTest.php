@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PhpScript\Ast\ArrayAccess;
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\Variable;

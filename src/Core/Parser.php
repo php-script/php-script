@@ -40,7 +40,7 @@ final class Parser implements ParserInterface
     private int $depth = 0;
 
     /**
-     * @var \PhpScript\Core\Token[]
+     * @var Token[]
      */
     private array $tokens;
 
@@ -53,9 +53,9 @@ final class Parser implements ParserInterface
     private bool $expressionMode = false;
 
     /**
-     * @param  \PhpScript\Core\Token[]  $tokens
+     * @param  Token[]  $tokens
      *
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     public function parse(array $tokens): Node
     {
@@ -70,9 +70,9 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @param  \PhpScript\Core\Token[]  $tokens
+     * @param  Token[]  $tokens
      *
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     public function parseExpression(array $tokens): Node
     {
@@ -92,7 +92,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @param  \PhpScript\Core\Token[]  $tokens
+     * @param  Token[]  $tokens
      */
     private function reset(array $tokens, bool $expressionMode): void
     {
@@ -110,7 +110,7 @@ final class Parser implements ParserInterface
     /**
      * Goes one level deeper and returns the previous depth for leave().
      *
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function enter(): int
     {
@@ -122,7 +122,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseStatement(): Node
     {
@@ -134,7 +134,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseStatementNode(): Node
     {
@@ -191,7 +191,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseForStatement(Token $token): ForStatement
     {
@@ -221,7 +221,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseForeachStatement(Token $token): ForeachStatement
     {
@@ -243,7 +243,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseIfStatement(Token $token): IfStatement
     {
@@ -262,7 +262,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseBlock(): Node
     {
@@ -279,7 +279,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseEchoStatement(Token $token): EchoStatement
     {
@@ -289,7 +289,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseReturnStatement(Token $token): ReturnStatement
     {
@@ -301,7 +301,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseBreakStatement(Token $token): BreakStatement
     {
@@ -339,7 +339,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseContinueStatement(Token $token): ContinueStatement
     {
@@ -395,7 +395,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseExpressionNode(): Node
     {
@@ -407,7 +407,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseAssignment(): Node
     {
@@ -448,7 +448,7 @@ final class Parser implements ParserInterface
      *
      * @param  callable(): Node  $operand
      *
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseBinary(callable $operand, TokenType ...$operators): Node
     {
@@ -467,7 +467,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseLogicalOr(): Node
     {
@@ -475,7 +475,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseLogicalAnd(): Node
     {
@@ -483,7 +483,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseEquality(): Node
     {
@@ -493,7 +493,7 @@ final class Parser implements ParserInterface
     /**
      * `<` binds tighter than `==`, so `a < b == c < d` compares two booleans.
      *
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseRelational(): Node
     {
@@ -507,7 +507,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseAdditive(): Node
     {
@@ -515,7 +515,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseMultiplicative(): Node
     {
@@ -523,7 +523,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseUnary(): Node
     {
@@ -540,7 +540,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parsePostfix(): Node
     {
@@ -562,7 +562,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseCall(): Node
     {
@@ -592,7 +592,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function finishCall(Node $callee): FunctionCall
     {
@@ -613,7 +613,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parsePrimary(): Node
     {
@@ -685,7 +685,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseListLiteral(Token $token): ListLiteral
     {
@@ -703,7 +703,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseMapLiteral(Token $token): MapLiteral
     {
@@ -741,7 +741,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function consume(TokenType $type, string $message): Token
     {

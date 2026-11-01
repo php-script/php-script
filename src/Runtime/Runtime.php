@@ -231,7 +231,7 @@ final class Runtime
                 return false;
             }
 
-            return array_all($left, function ($value, $key) use ($right, $depth, &$budget): bool {
+            return array_all($left, function (mixed $value, int|string $key) use ($right, $depth, &$budget): bool {
                 return array_key_exists($key, $right) && self::same($value, $right[$key], $depth + 1, $budget);
             });
         }

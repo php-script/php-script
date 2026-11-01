@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PhpScript\Core\DeterminismProfile;
 use PhpScript\Core\Engine;
 use PhpScript\Exceptions\EngineException;

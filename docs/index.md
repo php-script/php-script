@@ -18,6 +18,6 @@ This documentation will guide you through the process of integrating PHP Script 
 
 ## Where to start?
 
--   If you're new to PHP Script and want to understand the "why" behind it, start with the **[Introduction](./introduction.md)**.
+-   If you're new to PHP Script and want to understand the "why" behind it, start with the **[Introduction](./introduction.html)**.
 -   If you're a developer looking to integrate PHP Script into your application, check out the **[PHP Guide](./php/)**.
 -   If you're looking for a reference on the scripting language itself, head over to the **[Language Guide](./language/)**.

@@ -176,7 +176,7 @@ class LinterService
                 $this->compiler->setAllowedFunctions($this->allowedFunctions);
                 $this->compiler->traverse($this->expression ? new Program([new ReturnStatement($node)]) : $node);
             } catch (EngineException $e) {
-                $diagnostics[] = new LintDiagnostic(self::RULE_COMPILE, $e->getMessage(), $e->line, $e->column, $e->offset, $e->length);
+                $diagnostics[] = new LintDiagnostic(self::RULE_COMPILE, $e->reason, $e->line, $e->column, $e->offset, $e->length);
             }
         }
 

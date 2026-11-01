@@ -9,6 +9,11 @@ use Throwable;
 
 class EngineException extends RuntimeException
 {
+    /**
+     * The message without prefix and source position, e.g. for editor markers.
+     */
+    public readonly string $reason;
+
     public function __construct(
         string $message,
         public int $line = 1,
@@ -16,8 +21,10 @@ class EngineException extends RuntimeException
         public readonly int $offset = 0,
         public readonly int $length = 1,
         ?Throwable $previous = null,
+        ?string $reason = null,
     ) {
         parent::__construct($message, 0, $previous);
+        $this->reason = $reason ?? $message;
     }
 
     /**
@@ -30,9 +37,9 @@ class EngineException extends RuntimeException
 
     public static function runtimeError(string $message, int $line, int $column, int $offset, int $length, ?Throwable $previous = null): self
     {
-        $message = sprintf('Runtime error: %s in line: %d, column: %d, offset: %d', $message, $line, $column, $offset);
+        $formatted = sprintf('Runtime error: %s in line: %d, column: %d, offset: %d', $message, $line, $column, $offset);
 
-        return new self($message, $line, $column, $offset, $length, $previous);
+        return new self($formatted, $line, $column, $offset, $length, $previous, $message);
     }
 
     /**
@@ -40,16 +47,16 @@ class EngineException extends RuntimeException
      */
     public static function compileError(string $message, int $line, int $column, int $offset, int $length): self
     {
-        $message = sprintf('%s in line: %d, column: %d, offset: %d', $message, $line, $column, $offset);
+        $formatted = sprintf('%s in line: %d, column: %d, offset: %d', $message, $line, $column, $offset);
 
-        return new self($message, $line, $column, $offset, $length);
+        return new self($formatted, $line, $column, $offset, $length, reason: $message);
     }
 
     public static function invalidFunctionCall(string $functionName, int $line, int $column, int $offset, int $length, ?Throwable $previous = null): self
     {
         $message = sprintf('Invalid function call: %s in line: %d, column: %d, offset: %d', $functionName, $line, $column, $offset);
 
-        return new self($message, $line, $column, $offset, $length, $previous);
+        return new self($message, $line, $column, $offset, $length, $previous, 'Invalid function call: ' . $functionName);
     }
 
     public static function nonDeterministicFunction(string $functionName): self

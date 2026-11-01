@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Linter diagnostics of the `compile` rule no longer repeat the `Runtime error:` prefix and the
+  source position in their message. `EngineException::$reason` holds the plain message.
+
 ## v2.0.0 (2026-11-01)
 
 This release adds features for embedding PHP Script in workflow engines and hardens the sandbox.

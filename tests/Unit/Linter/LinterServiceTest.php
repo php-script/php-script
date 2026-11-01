@@ -80,6 +80,7 @@ it('reports disallowed function calls when an allowlist is given', function (): 
     expect($diagnostics)->toHaveCount(1)
         ->and($diagnostics[0]->rule)->toBe(LinterService::RULE_COMPILE)
         ->and($diagnostics[0]->line)->toBe(2)
+        ->and($diagnostics[0]->message)->toBe('Invalid function call: system')
         ->and($linter->withoutRule(LinterService::RULE_COMPILE)->isValid())->toBeTrue();
 });
 
@@ -135,4 +136,12 @@ it('passes the engine allowlist to the linter', function (): void {
 
     expect($engine->linter("strlen('a')")->isValid())->toBeTrue()
         ->and($engine->linter("system('a')")->isValid())->toBeFalse();
+});
+
+it('reports compile errors without prefix and source position', function (): void {
+    $diagnostics = new LinterService()->withScript('break')->withAllowedFunctions([])->diagnostics();
+
+    expect($diagnostics)->toHaveCount(1)
+        ->and($diagnostics[0]->message)->toBe("'break' can only be used inside a loop")
+        ->and($diagnostics[0]->column)->toBe(1);
 });

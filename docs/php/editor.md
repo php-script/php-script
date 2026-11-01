@@ -50,27 +50,13 @@ The editor provides intelligent code completion suggestions based on context:
 
 Break and continue statements are **context-aware** - they are provided in a separate `loopControls` category that frontend implementations should only display when the user is inside a `for` or `foreach` loop. This prevents suggesting invalid code and improves the developer experience.
 
-When writing code inside loops, the editor can suggest these loop control snippets:
+When writing code inside loops, the editor can suggest these loop control snippets for nested
+loops:
 
-- **`break`** - Exit the current loop
-  ```javascript
-  break;
-  ```
+- **`break 2`** - Exit two nested loops
+- **`continue 2`** - Continue with the next iteration of the outer loop
 
-- **`break (nested)`** - Exit multiple nested loops
-  ```javascript
-  break 2;
-  ```
-
-- **`continue`** - Skip to the next iteration
-  ```javascript
-  continue;
-  ```
-
-- **`continue (nested)`** - Continue to the next iteration of an outer loop
-  ```javascript
-  continue 2;
-  ```
+Plain `break` and `continue` come as keywords in `loopKeywords`.
 
 ### Control Flow Snippets
 
@@ -78,6 +64,7 @@ The editor also provides snippets for other control flow structures:
 
 - **`for`** - For loop template
 - **`foreach`** - Foreach loop template
+- **`foreach (key, value)`** - Foreach loop template with key and value
 - **`if`** - If statement template
 - **`ifelse`** - If-else statement template
 
@@ -94,13 +81,15 @@ $completionItems = $service->getCompletionItems();
 //     'globalFunctions' => [...],
 //     'globalVariables' => [...],
 //     'classes' => [...],
-//     'controlFlows' => [...],      // Always show: for, foreach, if, ifelse
-//     'loopControls' => [...],      // Only show inside loops: break, continue (4 snippets)
+//     'controlFlows' => [...],      // Always show: for, foreach, foreach (key, value), if, ifelse
+//     'loopControls' => [...],      // Only show inside loops: break 2, continue 2
 //     'loopKeywords' => ['break', 'continue']  // Keywords to add dynamically inside loops
 // ]
 ```
 
-**Important**: The `break` and `continue` keywords are **NOT** in the static `keywords` array returned by `getDefinition()`. They must be added dynamically by the frontend when inside a loop.
+`getDefinition()` returns `break` and `continue` in a separate `loopKeywords` list, not in
+`keywords`. The tokenizer highlights them as keywords everywhere; offer them as completion
+suggestions only inside a loop.
 
 #### Step 1: Detect Loop Context
 
@@ -159,7 +148,7 @@ monaco.languages.registerCompletionItemProvider('php-script', {
         const isInLoop = isInsideLoop(model, position);
 
         if (isInLoop) {
-            // Add loop control snippets (break, break 2, continue, continue 2)
+            // Add loop control snippets (break 2, continue 2)
             suggestions.push(...loopControls);
 
             // Add loop keywords (break, continue) as keyword suggestions
@@ -189,14 +178,42 @@ This ensures that `break` and `continue` suggestions only appear in valid contex
 
 ## Linting and Validation
 
-The `LinterService` validates PHP Script code in real-time, catching errors before execution:
+The `LinterService` finds errors before a script runs. `diagnostics()` returns `LintDiagnostic`
+objects whose 1-based `line` and `column` map directly to Monaco markers. See
+[Linting](./linting.html) for the rules.
 
-### Break/Continue Validation
+Return the diagnostics from an endpoint:
 
-The linter detects invalid usage of `break` and `continue`:
+```php
+$diagnostics = array_map(fn (LintDiagnostic $diagnostic): array => [
+    'rule' => $diagnostic->rule,
+    'message' => $diagnostic->message,
+    'line' => $diagnostic->line,
+    'column' => $diagnostic->column,
+    'length' => $diagnostic->length,
+    'severity' => $diagnostic->severity,
+], $engine->linter($script)->diagnostics());
 
-- ⚠️ **Outside loop context**: Using `break` or `continue` outside of a loop produces a runtime error
-- ⚠️ **Invalid level**: Using a level that exceeds the available loop nesting depth
-- ⚠️ **Invalid parameters**: Using `break 0`, negative levels, or non-integer levels
+echo json_encode($diagnostics);
+```
 
-These validations help developers catch errors early in the development process, improving the overall development experience.
+Set them as markers in the editor:
+
+```javascript
+const markers = diagnostics.map(d => ({
+    startLineNumber: d.line,
+    startColumn: d.column,
+    endLineNumber: d.line,
+    endColumn: d.column + Math.max(d.length, 1),
+    message: d.message,
+    source: d.rule,
+    severity: d.severity === 'error'
+        ? monaco.MarkerSeverity.Error
+        : monaco.MarkerSeverity.Warning,
+}));
+
+monaco.editor.setModelMarkers(editor.getModel(), 'php-script', markers);
+```
+
+The linter also reports `break` and `continue` outside a loop, levels deeper than the loop
+nesting, and invalid levels such as `break 0`.

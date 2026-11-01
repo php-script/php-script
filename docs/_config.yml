@@ -14,7 +14,7 @@ defaults:
 # Aux Links
 aux_links:
   "📦": https://github.com/php-script/php-script
-  "✏️": https://github.com/php-script/php-script-editor
+  "✏️ Editor": https://php-script.github.io/php-script-editor/
 aux_links_new_tab: true
 
 # Search

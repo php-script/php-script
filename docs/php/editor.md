@@ -16,18 +16,77 @@ layout: default
 
 ---
 
+## Editor packages
+
+**Full documentation: [php-script.github.io/php-script-editor](https://php-script.github.io/php-script-editor/)**
+
+[`<php-script-editor>`](https://php-script.github.io/php-script-editor/packages/editor.html) is a
+ready-made Monaco editor for PHP Script. It loads the language definition and completions from your
+`Engine`, and has saving, lint markers, light and dark themes and form support built in. Version
+0.1.0 ships these packages:
+
+| Package | For | Install |
+| --- | --- | --- |
+| [`@php-script/editor`](https://php-script.github.io/php-script-editor/packages/editor.html) | The web component (vanilla JS, Angular, Solid, Alpine) | `npm i @php-script/editor monaco-editor` |
+| [`@php-script/editor-react`](https://php-script.github.io/php-script-editor/packages/react.html) | React 18 and 19, Next.js | `npm i @php-script/editor-react monaco-editor` |
+| [`@php-script/editor-vue`](https://php-script.github.io/php-script-editor/packages/vue.html) | Vue 3 and Nuxt | `npm i @php-script/editor-vue monaco-editor` |
+| [`@php-script/editor-svelte`](https://php-script.github.io/php-script-editor/packages/svelte.html) | Svelte 5 and SvelteKit | `npm i @php-script/editor-svelte monaco-editor` |
+| [`php-script/editor-laravel`](https://php-script.github.io/php-script-editor/packages/laravel.html) | Laravel: Blade component, published assets, lint responses, validation rule | `composer require php-script/editor-laravel` |
+| [`php-script/editor-filament`](https://php-script.github.io/php-script-editor/packages/filament.html) | Filament 5 form field | `composer require php-script/editor-filament` |
+
+### Minimal example
+
+Serve the editor config from your engine:
+
+```php
+use PhpScript\Core\Engine;
+
+$engine = new Engine()
+    ->allow('strtoupper')
+    ->set('user', $user, 'The current user');
+
+$service = $engine->monarchLanguageDefinition();
+
+header('Content-Type: application/json');
+echo json_encode([
+    'definition' => $service->getDefinition(),
+    'completions' => $service->getCompletionItems(),
+]);
+```
+
+Then use the element:
+
+```js
+import '@php-script/editor';
+```
+
+```html
+<php-script-editor
+  config-url="/php-script/config"
+  save-url="/scripts"
+  lint-url="/scripts/lint"
+  value='echo strtoupper(user.name);'
+></php-script-editor>
+```
+
+With Laravel, `composer require php-script/editor-laravel` gives you `EditorConfig::fromEngine($engine)`
+and an `<x-php-script-editor :config="$engine" />` Blade component. See
+[Getting started](https://php-script.github.io/php-script-editor/getting-started.html) and
+[Server and language config](https://php-script.github.io/php-script-editor/server.html) for the
+endpoints.
+
+The rest of this page explains what the packages do under the hood, for a custom Monaco integration.
+
 ## Monaco Editor
 
-We support out-of-the-box the [Monaco Editor](https://microsoft.github.io/monaco-editor/).
+PHP Script supports the [Monaco Editor](https://microsoft.github.io/monaco-editor/) out of the box.
+It creates the whole language definition and the code completion suggestions in Monaco's Monarch
+format.
 
-Therefore we can create the whole language definition and code completion suggestion in the Monarch standard for the
-Monaco Editor.
-
-Our [Playground](https://github.com/php-script/php-script/blob/main/public/playground.php) provides a base 
-implementation of a pre-configured editor with dynamic code completion and the full language definition syntax.
-
-But we also provide a npm package for a pre-configured Monaco editor written in Typescript soon. You can head over to 
-the [repository](https://github.com/php-script/php-script-editor) for a first look.
+Our [Playground](https://github.com/php-script/php-script/blob/main/public/playground.php) is a
+minimal implementation of a pre-configured editor with dynamic code completion and the full
+language definition. The [editor packages](#editor-packages) are the maintained, ready-to-use
+version of it.
 
 The base of the server-side rendering is built by the `MonarchLanguageDefinitionService` which can create all necessary
 dynamic stuff for the editor.

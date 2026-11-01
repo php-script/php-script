@@ -86,6 +86,7 @@ it('returns the correct definition', function (): void {
         'keywords' => [
             'if', 'else', 'for', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'LINEBREAK',
         ],
+        'loopKeywords' => ['break', 'continue'],
         'allowedFunctions' => [],
         'contextVariables' => [],
         'operators' => [
@@ -99,6 +100,7 @@ it('returns the correct definition', function (): void {
                     [
                         'cases' => [
                             '@keywords' => 'keyword',
+                            '@loopKeywords' => 'keyword',
                             '@allowedFunctions' => 'predefined',
                             '@contextVariables' => 'variable.predefined',
                             '@default' => 'identifier',

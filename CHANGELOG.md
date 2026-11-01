@@ -35,6 +35,11 @@ Several changes break existing scripts or host code; see "Breaking changes" befo
 - Temporary files are removed even after fatal errors; the error handler, `SIGALRM` handler and
   time limit are restored after every run.
 
+### Fixed
+
+- The Monaco language definition highlights `break` and `continue` as keywords
+  (`loopKeywords` in `getDefinition()`).
+
 ### Maintenance
 
 - CI tests PHP 8.4, 8.5 and 8.6; PHP 8.5 is required to pass. GitHub Actions are pinned to commit

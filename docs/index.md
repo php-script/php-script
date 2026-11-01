@@ -21,3 +21,4 @@ This documentation will guide you through the process of integrating PHP Script 
 -   If you're new to PHP Script and want to understand the "why" behind it, start with the **[Introduction](./introduction.html)**.
 -   If you're a developer looking to integrate PHP Script into your application, check out the **[PHP Guide](./php/)**.
 -   If you're looking for a reference on the scripting language itself, head over to the **[Language Guide](./language/)**.
+-   If you want a code editor for your users, use the **[PHP Script Editor](https://php-script.github.io/php-script-editor/)**: a Monaco-based web component with React, Vue, Svelte, Laravel and Filament packages. See [Integrate Editor](./php/editor.html) for how it works.

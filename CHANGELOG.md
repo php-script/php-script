@@ -49,24 +49,16 @@ Several changes break existing scripts or host code; see "Breaking changes" befo
 
 - **`allow()` validates names.** Unknown functions, namespaced names, functions in
   `NEVER_ALLOWED` and functions that take callbacks throw an `InvalidArgumentException`. Use
-  `allowWithCallbacks()` for `array_map`, `array_filter`, `usort` and similar functions.
-- **Deterministic mode uses an allowlist** (`DeterminismProfile::PURE_FUNCTIONS`). Functions that
-  are not on it, such as `sprintf`, now need `allowNonDeterministic()`.
-- **`==` never converts types.** `1 == '1'` and `null == false` are `false`. Lists, maps and
-  objects are compared by value.
-- **`+` adds numbers only** and concatenates everything else: `'42' + 1` is `'421'`. Lists, maps
-  and objects without `__toString` cannot be concatenated.
+  `allowWithCallbacks()` for `array_map`, `array_filter`, `usort` and similar functions; callbacks
+  passed by a script must be allowed functions too.
+- **String literals stay strings.** `'007'` is the string `'007'`, no longer the number `7`.
+- **`==` never converts types.** `1 == '1'` is `false`, `10 == 10.0` is `true`. Objects are
+  compared by value.
+- **`+` adds numbers only** and concatenates everything else: `'42' + 1` is `'421'`.
 - **`<`, `>`, `<=`, `>=` only compare values of the same kind** (numbers, strings, dates).
-- **Precedence:** relational operators bind tighter than `==` and `!=`, as in JavaScript.
-- **Missing keys and properties are errors** instead of `null`. Writes no longer create
-  intermediate arrays (`a.b.c = 1` needs `a.b` to exist).
+  `'10' > 9` throws an error.
+- **Writes no longer create intermediate arrays.** `a.b.c = 1` needs `a.b` to exist.
 - **Assignments and `++`/`--` need a variable or a path below it** as target.
-- **Line breaks end `return`, `break` and `continue`.** `return` followed by a value on the next
-  line returns `null`.
 - **Integer literals that do not fit into a PHP integer** are a parse error.
 - **Reserved names:** variables cannot be named like PHP superglobals or `this`, or start with
   `__ps_`.
-- **Linter:** `isValid()` ignores warnings; the `infinite-loop` rule reports warnings. Unknown
-  rule names throw an `InvalidArgumentException`.
-- Compile errors (e.g. calling a function that is not allowed) no longer start with
-  `Runtime error:`.

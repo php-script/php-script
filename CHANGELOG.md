@@ -1,9 +1,9 @@
 # Changelog
 
-## Unreleased (next major version)
+## v2.0.0 (2026-11-01)
 
 This release adds features for embedding PHP Script in workflow engines and hardens the sandbox.
-Several changes break existing scripts or host code; release it as a new major version.
+Several changes break existing scripts or host code; see "Breaking changes" before upgrading.
 
 ### Added
 
@@ -34,6 +34,11 @@ Several changes break existing scripts or host code; release it as a new major v
   source positions of errors.
 - Temporary files are removed even after fatal errors; the error handler, `SIGALRM` handler and
   time limit are restored after every run.
+
+### Maintenance
+
+- CI tests PHP 8.4, 8.5 and 8.6; PHP 8.5 is required to pass. GitHub Actions are pinned to commit
+  SHAs.
 
 ### Breaking changes
 

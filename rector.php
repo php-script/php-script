@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPublicMethodParameterRector;
 use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
 
 return RectorConfig::configure()
@@ -12,6 +13,8 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         AddOverrideAttributeToOverriddenMethodsRector::class,
+        // The budget parameter is used by the included script, which Rector cannot see.
+        RemoveUnusedPublicMethodParameterRector::class => [__DIR__ . '/src/Runtime/Sandbox.php'],
     ])
     ->withPreparedSets(
         deadCode: true,

@@ -60,10 +60,55 @@ PHP Script supports the following literal types:
     ```javascript
     emptyValue = null;
     ```
+-   **Lists:** Values in square brackets. They become PHP list arrays.
+    ```javascript
+    numbers = [1, 2, 3];
+    empty = [];
+    echo numbers[0]; // 1
+    ```
+-   **Maps:** Key-value pairs in curly braces. Keys are identifiers or strings. Maps become PHP
+    `stdClass` objects, so an empty map `{}` stays different from an empty list `[]`.
+    ```javascript
+    customer = {name: 'Ada', 'first order': true};
+    echo customer.name; // Ada
+    echo customer['first order']; // 1
+    ```
 -   **LINEBREAK:** A special keyword representing a new line character.
     ```javascript
     echo 'Line 1' + LINEBREAK + 'Line 2';
     ```
+
+## Accessing Values
+
+Dot notation reads object properties and array keys alike, index access reads list elements and
+map keys:
+
+```javascript
+echo data.customer.name;
+echo data.items[0].price;
+```
+
+Reading a key or property that does not exist is an error. PHP Script never silently returns
+`null` for a typo.
+
+## Return Statement
+
+`return` ends the script and hands a value back to the host application. Without a value it
+returns `null`. The host reads the value with `Engine::run()`, see
+[Evaluating and Running](../php/evaluating.html).
+
+A line break ends a `return`, `break` or `continue` statement, as in JavaScript. The value or
+level must be on the same line:
+
+```javascript
+return
+total     // not returned: `return` above already ended the script
+```
+
+```javascript
+total = data.amount * 1.19;
+return {total: total, currency: 'EUR'};
+```
 
 ## Loop Control Statements
 

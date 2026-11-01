@@ -129,7 +129,7 @@ it('handles the LINEBREAK constant', function (): void {
 });
 
 /** @runInSeparateProcess */
-it('throws an exception when an infinite loop exceeds the execution time limit', function () {
+it('throws an exception when an infinite loop exceeds the execution time limit', function (): void {
     if (! extension_loaded('pcntl')) {
         $this->markTestSkipped('The "pcntl" extension is not available.');
     }
@@ -139,7 +139,7 @@ it('throws an exception when an infinite loop exceeds the execution time limit',
 
     $script = 'for (;;) {}';
 
-    expect(fn () => $engine->execute($script))
+    expect(fn (): mixed => $engine->execute($script))
         ->toThrow(EngineException::class, 'Maximum execution time of 1 second(s) exceeded');
 });
 

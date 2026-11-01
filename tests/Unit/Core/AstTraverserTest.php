@@ -10,6 +10,7 @@ use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\IfStatement;
 use PhpScript\Ast\Literal;
+use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
 use PhpScript\Ast\UnaryOperation;
@@ -39,7 +40,7 @@ it('can traverse an if-else statement', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "if (true) {echo 'true';\n} else {echo 'false';\n};\n";
+    $expected = "if (true) {\necho 'true';\n} else {\necho 'false';\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -107,7 +108,7 @@ it('can traverse a for statement with null parts', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (; ; ) {echo 'loop';\n};\n";
+    $expected = "for (; ; ) {\necho 'loop';\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -126,7 +127,7 @@ it('can traverse a for statement with an empty body', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (; ; ) {};\n";
+    $expected = "for (; ; ) {\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -147,7 +148,7 @@ it('can traverse a for statement with only a condition', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (; \$i < 10; ) {echo 'loop';\n};\n";
+    $expected = "for (; \\PhpScript\\Runtime\\Runtime::compare(\$i, '<', 10); ) {\necho 'loop';\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -168,7 +169,7 @@ it('can traverse a for statement with an initializer and a condition', function 
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (\$i = 0; \$i < 10; ) {echo 'loop';\n};\n";
+    $expected = "for (\$i = 0; \\PhpScript\\Runtime\\Runtime::compare(\$i, '<', 10); ) {\necho 'loop';\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -189,7 +190,7 @@ it('can traverse a for statement with an initializer and a condition and an incr
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (\$i = 0; \$i < 10; \$i++) {echo 'loop';\n};\n";
+    $expected = "for (\$i = 0; \\PhpScript\\Runtime\\Runtime::compare(\$i, '<', 10); \\PhpScript\\Runtime\\Runtime::increment(\$i, [], 1)) {\necho 'loop';\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -210,7 +211,7 @@ it('can traverse a for statement with an initializer and a condition and an decr
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (\$i = 10; \$i > 0; \$i--) {echo 'loop';\n};\n";
+    $expected = "for (\$i = 10; \\PhpScript\\Runtime\\Runtime::compare(\$i, '>', 0); \\PhpScript\\Runtime\\Runtime::increment(\$i, [], -1)) {\necho 'loop';\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -231,7 +232,7 @@ it('can traverse a foreach statement without a key', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "foreach (\$items as \$item) {echo \$item;\n};\n";
+    $expected = "foreach (\$items as \$item) {\necho \$item;\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -253,7 +254,7 @@ it('can traverse a foreach statement with a key', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "foreach (\$items as \$key => \$value) {echo \$key;\necho \$value;\n};\n";
+    $expected = "foreach (\$items as \$key => \$value) {\necho \$key;\necho \$value;\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -262,10 +263,9 @@ it('can traverse all binary operators', function (): void {
         TokenType::T_MINUS->value => '-',
         TokenType::T_MULTIPLY->value => '*',
         TokenType::T_DIVIDE->value => '/',
-        TokenType::T_COMPARE_EQUALS->value => '===',
-        TokenType::T_COMPARE_UNEQUALS->value => '!==',
-        TokenType::T_GREATER_THAN->value => '>',
-        TokenType::T_LESS_THAN->value => '<',
+        TokenType::T_MODULO->value => '%',
+        TokenType::T_AND->value => '&&',
+        TokenType::T_OR->value => '||',
     ];
 
     foreach ($operators as $tokenType => $operator) {
@@ -274,7 +274,7 @@ it('can traverse all binary operators', function (): void {
         ]);
         $traverser = new AstTraverser;
         $output = $traverser->traverse($program);
-        $expected = "1 {$operator} 2;\n";
+        $expected = "(1 {$operator} 2);\n";
         expect($output)->toBe($expected);
     }
 });
@@ -285,7 +285,7 @@ it('can traverse plus operator', function (): void {
     ]);
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
-    $expected = "((is_numeric(1) && is_numeric(2)) ? (1 + 2) : (1 . 2));\n";
+    $expected = "\\PhpScript\\Runtime\\Runtime::add(1, 2);\n";
     expect($output)->toBe($expected);
 });
 
@@ -298,7 +298,7 @@ it('can traverse a unary minus operation', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "-1;\n";
+    $expected = "(-1);\n";
     expect($output)->toBe($expected);
 });
 
@@ -311,7 +311,7 @@ it('can traverse a postfix decrement operation', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "\$i--;\n";
+    $expected = "\\PhpScript\\Runtime\\Runtime::increment(\$i, [], -1);\n";
     expect($output)->toBe($expected);
 });
 
@@ -354,7 +354,7 @@ it('can traverse an array access statement', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "\$a[1];\n";
+    $expected = "\\PhpScript\\Runtime\\Runtime::index(\$a, 1);\n";
     expect($output)->toBe($expected);
 });
 
@@ -449,7 +449,7 @@ it('can traverse break statement in for loop', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (\$i = 0; \$i < 10; \$i++) {break;\n};\n";
+    $expected = "for (\$i = 0; \\PhpScript\\Runtime\\Runtime::compare(\$i, '<', 10); \\PhpScript\\Runtime\\Runtime::increment(\$i, [], 1)) {\nbreak;\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -470,7 +470,7 @@ it('can traverse break statement in foreach loop', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "foreach (\$items as \$item) {break;\n};\n";
+    $expected = "foreach (\$items as \$item) {\nbreak;\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -527,7 +527,7 @@ it('can traverse break 2 in nested loops', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (\$i = 0; \$i < 10; \$i++) {for (\$j = 0; \$j < 10; \$j++) {break 2;\n};\n};\n";
+    $expected = "for (\$i = 0; \\PhpScript\\Runtime\\Runtime::compare(\$i, '<', 10); \\PhpScript\\Runtime\\Runtime::increment(\$i, [], 1)) {\nfor (\$j = 0; \\PhpScript\\Runtime\\Runtime::compare(\$j, '<', 10); \\PhpScript\\Runtime\\Runtime::increment(\$j, [], 1)) {\nbreak 2;\n};\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -618,7 +618,7 @@ it('can traverse continue statement in for loop', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (\$i = 0; \$i < 10; \$i++) {continue;\n};\n";
+    $expected = "for (\$i = 0; \\PhpScript\\Runtime\\Runtime::compare(\$i, '<', 10); \\PhpScript\\Runtime\\Runtime::increment(\$i, [], 1)) {\ncontinue;\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -639,7 +639,7 @@ it('can traverse continue statement in foreach loop', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "foreach (\$items as \$item) {continue;\n};\n";
+    $expected = "foreach (\$items as \$item) {\ncontinue;\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -696,7 +696,7 @@ it('can traverse continue 2 in nested loops', function (): void {
     $traverser = new AstTraverser;
     $output = $traverser->traverse($program);
 
-    $expected = "for (\$i = 0; \$i < 10; \$i++) {for (\$j = 0; \$j < 10; \$j++) {continue 2;\n};\n};\n";
+    $expected = "for (\$i = 0; \\PhpScript\\Runtime\\Runtime::compare(\$i, '<', 10); \\PhpScript\\Runtime\\Runtime::increment(\$i, [], 1)) {\nfor (\$j = 0; \\PhpScript\\Runtime\\Runtime::compare(\$j, '<', 10); \\PhpScript\\Runtime\\Runtime::increment(\$j, [], 1)) {\ncontinue 2;\n};\n};\n";
     expect($output)->toBe($expected);
 });
 
@@ -712,3 +712,35 @@ it('can traverse a NoOp statement', function (): void {
     // NoOp produces a semicolon followed by newline when traversed
     expect($output)->toBe(";\n");
 });
+
+it('generates value equality for == and !=', function (): void {
+    $equals = new AstTraverser()->traverse(new Program([
+        new BinaryOperation(new Literal(1), TokenType::T_COMPARE_EQUALS, new Literal(2)),
+    ]));
+    $unequals = new AstTraverser()->traverse(new Program([
+        new BinaryOperation(new Literal(1), TokenType::T_COMPARE_UNEQUALS, new Literal(2)),
+    ]));
+
+    expect($equals)->toBe("\\PhpScript\\Runtime\\Runtime::equals(1, 2);\n")
+        ->and($unequals)->toBe("!\\PhpScript\\Runtime\\Runtime::equals(1, 2);\n");
+});
+
+it('compiles comparison operators to runtime compare calls', function (): void {
+    foreach (['>' => TokenType::T_GREATER_THAN, '<' => TokenType::T_LESS_THAN, '>=' => TokenType::T_GREATER_EQUAL, '<=' => TokenType::T_LESS_EQUAL] as $operator => $tokenType) {
+        $program = new Program([new BinaryOperation(new Literal(1), $tokenType, new Literal(2))]);
+
+        expect(new AstTraverser()->traverse($program))->toBe("\\PhpScript\\Runtime\\Runtime::compare(1, '{$operator}', 2);\n");
+    }
+});
+
+it('rejects assignments to paths that do not start at a variable', function (): void {
+    // AST for: f().x = 1 (the parser rejects this already)
+    $program = new Program([
+        new Assignment(
+            new MemberAccess(new FunctionCall(new Identifier('f'), []), new Identifier('x')),
+            new Literal(1),
+        ),
+    ]);
+
+    new AstTraverser()->traverse($program);
+})->throws(EngineException::class, 'Invalid assignment target');

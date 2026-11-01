@@ -10,11 +10,14 @@ use PhpScript\Ast\ForStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\IfStatement;
+use PhpScript\Ast\ListLiteral;
 use PhpScript\Ast\Literal;
+use PhpScript\Ast\MapLiteral;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
+use PhpScript\Ast\ReturnStatement;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
 use PhpScript\Core\PhpScriptRenderer;
@@ -376,4 +379,30 @@ it('can round-trip a continue statement with level', function (): void {
     $output = $renderer->traverse($ast);
 
     expect(trim($output))->toBe($code);
+});
+
+it('renders list and map literals', function (): void {
+    $output = new PhpScriptRenderer()->traverse(new Program([
+        new ListLiteral([new Literal(1), new Literal('a')]),
+        new MapLiteral([['a', new Literal(1)], ['b c', new Literal(2)], ['if', new Literal(3)], ["it's", new ListLiteral([])]]),
+    ]));
+
+    expect($output)->toBe("[1, 'a']\n{a: 1, 'b c': 2, 'if': 3, 'it\\'s': []}\n");
+});
+
+it('renders parentheses only where precedence requires them', function (): void {
+    $renderer = new PhpScriptRenderer;
+    $sub = new BinaryOperation(new Literal(5), TokenType::T_MINUS, new Literal(3));
+    $not = new UnaryOperation(TokenType::T_BANG, new BinaryOperation(new Literal(1), TokenType::T_COMPARE_EQUALS, new Literal(2)));
+
+    expect($renderer->traverse(new BinaryOperation(new Literal(10), TokenType::T_MINUS, $sub)))->toBe('10 - (5 - 3)')
+        ->and($renderer->traverse(new BinaryOperation($sub, TokenType::T_MINUS, new Literal(1))))->toBe('5 - 3 - 1')
+        ->and($renderer->traverse(new BinaryOperation($sub, TokenType::T_MULTIPLY, new Literal(2))))->toBe('(5 - 3) * 2')
+        ->and($renderer->traverse($not))->toBe('!(1 == 2)')
+        ->and($renderer->traverse(new BinaryOperation(new UnaryOperation(TokenType::T_MINUS, new Literal(1)), TokenType::T_MULTIPLY, new Literal(2))))->toBe('-1 * 2');
+});
+
+it('renders return statements', function (): void {
+    expect(new PhpScriptRenderer()->traverse(new Program([new ReturnStatement(new Literal(1)), new ReturnStatement])))
+        ->toBe("return 1;\nreturn;\n");
 });

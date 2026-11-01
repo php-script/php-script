@@ -14,6 +14,11 @@ interface AstTraverserInterface
      */
     public function setAllowedFunctions(array $allowedFunctions): void;
 
+    /**
+     * Emits operation counting into the generated code (see ExecutionBudget).
+     */
+    public function setBudgetTracking(bool $enabled): void;
+
     public function traverse(Node $node): string;
 
     /**

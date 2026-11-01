@@ -1,7 +1,7 @@
 ---
 title: Handle Context
 parent: PHP
-nav_order: 3
+nav_order: 4
 layout: default
 ---
 
@@ -19,7 +19,7 @@ layout: default
 ## Allow the interaction with context
 
 Besides the global php [functions](./functions.html) you can provide Context Variables as context to the engine.
-Therefore the end-user can code with the given variables. The main reason for this is providing context to teh script
+Therefore the end-user can code with the given variables. The main reason for this is providing context to the script
 with service class instances or definition values like collections of items or access to the current stack and executing
 php code with much more functionality built-in and not accessible directly by the end-user.
 
@@ -84,3 +84,27 @@ try {
     // log or fetch the cause of the error
 }
 ```
+
+## What scripts can do with context objects
+
+{: .warning }
+Scripts can **write** to context objects. `user.name = 'x'` changes the property of the object you
+passed in, and the change is visible in your PHP code after the script ran. Only set objects whose
+public properties end-users may change, or pass a copy or a read-only view.
+
+- **Properties:** public properties can be read and written. Objects with `__get` and `__set`
+  (e.g. Eloquent models) work through these methods.
+- **Methods:** *every* public instance method can be called, including methods that change state
+  or do I/O. Review each exposed class as part of your API.
+- **Static methods** cannot be called through an instance (`user.create()` fails when `create`
+  is static), because an instance would otherwise give access to every static factory of the class.
+- **Magic methods** (`__toString`, `__destruct`, …) cannot be called directly.
+- **Closures** set as context can be passed as callbacks, but their methods (`call`, `bind`,
+  `bindTo`) cannot be called.
+- **`ArrayAccess`** objects support `bag['key']` for reading and writing.
+
+Arrays are passed by value: a script changing `items[0]` works on its own copy.
+
+Exception messages from your methods are passed to the script's caller as part of the
+`EngineException` message. Do not include secrets in exception messages of exposed code, if you
+show errors to end-users.

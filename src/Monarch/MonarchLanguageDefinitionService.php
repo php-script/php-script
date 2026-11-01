@@ -69,7 +69,7 @@ final class MonarchLanguageDefinitionService
             }, $this->allowedFunctions),
             'contextVariables' => array_keys($this->contextVariables),
             'operators' => [
-                '==', '===', '!=', '!==', '=', '.', '+', '-', '*', '/', '>', '<',
+                '==', '===', '!=', '!==', '=', '.', '+', '-', '*', '/', '%', '>', '<', '>=', '<=', '&&', '||', '!', '++', '--', ':',
             ],
             'symbols' => '[=><!~?&|+\\-*/^%.,;()\\{}\\[\\]]',
             'tokenizer' => [

@@ -15,11 +15,14 @@ use PhpScript\Ast\ForStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\IfStatement;
+use PhpScript\Ast\ListLiteral;
 use PhpScript\Ast\Literal;
+use PhpScript\Ast\MapLiteral;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
+use PhpScript\Ast\ReturnStatement;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
 use PhpScript\Contracts\AstTraverserInterface;
@@ -38,6 +41,14 @@ final class PhpScriptRenderer implements AstTraverserInterface
      * @codeCoverageIgnore
      */
     public function setAllowedFunctions(array $allowedFunctions): void
+    {
+        // do nothing
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function setBudgetTracking(bool $enabled): void
     {
         // do nothing
     }
@@ -68,6 +79,7 @@ final class PhpScriptRenderer implements AstTraverserInterface
             IfStatement::class => $this->traverseIfStatement($node),
             ForStatement::class => $this->traverseForStatement($node),
             ForeachStatement::class => $this->traverseForeachStatement($node),
+            ReturnStatement::class => $this->traverseReturnStatement($node),
             BreakStatement::class => $this->traverseBreakStatement($node),
             ContinueStatement::class => $this->traverseContinueStatement($node),
             Assignment::class => $this->traverseAssignment($node),
@@ -80,6 +92,8 @@ final class PhpScriptRenderer implements AstTraverserInterface
             Variable::class => $this->traverseVariable($node),
             Identifier::class => $this->traverseIdentifier($node),
             Literal::class => $this->traverseLiteral($node),
+            ListLiteral::class => $this->traverseListLiteral($node),
+            MapLiteral::class => $this->traverseMapLiteral($node),
             NoOp::class => $this->traverseNoOp(),
             // @codeCoverageIgnoreStart
             default => throw AstTraverserException::unknownNodeType($node::class),
@@ -93,6 +107,16 @@ final class PhpScriptRenderer implements AstTraverserInterface
             $this->doTraverse($statement);
             $this->generatedCode .= "\n" . $this->lineIndent();
         }
+    }
+
+    private function traverseReturnStatement(ReturnStatement $node): void
+    {
+        $this->generatedCode .= 'return';
+        if ($node->expression instanceof Node) {
+            $this->generatedCode .= ' ';
+            $this->doTraverse($node->expression);
+        }
+        $this->generatedCode .= ';';
     }
 
     private function traverseEchoStatement(EchoStatement $node): void
@@ -190,20 +214,58 @@ final class PhpScriptRenderer implements AstTraverserInterface
 
     private function traverseBinaryOperation(BinaryOperation $node): void
     {
-        $this->doTraverse($node->left);
         $operator = match ($node->operator) {
             TokenType::T_PLUS => '+',
             TokenType::T_MINUS => '-',
             TokenType::T_MULTIPLY => '*',
             TokenType::T_DIVIDE => '/',
+            TokenType::T_MODULO => '%',
             TokenType::T_COMPARE_EQUALS => '==',
             TokenType::T_COMPARE_UNEQUALS => '!=',
             TokenType::T_GREATER_THAN => '>',
             TokenType::T_LESS_THAN => '<',
+            TokenType::T_GREATER_EQUAL => '>=',
+            TokenType::T_LESS_EQUAL => '<=',
+            TokenType::T_AND => '&&',
+            TokenType::T_OR => '||',
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
+
+        $precedence = $this->precedence($node);
+        // Operators are left-associative: the right operand needs parentheses already on equal precedence.
+        $this->traverseOperand($node->left, $this->precedence($node->left) < $precedence);
         $this->generatedCode .= ' ' . $operator . ' ';
-        $this->doTraverse($node->right);
+        $this->traverseOperand($node->right, $this->precedence($node->right) <= $precedence);
+    }
+
+    private function traverseOperand(Node $node, bool $parenthesize): void
+    {
+        $this->generatedCode .= $parenthesize ? '(' : '';
+        $this->doTraverse($node);
+        $this->generatedCode .= $parenthesize ? ')' : '';
+    }
+
+    /**
+     * Binding strength as used by the parser; higher binds tighter.
+     */
+    private function precedence(Node $node): int
+    {
+        if ($node instanceof UnaryOperation) {
+            return 7;
+        }
+
+        if (! $node instanceof BinaryOperation) {
+            return 8;
+        }
+
+        return match ($node->operator) {
+            TokenType::T_OR => 1,
+            TokenType::T_AND => 2,
+            TokenType::T_COMPARE_EQUALS, TokenType::T_COMPARE_UNEQUALS => 3,
+            TokenType::T_PLUS, TokenType::T_MINUS => 5,
+            TokenType::T_MULTIPLY, TokenType::T_DIVIDE, TokenType::T_MODULO => 6,
+            default => 4,
+        };
     }
 
     private function traverseUnaryOperation(UnaryOperation $node): void
@@ -214,7 +276,11 @@ final class PhpScriptRenderer implements AstTraverserInterface
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
         $this->generatedCode .= $operator;
-        $this->doTraverse($node->right);
+        // `- -a` must not become `--a`, which is a decrement.
+        $doubleMinus = $node->operator === TokenType::T_MINUS
+            && $node->right instanceof UnaryOperation
+            && $node->right->operator === TokenType::T_MINUS;
+        $this->traverseOperand($node->right, $doubleMinus || $this->precedence($node->right) < 7);
     }
 
     private function traversePostfixOperation(PostfixOperation $node): void
@@ -269,8 +335,14 @@ final class PhpScriptRenderer implements AstTraverserInterface
     private function traverseLiteral(Literal $node): void
     {
         $value = $node->value;
-        if (is_numeric($value)) {
+        if (is_int($value)) {
             $this->generatedCode .= (string) $value;
+
+            return;
+        }
+
+        if (is_float($value)) {
+            $this->generatedCode .= $this->renderFloat($value);
 
             return;
         }
@@ -281,7 +353,7 @@ final class PhpScriptRenderer implements AstTraverserInterface
 
                 return;
             }
-            $this->generatedCode .= "'" . addslashes($value) . "'";
+            $this->generatedCode .= $this->quote($value);
 
             return;
         }
@@ -301,6 +373,34 @@ final class PhpScriptRenderer implements AstTraverserInterface
         throw AstTraverserException::unknownLiteralType(gettype($value));
     }
 
+    private function traverseListLiteral(ListLiteral $node): void
+    {
+        $this->generatedCode .= '[';
+        foreach ($node->elements as $i => $element) {
+            $this->generatedCode .= $i > 0 ? ', ' : '';
+            $this->doTraverse($element);
+        }
+        $this->generatedCode .= ']';
+    }
+
+    private function traverseMapLiteral(MapLiteral $node): void
+    {
+        $this->generatedCode .= '{';
+        foreach ($node->entries as $i => [$key, $value]) {
+            $this->generatedCode .= $i > 0 ? ', ' : '';
+            $this->generatedCode .= $this->isBareKey($key) ? $key : $this->quote($key);
+            $this->generatedCode .= ': ';
+            $this->doTraverse($value);
+        }
+        $this->generatedCode .= '}';
+    }
+
+    private function isBareKey(string $key): bool
+    {
+        return preg_match('/^[a-zA-Z_]\w*$/', $key) === 1
+            && ! in_array($key, ['if', 'else', 'for', 'foreach', 'as', 'echo', 'return', 'true', 'false', 'null', 'break', 'continue', 'LINEBREAK'], true);
+    }
+
     private function traverseNoOp(): void {}
 
     private function lineIndent(int $increment = 0): string
@@ -308,5 +408,39 @@ final class PhpScriptRenderer implements AstTraverserInterface
         $this->indentLevel += $increment;
 
         return str_repeat(' ', $this->indentLevel * 4);
+    }
+
+    /**
+     * Quotes a string so that the lexer reads back the same value.
+     */
+    private function quote(string $value): string
+    {
+        return "'" . addcslashes($value, "\0..\37'\\\177") . "'";
+    }
+
+    /**
+     * Floats without exponent, because the language has no `1.0E+25` syntax.
+     */
+    private function renderFloat(float $value): string
+    {
+        $exported = var_export($value, true);
+        if (! str_contains($exported, 'E')) {
+            return $exported;
+        }
+
+        // Expand the shortest round-trip form (e.g. "1.5E-8") without adding digits.
+        [$mantissa, $exponent] = explode('E', $exported);
+        $sign = str_starts_with($mantissa, '-') ? '-' : '';
+        $digits = str_replace(['-', '.'], '', $mantissa);
+        $point = strlen(explode('.', ltrim($mantissa, '-'))[0]) + (int) $exponent;
+
+        if ($point <= 0) {
+            return $sign . '0.' . str_repeat('0', -$point) . rtrim($digits, '0');
+        }
+
+        $digits = str_pad($digits, $point, '0');
+        $fraction = rtrim(substr($digits, $point), '0');
+
+        return $sign . substr($digits, 0, $point) . '.' . ($fraction === '' ? '0' : $fraction);
     }
 }

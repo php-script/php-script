@@ -15,21 +15,48 @@ use PhpScript\Ast\ForStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\IfStatement;
+use PhpScript\Ast\ListLiteral;
 use PhpScript\Ast\Literal;
+use PhpScript\Ast\MapLiteral;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
+use PhpScript\Ast\ReturnStatement;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
 use PhpScript\Contracts\AstTraverserInterface;
 use PhpScript\Contracts\Node;
 use PhpScript\Exceptions\AstTraverserException;
 use PhpScript\Exceptions\EngineException;
+use PhpScript\Runtime\Runtime;
+use PhpScript\Runtime\Signature;
+use ReflectionFunction;
 
 class AstTraverser implements AstTraverserInterface
 {
+    /**
+     * Variables that would give a script access to the PHP environment.
+     */
+    public const array RESERVED_VARIABLES = [
+        'this', 'GLOBALS', '_SERVER', '_GET', '_POST', '_FILES', '_COOKIE',
+        '_SESSION', '_REQUEST', '_ENV', 'http_response_header', 'argc', 'argv',
+    ];
+
+    /**
+     * Prefix of the variables the engine uses internally in the generated code.
+     */
+    public const string INTERNAL_PREFIX = '__ps_';
+
+    private const string RUNTIME = '\\' . Runtime::class;
+
+    private const string BUDGET = '$' . self::INTERNAL_PREFIX . 'budget';
+
+    private const string GUARD = '$' . self::INTERNAL_PREFIX . 'guard';
+
     private string $generatedCode = '';
+
+    private bool $budgetTracking = false;
 
     /**
      * @var \PhpScript\Core\Token[]
@@ -51,6 +78,11 @@ class AstTraverser implements AstTraverserInterface
     public function setAllowedFunctions(array $allowedFunctions): void
     {
         $this->allowedFunctions = $allowedFunctions;
+    }
+
+    public function setBudgetTracking(bool $enabled): void
+    {
+        $this->budgetTracking = $enabled;
     }
 
     /**
@@ -116,6 +148,7 @@ class AstTraverser implements AstTraverserInterface
             IfStatement::class => $this->traverseIfStatement($node),
             ForStatement::class => $this->traverseForStatement($node),
             ForeachStatement::class => $this->traverseForeachStatement($node),
+            ReturnStatement::class => $this->traverseReturnStatement($node),
             BreakStatement::class => $this->traverseBreakStatement($node),
             ContinueStatement::class => $this->traverseContinueStatement($node),
             Assignment::class => $this->traverseAssignment($node),
@@ -128,18 +161,72 @@ class AstTraverser implements AstTraverserInterface
             Variable::class => $this->traverseVariable($node),
             Identifier::class => $this->traverseIdentifier($node),
             Literal::class => $this->traverseLiteral($node),
+            ListLiteral::class => $this->traverseListLiteral($node),
+            MapLiteral::class => $this->traverseMapLiteral($node),
             NoOp::class => $this->traverseNoOp(),
             default => throw AstTraverserException::unknownNodeType($node::class),
         };
     }
 
+    /**
+     * Every statement gets its own line in the generated code, so the source map
+     * can point runtime errors at the right statement.
+     */
     private function traverseProgram(Program $node): void
     {
         foreach ($node->statements as $statement) {
+            $this->emitTick();
             $this->doTraverse($statement);
-            $this->generatedCode .= ";\n";
-            $this->currentLine++;
+            $this->generatedCode .= ';';
+            $this->newline();
         }
+    }
+
+    private function newline(): void
+    {
+        $this->generatedCode .= "\n";
+        $this->currentLine++;
+    }
+
+    /**
+     * Counts one operation. Loop bodies tick too, so even `for (;;) {}` is bounded.
+     */
+    private function emitTick(): void
+    {
+        if ($this->budgetTracking) {
+            $this->generatedCode .= self::BUDGET . '->tick(); ';
+        }
+    }
+
+    /**
+     * Opens a block body on a new line. Loops tick once per iteration on a line
+     * of their own that maps to the loop.
+     */
+    private function openBlock(?Node $loop = null): void
+    {
+        $this->generatedCode .= ' {';
+        $this->newline();
+
+        if ($loop instanceof Node && $this->budgetTracking) {
+            $token = $loop->getToken();
+            if ($token instanceof Token) {
+                $this->sourceMap[$this->currentLine] = $token;
+            }
+            $this->emitTick();
+            $this->newline();
+        }
+    }
+
+    private function traverseReturnStatement(ReturnStatement $node): void
+    {
+        $this->generatedCode .= 'return ';
+        if ($node->expression instanceof Node) {
+            $this->doTraverse($node->expression);
+
+            return;
+        }
+
+        $this->generatedCode .= 'null';
     }
 
     private function traverseEchoStatement(EchoStatement $node): void
@@ -152,12 +239,14 @@ class AstTraverser implements AstTraverserInterface
     {
         $this->generatedCode .= 'if (';
         $this->doTraverse($node->condition);
-        $this->generatedCode .= ') {';
+        $this->generatedCode .= ')';
+        $this->openBlock();
         $this->doTraverse($node->then);
         $this->generatedCode .= '}';
 
         if ($node->else instanceof Node) {
-            $this->generatedCode .= ' else {';
+            $this->generatedCode .= ' else';
+            $this->openBlock();
             $this->doTraverse($node->else);
             $this->generatedCode .= '}';
         }
@@ -177,7 +266,8 @@ class AstTraverser implements AstTraverserInterface
         if ($node->increment instanceof Node) {
             $this->doTraverse($node->increment);
         }
-        $this->generatedCode .= ') {';
+        $this->generatedCode .= ')';
+        $this->openBlock($node);
         $this->enterLoop();
         $this->doTraverse($node->body);
         $this->exitLoop();
@@ -194,7 +284,8 @@ class AstTraverser implements AstTraverserInterface
             $this->generatedCode .= ' => ';
         }
         $this->doTraverse($node->value);
-        $this->generatedCode .= ') {';
+        $this->generatedCode .= ')';
+        $this->openBlock($node);
         $this->enterLoop();
         $this->doTraverse($node->body);
         $this->exitLoop();
@@ -265,50 +356,121 @@ class AstTraverser implements AstTraverserInterface
         $this->generatedCode .= $node->level === 1 ? 'continue' : "continue {$node->level}";
     }
 
+    /**
+     * `x = …` stays a plain PHP assignment. Writes into lists, maps and objects go
+     * through Runtime::assign(), which checks every key on the way.
+     *
+     * @throws \PhpScript\Exceptions\EngineException
+     */
     private function traverseAssignment(Assignment $node): void
     {
-        $this->doTraverse($node->variable);
-        $this->generatedCode .= ' = ';
-        $this->doTraverse($node->expression);
-    }
-
-    /**
-     * @throws \PhpScript\Exceptions\AstTraverserException
-     */
-    private function traverseBinaryOperation(BinaryOperation $node): void
-    {
-        if ($node->operator === TokenType::T_PLUS) {
-            $this->generatedCode .= '((is_numeric(';
-            $this->doTraverse($node->left);
-            $this->generatedCode .= ') && is_numeric(';
-            $this->doTraverse($node->right);
-            $this->generatedCode .= ')) ? (';
-            $this->doTraverse($node->left);
-            $this->generatedCode .= ' + ';
-            $this->doTraverse($node->right);
-            $this->generatedCode .= ') : (';
-            $this->doTraverse($node->left);
-            $this->generatedCode .= ' . ';
-            $this->doTraverse($node->right);
-            $this->generatedCode .= '))';
+        if ($node->variable instanceof Variable) {
+            $this->doTraverse($node->variable);
+            $this->generatedCode .= ' = ';
+            $this->doTraverse($node->expression);
 
             return;
         }
 
-        $this->doTraverse($node->left);
+        $this->generatedCode .= self::RUNTIME . '::assign(';
+        $this->traversePath($node->variable);
+        $this->generatedCode .= ', ';
+        $this->doTraverse($node->expression);
+        $this->generatedCode .= ')';
+    }
+
+    /**
+     * Emits `$root, [[kind, key], …]` for a write target like `a.b[c]`.
+     *
+     * @throws \PhpScript\Exceptions\EngineException
+     */
+    private function traversePath(Node $target): void
+    {
+        $segments = [];
+        while ($target instanceof MemberAccess || $target instanceof ArrayAccess) {
+            $segments[] = $target;
+            $target = $target instanceof MemberAccess ? $target->object : $target->array;
+        }
+
+        if (! $target instanceof Variable) {
+            throw $this->forbidden('Invalid assignment target', $target);
+        }
+
+        $this->doTraverse($target);
+        $this->generatedCode .= ', [';
+        foreach (array_reverse($segments) as $i => $segment) {
+            $this->generatedCode .= $i > 0 ? ', ' : '';
+            if ($segment instanceof MemberAccess) {
+                $this->generatedCode .= '[' . self::RUNTIME . '::MEMBER, ' . var_export($segment->property->name, true) . ']';
+
+                continue;
+            }
+
+            $this->generatedCode .= '[' . self::RUNTIME . '::INDEX, ';
+            $this->doTraverse($segment->key);
+            $this->generatedCode .= ']';
+        }
+        $this->generatedCode .= ']';
+    }
+
+    /**
+     * Every operation is wrapped in parentheses, so the PHP code keeps the
+     * precedence of the parsed tree.
+     *
+     * @throws \PhpScript\Exceptions\AstTraverserException
+     */
+    private function traverseBinaryOperation(BinaryOperation $node): void
+    {
+        $runtimeCall = match ($node->operator) {
+            TokenType::T_PLUS => 'add',
+            TokenType::T_COMPARE_EQUALS, TokenType::T_COMPARE_UNEQUALS => 'equals',
+            default => null,
+        };
+
+        if ($runtimeCall !== null) {
+            $negate = $node->operator === TokenType::T_COMPARE_UNEQUALS ? '!' : '';
+            $this->generatedCode .= $negate . self::RUNTIME . '::' . $runtimeCall . '(';
+            $this->doTraverse($node->left);
+            $this->generatedCode .= ', ';
+            $this->doTraverse($node->right);
+            $this->generatedCode .= $runtimeCall === 'add' && $this->budgetTracking ? ', ' . self::BUDGET . ')' : ')';
+
+            return;
+        }
+
+        $comparison = match ($node->operator) {
+            TokenType::T_GREATER_THAN => '>',
+            TokenType::T_LESS_THAN => '<',
+            TokenType::T_GREATER_EQUAL => '>=',
+            TokenType::T_LESS_EQUAL => '<=',
+            default => null,
+        };
+
+        if ($comparison !== null) {
+            $this->generatedCode .= self::RUNTIME . '::compare(';
+            $this->doTraverse($node->left);
+            $this->generatedCode .= ", '" . $comparison . "', ";
+            $this->doTraverse($node->right);
+            $this->generatedCode .= ')';
+
+            return;
+        }
+
         $operator = match ($node->operator) {
             TokenType::T_MINUS => '-',
             TokenType::T_MULTIPLY => '*',
             TokenType::T_DIVIDE => '/',
-            TokenType::T_COMPARE_EQUALS => '===',
-            TokenType::T_COMPARE_UNEQUALS => '!==',
-            TokenType::T_GREATER_THAN => '>',
-            TokenType::T_LESS_THAN => '<',
+            TokenType::T_MODULO => '%',
+            TokenType::T_AND => '&&',
+            TokenType::T_OR => '||',
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
 
+        $this->generatedCode .= '(';
+        $this->doTraverse($node->left);
         $this->generatedCode .= ' ' . $operator . ' ';
         $this->doTraverse($node->right);
+        $this->generatedCode .= ')';
     }
 
     /**
@@ -321,8 +483,9 @@ class AstTraverser implements AstTraverserInterface
             TokenType::T_MINUS => '-',
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
-        $this->generatedCode .= $operator;
+        $this->generatedCode .= '(' . $operator;
         $this->doTraverse($node->right);
+        $this->generatedCode .= ')';
     }
 
     /**
@@ -330,54 +493,109 @@ class AstTraverser implements AstTraverserInterface
      */
     private function traversePostfixOperation(PostfixOperation $node): void
     {
-        $this->doTraverse($node->left);
-        $operator = match ($node->operator) {
-            TokenType::T_INCREMENT => '++',
-            TokenType::T_DECREMENT => '--',
+        $delta = match ($node->operator) {
+            TokenType::T_INCREMENT => '1',
+            TokenType::T_DECREMENT => '-1',
             default => throw AstTraverserException::unknownOperator($node->operator->value),
         };
-        $this->generatedCode .= $operator;
+        $this->generatedCode .= self::RUNTIME . '::increment(';
+        $this->traversePath($node->left);
+        $this->generatedCode .= ', ' . $delta . ')';
     }
 
     private function traverseArrayAccess(ArrayAccess $node): void
     {
+        $this->generatedCode .= self::RUNTIME . '::index(';
         $this->doTraverse($node->array);
-        $this->generatedCode .= '[';
+        $this->generatedCode .= ', ';
         $this->doTraverse($node->key);
-        $this->generatedCode .= ']';
+        $this->generatedCode .= ')';
     }
 
     private function traverseMemberAccess(MemberAccess $node): void
     {
+        $this->generatedCode .= self::RUNTIME . '::member(';
         $this->doTraverse($node->object);
-        $this->generatedCode .= '->';
-        $this->doTraverse($node->property);
+        $this->generatedCode .= ', ' . var_export($node->property->name, true) . ')';
+    }
+
+    /**
+     * Only two kinds of calls exist: an allowed function by name and a method of an object.
+     * Anything else (`'system'('id')`, `f()()`, `list[0]()`) would call an arbitrary
+     * PHP function by its string name and is rejected.
+     *
+     * Arguments that PHP may call (callable parameters) are checked at runtime by
+     * the CallGuard, methods are called through it.
+     *
+     * @throws \PhpScript\Exceptions\EngineException
+     */
+    private function traverseFunctionCall(FunctionCall $node): void
+    {
+        $callee = $node->callee;
+
+        if ($callee instanceof MemberAccess) {
+            $method = $callee->property->name;
+            if (str_starts_with($method, '__')) {
+                throw $this->forbidden(sprintf("Calling magic method '%s' is not allowed", $method), $callee->property);
+            }
+
+            $this->generatedCode .= self::GUARD . '->call(';
+            $this->doTraverse($callee->object);
+            $this->generatedCode .= ', ' . var_export($method, true);
+            foreach ($node->arguments as $argument) {
+                $this->generatedCode .= ', ';
+                $this->doTraverse($argument);
+            }
+            $this->generatedCode .= ')';
+
+            return;
+        }
+
+        if (! $callee instanceof Identifier) {
+            throw $this->forbidden('Dynamic function calls are not allowed', $node);
+        }
+
+        if (! in_array($callee->name, $this->allowedFunctions, true)) {
+            $token = $callee->getToken();
+            $length = $token instanceof Token ? strlen($token->value) : strlen($callee->name);
+            throw EngineException::invalidFunctionCall($callee->name, (int) $token?->line, (int) $token?->column, (int) $token?->offset, $length);
+        }
+
+        $signature = function_exists($callee->name) ? Signature::of(new ReflectionFunction($callee->name)) : [[], false];
+
+        $this->generatedCode .= $callee->name . '(';
+        foreach (array_values($node->arguments) as $i => $argument) {
+            $this->generatedCode .= $i > 0 ? ', ' : '';
+            $check = Signature::at($signature, $i) === Signature::CALLBACK;
+            $this->generatedCode .= $check ? self::GUARD . '->callback(' : '';
+            $this->doTraverse($argument);
+            $this->generatedCode .= $check ? ')' : '';
+        }
+        $this->generatedCode .= ')';
+    }
+
+    private function forbidden(string $message, Node $node): EngineException
+    {
+        $token = $node->getToken();
+
+        return EngineException::compileError(
+            $message,
+            (int) $token?->line,
+            (int) $token?->column,
+            (int) $token?->offset,
+            $token instanceof Token ? max(1, strlen($token->value)) : 1,
+        );
     }
 
     /**
      * @throws \PhpScript\Exceptions\EngineException
      */
-    private function traverseFunctionCall(FunctionCall $node): void
-    {
-        if ($node->callee instanceof Identifier && ! in_array($node->callee->name, $this->allowedFunctions, true)) {
-            $token = $node->callee->getToken();
-            $length = $token instanceof Token ? strlen($token->value) : strlen($node->callee->name);
-            throw EngineException::invalidFunctionCall($node->callee->name, (int) $token?->line, (int) $token?->column, (int) $token?->offset, $length);
-        }
-
-        $this->doTraverse($node->callee);
-        $this->generatedCode .= '(';
-        foreach ($node->arguments as $i => $argument) {
-            $this->doTraverse($argument);
-            if ($i < count($node->arguments) - 1) {
-                $this->generatedCode .= ', ';
-            }
-        }
-        $this->generatedCode .= ')';
-    }
-
     private function traverseVariable(Variable $node): void
     {
+        if (in_array($node->name, self::RESERVED_VARIABLES, true) || str_starts_with($node->name, self::INTERNAL_PREFIX)) {
+            throw $this->forbidden(sprintf("Variable name '%s' is reserved", $node->name), $node);
+        }
+
         $this->generatedCode .= '$' . $node->name;
     }
 
@@ -392,33 +610,45 @@ class AstTraverser implements AstTraverserInterface
     private function traverseLiteral(Literal $node): void
     {
         $value = $node->value;
-        if (is_numeric($value)) {
-            $this->generatedCode .= (string) $value;
+        if (! is_scalar($value) && $value !== null) {
+            throw AstTraverserException::unknownLiteralType(gettype($value));
+        }
+
+        if (is_string($value) && preg_match('/[\x00-\x1f\x7f]/', $value) === 1) {
+            // A literal line break would shift the lines of the source map.
+            // Octal escapes for all control characters: addcslashes() would write `\a`
+            // and `\b`, which PHP does not understand in double-quoted strings.
+            $escaped = (string) preg_replace_callback(
+                '/[\x00-\x1f\x7f]/',
+                static fn (array $match): string => sprintf('\\%03o', ord($match[0])),
+                addcslashes($value, '"\\$'),
+            );
+            $this->generatedCode .= '"' . $escaped . '"';
 
             return;
         }
 
-        if (is_string($value)) {
-            $this->generatedCode .= "'" . addslashes($value) . "'";
+        $this->generatedCode .= $value === null ? 'null' : var_export($value, true);
+    }
 
-            return;
+    private function traverseListLiteral(ListLiteral $node): void
+    {
+        $this->generatedCode .= '[';
+        foreach ($node->elements as $i => $element) {
+            $this->generatedCode .= $i > 0 ? ', ' : '';
+            $this->doTraverse($element);
         }
+        $this->generatedCode .= ']';
+    }
 
-        if (is_bool($value)) {
-            $this->generatedCode .= $value ? 'true' : 'false';
-
-            return;
+    private function traverseMapLiteral(MapLiteral $node): void
+    {
+        $this->generatedCode .= '(object) [';
+        foreach ($node->entries as $i => [$key, $value]) {
+            $this->generatedCode .= ($i > 0 ? ', ' : '') . var_export($key, true) . ' => ';
+            $this->doTraverse($value);
         }
-
-        if ($value === null) {
-            $this->generatedCode .= 'null';
-
-            return;
-        }
-
-        // @codeCoverageIgnoreStart
-        throw AstTraverserException::unknownLiteralType(gettype($value));
-        // @codeCoverageIgnoreEnd
+        $this->generatedCode .= ']';
     }
 
     private function traverseNoOp(): void

@@ -1,8 +1,12 @@
 <?php
 
 use PhpScript\Ast\ContinueStatement;
+use PhpScript\Core\AstTraverser;
+use PhpScript\Core\PhpScriptRenderer;
 use PhpScript\Core\Token;
 use PhpScript\Core\TokenType;
+use PhpScript\Exceptions\EngineException;
+use Tests\Support\TestAstTraverser;
 
 it('can create a continue statement with default level', function (): void {
     $continueStatement = new ContinueStatement;
@@ -34,7 +38,7 @@ it('stores the token correctly', function (): void {
 
 it('accept method calls visitor visitContinueStatement', function (): void {
     $continueStatement = new ContinueStatement(level: 2);
-    $renderer = new \PhpScript\Core\PhpScriptRenderer;
+    $renderer = new PhpScriptRenderer;
 
     $result = $continueStatement->accept($renderer);
 
@@ -43,19 +47,19 @@ it('accept method calls visitor visitContinueStatement', function (): void {
 
 it('accept method calls AstTraverser visitContinueStatement without loop context', function (): void {
     $continueStatement = new ContinueStatement(level: 1);
-    $traverser = new \PhpScript\Core\AstTraverser;
+    $traverser = new AstTraverser;
 
     // Calling accept outside a loop should throw an exception
     // This tests the visitContinueStatement method in AstTraverser
     expect(fn (): string => $continueStatement->accept($traverser))
-        ->toThrow(\PhpScript\Exceptions\EngineException::class, "'continue' can only be used inside a loop");
+        ->toThrow(EngineException::class, "'continue' can only be used inside a loop");
 });
 
 it('accept method returns code when called on AstTraverser in loop context', function (): void {
     $continueStatement = new ContinueStatement(level: 2);
 
     // Use test helper to set loop depth
-    $traverser = new \Tests\Support\TestAstTraverser;
+    $traverser = new TestAstTraverser;
     $traverser->setLoopDepthForTesting(2);
 
     $result = $continueStatement->accept($traverser);

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PhpScript\Ast\Variable;
 
 it('should return correct array representation', function (): void {

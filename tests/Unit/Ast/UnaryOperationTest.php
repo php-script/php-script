@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PhpScript\Ast\Literal;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Core\Token;

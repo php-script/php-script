@@ -6,6 +6,7 @@ namespace PhpScript\Contracts;
 
 use PhpScript\Ast\BreakStatement;
 use PhpScript\Ast\ContinueStatement;
+use PhpScript\Core\Token;
 
 interface AstTraverserInterface
 {
@@ -14,10 +15,15 @@ interface AstTraverserInterface
      */
     public function setAllowedFunctions(array $allowedFunctions): void;
 
+    /**
+     * Emits operation counting into the generated code (see ExecutionBudget).
+     */
+    public function setBudgetTracking(bool $enabled): void;
+
     public function traverse(Node $node): string;
 
     /**
-     * @return \PhpScript\Core\Token[]
+     * @return Token[]
      */
     public function getSourceMap(): array;
 

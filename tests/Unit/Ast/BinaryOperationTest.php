@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PhpScript\Ast\BinaryOperation;
 use PhpScript\Ast\Literal;
 use PhpScript\Core\TokenType;

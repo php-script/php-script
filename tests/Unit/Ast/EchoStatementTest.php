@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PhpScript\Ast\EchoStatement;
 use PhpScript\Ast\Literal;
 

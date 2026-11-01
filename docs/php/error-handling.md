@@ -1,7 +1,7 @@
 ---
 title: Error Handling
 parent: PHP
-nav_order: 5
+nav_order: 6
 layout: default
 ---
 
@@ -33,6 +33,28 @@ it provides `$offset` and `$length` too. The `$offset` is the offset from the ve
 whole cause source of the error. Within the editor we can show exactly the position for the cause of an error.
 
 If you provide your own editor, you can too by using this position data of the committed PHP Script code.
+
+## Runtime errors
+
+Errors while the script runs are re-thrown as `EngineException` with the position of the
+script line that failed. This includes reading a missing key (`data.missing`), a division by
+zero and PHP warnings raised by allowed functions.
+
+## BudgetExceededException
+
+Thrown when a script exceeds its operation or memory limit (see
+[Limits and Determinism](./limits.html)). It extends `EngineException`, so existing error
+handling keeps working. Only the script is aborted, the PHP process continues.
+
+```php
+use PhpScript\Exceptions\BudgetExceededException;
+
+try {
+    $engine->setOperationLimit(10_000)->run($script);
+} catch (BudgetExceededException $e) {
+    // e.g. "Operation limit of 10000 exceeded in line: 3, column: 5, offset: 20"
+}
+```
 
 ## LexerException
 

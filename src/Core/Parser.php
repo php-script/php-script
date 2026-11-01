@@ -15,11 +15,14 @@ use PhpScript\Ast\ForStatement;
 use PhpScript\Ast\FunctionCall;
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\IfStatement;
+use PhpScript\Ast\ListLiteral;
 use PhpScript\Ast\Literal;
+use PhpScript\Ast\MapLiteral;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\NoOp;
 use PhpScript\Ast\PostfixOperation;
 use PhpScript\Ast\Program;
+use PhpScript\Ast\ReturnStatement;
 use PhpScript\Ast\UnaryOperation;
 use PhpScript\Ast\Variable;
 use PhpScript\Contracts\Node;
@@ -29,26 +32,34 @@ use PhpScript\Exceptions\ParseException;
 final class Parser implements ParserInterface
 {
     /**
-     * @var \PhpScript\Core\Token[]
+     * Deepest nesting of blocks and expressions. Deeper scripts would exhaust the
+     * PHP stack while parsing or compiling.
+     */
+    public const int MAX_DEPTH = 256;
+
+    private int $depth = 0;
+
+    /**
+     * @var Token[]
      */
     private array $tokens;
 
     private int $position = 0;
 
     /**
-     * @param  \PhpScript\Core\Token[]  $tokens
+     * In expression mode only side-effect free expressions are accepted:
+     * no statements, no assignments, no increments or decrements.
+     */
+    private bool $expressionMode = false;
+
+    /**
+     * @param  Token[]  $tokens
      *
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     public function parse(array $tokens): Node
     {
-        $this->tokens = array_values(
-            array_filter(
-                $tokens,
-                static fn (Token $token): bool => ! in_array($token->type, [TokenType::T_WHITESPACE, TokenType::T_COMMENT], true)
-            )
-        );
-        $this->position = 0;
+        $this->reset($tokens, expressionMode: false);
 
         $statements = [];
         while (! $this->isAtEnd()) {
@@ -59,9 +70,73 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @param  Token[]  $tokens
+     *
+     * @throws ParseException
+     */
+    public function parseExpression(array $tokens): Node
+    {
+        $this->reset($tokens, expressionMode: true);
+
+        if ($this->isAtEnd()) {
+            throw new ParseException('Expected an expression.', null);
+        }
+
+        $node = $this->parseExpressionNode();
+
+        if ($this->position < count($this->tokens)) {
+            throw new ParseException('Unexpected token: ' . $this->peek()->type->value . ', expected end of expression.', $this->peek());
+        }
+
+        return $node;
+    }
+
+    /**
+     * @param  Token[]  $tokens
+     */
+    private function reset(array $tokens, bool $expressionMode): void
+    {
+        $this->tokens = array_values(
+            array_filter(
+                $tokens,
+                static fn (Token $token): bool => ! in_array($token->type, [TokenType::T_WHITESPACE, TokenType::T_COMMENT], true)
+            )
+        );
+        $this->position = 0;
+        $this->depth = 0;
+        $this->expressionMode = $expressionMode;
+    }
+
+    /**
+     * Goes one level deeper and returns the previous depth for leave().
+     *
+     * @throws ParseException
+     */
+    private function enter(): int
+    {
+        if (++$this->depth > self::MAX_DEPTH) {
+            throw new ParseException('Script is nested too deeply.', $this->isAtEnd() ? $this->previous() : $this->peek());
+        }
+
+        return $this->depth - 1;
+    }
+
+    /**
+     * @throws ParseException
      */
     private function parseStatement(): Node
+    {
+        $depth = $this->enter();
+        $node = $this->parseStatementNode();
+        $this->depth = $depth;
+
+        return $node;
+    }
+
+    /**
+     * @throws ParseException
+     */
+    private function parseStatementNode(): Node
     {
         $token = $this->peek();
         if ($this->match(TokenType::T_ECHO)) {
@@ -97,11 +172,18 @@ final class Parser implements ParserInterface
             return $node;
         }
 
+        if ($this->match(TokenType::T_RETURN)) {
+            $node = $this->parseReturnStatement($token);
+            $this->match(TokenType::T_SEMICOLON);
+
+            return $node;
+        }
+
         if ($this->match(TokenType::T_SEMICOLON)) {
             return new NoOp($token);
         }
 
-        $node = $this->parseExpression();
+        $node = $this->parseExpressionNode();
 
         $this->match(TokenType::T_SEMICOLON);
 
@@ -109,7 +191,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseForStatement(Token $token): ForStatement
     {
@@ -117,19 +199,19 @@ final class Parser implements ParserInterface
 
         $initializer = null;
         if (! $this->check(TokenType::T_SEMICOLON)) {
-            $initializer = $this->parseExpression();
+            $initializer = $this->parseExpressionNode();
         }
         $this->consume(TokenType::T_SEMICOLON, "Expect ';' after loop initializer.");
 
         $condition = null;
         if (! $this->check(TokenType::T_SEMICOLON)) {
-            $condition = $this->parseExpression();
+            $condition = $this->parseExpressionNode();
         }
         $this->consume(TokenType::T_SEMICOLON, "Expect ';' after loop condition.");
 
         $increment = null;
         if (! $this->check(TokenType::T_RIGHT_PARENTHESIS)) {
-            $increment = $this->parseExpression();
+            $increment = $this->parseExpressionNode();
         }
         $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after for clauses.");
 
@@ -139,12 +221,12 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseForeachStatement(Token $token): ForeachStatement
     {
         $this->consume(TokenType::T_LEFT_PARENTHESIS, "Expect '(' after 'foreach'.");
-        $iterable = $this->parseExpression();
+        $iterable = $this->parseExpressionNode();
         $this->consume(TokenType::T_AS, "Expect 'as' after iterable.");
         $valueToken = $this->consume(TokenType::T_IDENTIFIER, 'Expect identifier for value.');
         $value = new Variable($valueToken->value, $valueToken);
@@ -161,12 +243,12 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseIfStatement(Token $token): IfStatement
     {
         $this->consume(TokenType::T_LEFT_PARENTHESIS, "Expect '(' after 'if'.");
-        $condition = $this->parseExpression();
+        $condition = $this->parseExpressionNode();
         $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after if condition.");
 
         $thenBranch = $this->parseBlock();
@@ -180,7 +262,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseBlock(): Node
     {
@@ -197,23 +279,35 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseEchoStatement(Token $token): EchoStatement
     {
-        $expression = $this->parseExpression();
+        $expression = $this->parseExpressionNode();
 
         return new EchoStatement($expression, $token);
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
+     */
+    private function parseReturnStatement(Token $token): ReturnStatement
+    {
+        if ($this->endsStatement($token)) {
+            return new ReturnStatement(null, $token);
+        }
+
+        return new ReturnStatement($this->parseExpressionNode(), $token);
+    }
+
+    /**
+     * @throws ParseException
      */
     private function parseBreakStatement(Token $token): BreakStatement
     {
         $level = 1;
 
-        if ($this->check(TokenType::T_NUMBER)) {
+        if ($this->check(TokenType::T_NUMBER) && $this->peek()->line === $token->line) {
             $levelToken = $this->advance();
             $levelValue = $levelToken->value;
 
@@ -232,7 +326,7 @@ final class Parser implements ParserInterface
                     $levelToken
                 );
             }
-        } elseif (! $this->check(TokenType::T_SEMICOLON)) {
+        } elseif (! $this->endsStatement($token)) {
             // If next token is not a number and not a semicolon, it's an error
             $unexpectedToken = $this->peek();
             throw new ParseException(
@@ -245,13 +339,13 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseContinueStatement(Token $token): ContinueStatement
     {
         $level = 1;
 
-        if ($this->check(TokenType::T_NUMBER)) {
+        if ($this->check(TokenType::T_NUMBER) && $this->peek()->line === $token->line) {
             $levelToken = $this->advance();
             $levelValue = $levelToken->value;
 
@@ -270,7 +364,7 @@ final class Parser implements ParserInterface
                     $levelToken
                 );
             }
-        } elseif (! $this->check(TokenType::T_SEMICOLON)) {
+        } elseif (! $this->endsStatement($token)) {
             // If next token is not a number and not a semicolon, it's an error
             $unexpectedToken = $this->peek();
             throw new ParseException(
@@ -283,102 +377,170 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * A statement ends at `;`, `}`, the end of the script or a line break.
      */
-    private function parseExpression(): Node
+    private function endsStatement(Token $keyword): bool
     {
-        return $this->parseAssignment();
+        if ($this->isAtEnd()) {
+            return true;
+        }
+        if ($this->check(TokenType::T_SEMICOLON)) {
+            return true;
+        }
+        if ($this->check(TokenType::T_RIGHT_BRACE)) {
+            return true;
+        }
+
+        return $this->peek()->line !== $keyword->line;
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
+     */
+    private function parseExpressionNode(): Node
+    {
+        $depth = $this->enter();
+        $node = $this->parseAssignment();
+        $this->depth = $depth;
+
+        return $node;
+    }
+
+    /**
+     * @throws ParseException
      */
     private function parseAssignment(): Node
     {
-        $left = $this->parseComparison();
+        $left = $this->parseLogicalOr();
 
         if ($this->match(TokenType::T_EQUALS)) {
             $token = $this->previous();
-            if (! $left instanceof Variable && ! $left instanceof MemberAccess && ! $left instanceof ArrayAccess) {
+            if ($this->expressionMode) {
+                throw new ParseException('Assignments are not allowed in expressions.', $token);
+            }
+            if (! $this->isAssignable($left)) {
                 throw new ParseException('Invalid assignment target.', $token);
             }
-            $right = $this->parseAssignment();
 
-            return new Assignment($left, $right, $token);
+            return new Assignment($left, $this->parseExpressionNode(), $token);
         }
 
         return $left;
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * Only a variable or a path below it (`a.b[c]`) can be written to.
+     *
+     * @phpstan-assert-if-true ArrayAccess|MemberAccess|Variable $node
      */
-    private function parseComparison(): Node
+    private function isAssignable(Node $node): bool
     {
-        $node = $this->parseAdditive();
-
-        while ($this->match(TokenType::T_COMPARE_EQUALS, TokenType::T_COMPARE_UNEQUALS, TokenType::T_GREATER_THAN, TokenType::T_LESS_THAN)) {
-            $token = $this->previous();
-            $operator = $this->previous()->type;
-            $right = $this->parseAdditive();
-            $node = new BinaryOperation($node, $operator, $right, $token);
+        while ($node instanceof MemberAccess || $node instanceof ArrayAccess) {
+            $node = $node instanceof MemberAccess ? $node->object : $node->array;
         }
+
+        return $node instanceof Variable;
+    }
+
+    /**
+     * Parses a left-associative chain like `a + b - c`. Every operator counts as
+     * one level of nesting, because the tree grows one level per operator.
+     *
+     * @param  callable(): Node  $operand
+     *
+     * @throws ParseException
+     */
+    private function parseBinary(callable $operand, TokenType ...$operators): Node
+    {
+        $depth = $this->depth;
+        $node = $operand();
+
+        while ($this->match(...$operators)) {
+            $token = $this->previous();
+            $this->enter();
+            $node = new BinaryOperation($node, $token->type, $operand(), $token);
+        }
+
+        $this->depth = $depth;
 
         return $node;
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
+     */
+    private function parseLogicalOr(): Node
+    {
+        return $this->parseBinary($this->parseLogicalAnd(...), TokenType::T_OR);
+    }
+
+    /**
+     * @throws ParseException
+     */
+    private function parseLogicalAnd(): Node
+    {
+        return $this->parseBinary($this->parseEquality(...), TokenType::T_AND);
+    }
+
+    /**
+     * @throws ParseException
+     */
+    private function parseEquality(): Node
+    {
+        return $this->parseBinary($this->parseRelational(...), TokenType::T_COMPARE_EQUALS, TokenType::T_COMPARE_UNEQUALS);
+    }
+
+    /**
+     * `<` binds tighter than `==`, so `a < b == c < d` compares two booleans.
+     *
+     * @throws ParseException
+     */
+    private function parseRelational(): Node
+    {
+        return $this->parseBinary(
+            $this->parseAdditive(...),
+            TokenType::T_GREATER_THAN,
+            TokenType::T_LESS_THAN,
+            TokenType::T_GREATER_EQUAL,
+            TokenType::T_LESS_EQUAL,
+        );
+    }
+
+    /**
+     * @throws ParseException
      */
     private function parseAdditive(): Node
     {
-        $node = $this->parseMultiplicative();
-
-        while ($this->match(TokenType::T_PLUS, TokenType::T_MINUS)) {
-            $token = $this->previous();
-            $operator = $this->previous()->type;
-            $right = $this->parseMultiplicative();
-            $node = new BinaryOperation($node, $operator, $right, $token);
-        }
-
-        return $node;
+        return $this->parseBinary($this->parseMultiplicative(...), TokenType::T_PLUS, TokenType::T_MINUS);
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseMultiplicative(): Node
     {
-        $node = $this->parseUnary();
-
-        while ($this->match(TokenType::T_MULTIPLY, TokenType::T_DIVIDE)) {
-            $token = $this->previous();
-            $operator = $this->previous()->type;
-            $right = $this->parseUnary();
-            $node = new BinaryOperation($node, $operator, $right, $token);
-        }
-
-        return $node;
+        return $this->parseBinary($this->parseUnary(...), TokenType::T_MULTIPLY, TokenType::T_DIVIDE, TokenType::T_MODULO);
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseUnary(): Node
     {
         if ($this->match(TokenType::T_BANG, TokenType::T_MINUS)) {
             $token = $this->previous();
-            $operator = $this->previous()->type;
+            $depth = $this->enter();
             $right = $this->parseUnary();
+            $this->depth = $depth;
 
-            return new UnaryOperation($operator, $right, $token);
+            return new UnaryOperation($token->type, $right, $token);
         }
 
         return $this->parsePostfix();
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parsePostfix(): Node
     {
@@ -386,22 +548,29 @@ final class Parser implements ParserInterface
 
         if ($this->match(TokenType::T_INCREMENT, TokenType::T_DECREMENT)) {
             $token = $this->previous();
-            $operator = $this->previous()->type;
+            if ($this->expressionMode) {
+                throw new ParseException('Increment and decrement are not allowed in expressions.', $token);
+            }
+            if (! $this->isAssignable($node)) {
+                throw new ParseException('Invalid increment or decrement target.', $token);
+            }
 
-            return new PostfixOperation($node, $operator, $token);
+            return new PostfixOperation($node, $token->type, $token);
         }
 
         return $node;
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parseCall(): Node
     {
+        $depth = $this->depth;
         $expr = $this->parsePrimary();
 
         while (true) {
+            $this->enter();
             if ($this->match(TokenType::T_LEFT_PARENTHESIS)) {
                 $expr = $this->finishCall($expr);
             } elseif ($this->match(TokenType::T_DOT)) {
@@ -409,7 +578,7 @@ final class Parser implements ParserInterface
                 $property = new Identifier($propertyToken->value, $propertyToken);
                 $expr = new MemberAccess($expr, $property, $propertyToken);
             } elseif ($this->match(TokenType::T_LEFT_BRACKET)) {
-                $key = $this->parseExpression();
+                $key = $this->parseExpressionNode();
                 $this->consume(TokenType::T_RIGHT_BRACKET, "Expect ']' after array key.");
                 $expr = new ArrayAccess($expr, $key);
             } else {
@@ -417,11 +586,13 @@ final class Parser implements ParserInterface
             }
         }
 
+        $this->depth = $depth;
+
         return $expr;
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function finishCall(Node $callee): FunctionCall
     {
@@ -432,7 +603,7 @@ final class Parser implements ParserInterface
         $arguments = [];
         if (! $this->check(TokenType::T_RIGHT_PARENTHESIS)) {
             do {
-                $arguments[] = $this->parseExpression();
+                $arguments[] = $this->parseExpressionNode();
             } while ($this->match(TokenType::T_COMMA));
         }
 
@@ -442,13 +613,49 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function parsePrimary(): Node
     {
+        if ($this->isAtEnd()) {
+            throw new ParseException('Unexpected end of input.', $this->tokens === [] ? null : $this->previous());
+        }
+
         $token = $this->peek();
-        if ($this->match(TokenType::T_NUMBER, TokenType::T_STRING)) {
+        if ($this->match(TokenType::T_NUMBER)) {
+            $value = $this->previous()->value;
+
+            if (str_contains($value, '.')) {
+                if (! is_finite((float) $value)) {
+                    throw new ParseException(sprintf('Number %s is too large.', $value), $token);
+                }
+
+                return new Literal((float) $value, $token);
+            }
+
+            $digits = ltrim($value, '0');
+            $integer = $digits === '' ? 0 : filter_var($digits, FILTER_VALIDATE_INT);
+            if ($integer === false) {
+                throw new ParseException(sprintf('Number %s is too large.', $value), $token);
+            }
+
+            return new Literal($integer, $token);
+        }
+
+        if ($this->match(TokenType::T_STRING)) {
             return new Literal($this->previous()->value, $token);
+        }
+
+        if ($this->match(TokenType::T_NULL)) {
+            return new Literal(null, $token);
+        }
+
+        if ($this->match(TokenType::T_LEFT_BRACKET)) {
+            return $this->parseListLiteral($token);
+        }
+
+        if ($this->match(TokenType::T_LEFT_BRACE)) {
+            return $this->parseMapLiteral($token);
         }
 
         if ($this->match(TokenType::T_TRUE)) {
@@ -468,13 +675,56 @@ final class Parser implements ParserInterface
         }
 
         if ($this->match(TokenType::T_LEFT_PARENTHESIS)) {
-            $node = $this->parseExpression();
+            $node = $this->parseExpressionNode();
             $this->consume(TokenType::T_RIGHT_PARENTHESIS, "Expect ')' after expression.");
 
             return $node;
         }
 
         throw new ParseException('Unexpected token: ' . $this->peek()->type->value, $this->peek());
+    }
+
+    /**
+     * @throws ParseException
+     */
+    private function parseListLiteral(Token $token): ListLiteral
+    {
+        $elements = [];
+        while (! $this->check(TokenType::T_RIGHT_BRACKET)) {
+            $elements[] = $this->parseExpressionNode();
+            if (! $this->match(TokenType::T_COMMA)) {
+                break;
+            }
+        }
+
+        $this->consume(TokenType::T_RIGHT_BRACKET, "Expect ']' after list elements.");
+
+        return new ListLiteral($elements, $token);
+    }
+
+    /**
+     * @throws ParseException
+     */
+    private function parseMapLiteral(Token $token): MapLiteral
+    {
+        $entries = [];
+        while (! $this->check(TokenType::T_RIGHT_BRACE)) {
+            if ($this->isAtEnd() || ! $this->match(TokenType::T_IDENTIFIER, TokenType::T_STRING)) {
+                throw new ParseException('Map keys must be identifiers or strings.', $this->isAtEnd() ? $this->previous() : $this->peek());
+            }
+
+            $key = $this->previous()->value;
+            $this->consume(TokenType::T_COLON, "Expect ':' after map key.");
+            $entries[] = [$key, $this->parseExpressionNode()];
+
+            if (! $this->match(TokenType::T_COMMA)) {
+                break;
+            }
+        }
+
+        $this->consume(TokenType::T_RIGHT_BRACE, "Expect '}' after map entries.");
+
+        return new MapLiteral($entries, $token);
     }
 
     private function match(TokenType ...$types): bool
@@ -491,7 +741,7 @@ final class Parser implements ParserInterface
     }
 
     /**
-     * @throws \PhpScript\Exceptions\ParseException
+     * @throws ParseException
      */
     private function consume(TokenType $type, string $message): Token
     {

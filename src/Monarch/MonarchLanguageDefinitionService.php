@@ -49,6 +49,7 @@ final class MonarchLanguageDefinitionService
     /**
      * @return array{
      *     keywords: string[],
+     *     loopKeywords: string[],
      *     allowedFunctions: string[],
      *     contextVariables: string[],
      *     operators: string[],
@@ -60,6 +61,7 @@ final class MonarchLanguageDefinitionService
     {
         return [
             'keywords' => self::KEYWORDS,
+            'loopKeywords' => self::LOOP_KEYWORDS,
             'allowedFunctions' => array_map(function (string $fqn): string {
                 try {
                     return new ReflectionFunction($fqn)->getShortName();
@@ -69,7 +71,7 @@ final class MonarchLanguageDefinitionService
             }, $this->allowedFunctions),
             'contextVariables' => array_keys($this->contextVariables),
             'operators' => [
-                '==', '===', '!=', '!==', '=', '.', '+', '-', '*', '/', '>', '<',
+                '==', '===', '!=', '!==', '=', '.', '+', '-', '*', '/', '%', '>', '<', '>=', '<=', '&&', '||', '!', '++', '--', ':',
             ],
             'symbols' => '[=><!~?&|+\\-*/^%.,;()\\{}\\[\\]]',
             'tokenizer' => [
@@ -79,6 +81,7 @@ final class MonarchLanguageDefinitionService
                         [
                             'cases' => [
                                 '@keywords' => 'keyword',
+                                '@loopKeywords' => 'keyword',
                                 '@allowedFunctions' => 'predefined',
                                 '@contextVariables' => 'variable.predefined',
                                 '@default' => 'identifier',

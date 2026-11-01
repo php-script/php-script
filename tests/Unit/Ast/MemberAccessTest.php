@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use PhpScript\Ast\Identifier;
 use PhpScript\Ast\MemberAccess;
 use PhpScript\Ast\Variable;

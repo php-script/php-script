@@ -35,10 +35,25 @@ class EngineException extends RuntimeException
         return new self($message, $line, $column, $offset, $length, $previous);
     }
 
+    /**
+     * The script uses a construct that is not allowed; found before it runs.
+     */
+    public static function compileError(string $message, int $line, int $column, int $offset, int $length): self
+    {
+        $message = sprintf('%s in line: %d, column: %d, offset: %d', $message, $line, $column, $offset);
+
+        return new self($message, $line, $column, $offset, $length);
+    }
+
     public static function invalidFunctionCall(string $functionName, int $line, int $column, int $offset, int $length, ?Throwable $previous = null): self
     {
         $message = sprintf('Invalid function call: %s in line: %d, column: %d, offset: %d', $functionName, $line, $column, $offset);
 
         return new self($message, $line, $column, $offset, $length, $previous);
+    }
+
+    public static function nonDeterministicFunction(string $functionName): self
+    {
+        return new self(sprintf("Function '%s' is not deterministic. Use allowNonDeterministic() to allow it anyway.", $functionName));
     }
 }

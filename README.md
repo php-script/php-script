@@ -139,6 +139,27 @@ Access granted!
 App Version: 1.2.3
 ```
 
+### 4. Evaluating expressions and returning values
+
+`evaluate()` returns the typed value of a single expression, `run()` returns the echo output
+together with the value of a `return` statement.
+
+```php
+$engine->evaluate('users_list[0] + " is first"'); // 'Alice is first'
+
+$result = $engine->run("echo 'done'\nreturn {version: app_version}");
+$result->output; // 'done'
+$result->value;  // stdClass {version: '1.2.3'}
+```
+
+### 5. Limits for untrusted scripts
+
+```php
+$engine->setOperationLimit(10_000)      // aborts with BudgetExceededException
+    ->setMemoryLimit(8 * 1024 * 1024)
+    ->deterministic();                  // refuses time, random and environment functions
+```
+
 ## PHP Script Language Reference
 
 [![Deploy Jekyll site to Pages](https://github.com/php-script/php-script/actions/workflows/pages.yml/badge.svg)](https://github.com/php-script/php-script/actions/workflows/pages.yml)
@@ -153,6 +174,10 @@ Please take a look into the language reference [online](https://php-script.githu
 - robust error handling with a pointer to the root cause in the PHP Script
 - 100% code coverage
 - Whitelist implementation for allowing function calls
+- Expression mode (`evaluate()`) and return values (`run()`)
+- Operation and memory budget per execution
+- Deterministic mode without time, random or environment functions
+- Linter diagnostics with an infinite loop rule
 - Playground
   - use `make playground` and open http://localhost:8080/playground.php in your browser
   - with a Monaco prepared editor
